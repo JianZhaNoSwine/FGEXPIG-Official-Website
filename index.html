@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>JFES150</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- 启动视频与进入页 -->
+<div class="startup-overlay" id="startupOverlay">
+  <video class="startup-video" id="startupVideo" src="wallpaper/start.mp4" playsinline preload="auto"></video>
+  <div class="startup-audio-start" id="startupAudioStart" hidden>点击播放视频</div>
+  <div class="startup-landing" id="startupLanding" hidden>
+    <img class="startup-logo" id="startupLogo" alt="活动 Logo" draggable="false" hidden>
+    <div class="startup-press">PRESS ANY BOTTOM</div>
+  </div>
+</div>
+
+<!-- 壁纸层（双层交叉淡入淡出） -->
+<div class="bg-layer" id="bgA"></div>
+<div class="bg-layer" id="bgB"></div>
+<div class="bg-tint"></div>
+
+<!-- 页面容器：每个 logo 对应一个 page，data-page 以 logo 名为唯一标识 -->
+<main id="pages"></main>
+
+<!-- 顶部区域：左（用户/等级/称号） · 中（三大导航） · 右（曲名/专辑） -->
+<header class="topbar" id="topbar">
+  <!-- 左侧区 -->
+  <div class="tb-left">
+    <button class="tb-avatar-wrap" id="userMenuBtn" type="button" aria-label="打开侧边栏">
+      <div class="tb-avatar" id="userPillAvatar"></div>
+      <svg class="tb-avatar-ring" viewBox="0 0 40 40" aria-hidden="true">
+        <path class="ring-track" d="M 7.2 32.8 A 18.1 18.1 0 1 1 32.8 32.8"></path>
+        <path class="ring-fill" id="userExpRing" d="M 7.2 32.8 A 18.1 18.1 0 1 1 32.8 32.8"></path>
+      </svg>
+      <span class="tb-avatar-level" id="userPillLevel">Lv1</span>
+    </button>
+    <span class="tb-nick" id="userPillName">访客用户</span>
+    <span class="tb-ribbon" id="userTitle">⁓探索の主宰新手⁓</span>
+  </div>
+
+  <!-- 中部导航 -->
+  <nav class="topnav" id="topnav"></nav>
+
+  <!-- 右侧区（从右向左：曲名 / 专辑(外描边圆形进度)） -->
+  <div class="tb-right">
+    <span class="tb-songname" id="playerName">未播放</span>
+    <div class="tb-cover" id="playerCover" title="播放/暂停；点边缘圆环拖动进度">
+      <div class="tb-cover-art" id="playerCoverArt"></div>
+      <svg class="tb-cover-ring" viewBox="0 0 40 40" aria-hidden="true">
+        <circle class="ring-track" cx="20" cy="20" r="18.1"></circle>
+        <circle class="ring-fill" id="playerRing" cx="20" cy="20" r="18.1"></circle>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<!-- 底部 logo 刻度槽 -->
+<div class="dock-wrap">
+  <div class="dock" id="dock">
+    <div class="dock-track" id="dockTrack"></div>
+  </div>
+  <div class="ruler" aria-hidden="true"></div>
+  <div class="ruler-major" aria-hidden="true"></div>
+</div>
+
+<!-- 全屏暂停菜单 -->
+<section class="pause-menu" id="pauseMenu" aria-hidden="true">
+  <div class="sidebar-inner pause-menu-inner">
+    <div class="sidebar-panel" id="panelMenu">
+      <div class="sidebar-list">
+        <button class="sidebar-item" id="navAccountSwitch">
+          <svg viewBox="0 0 24 24" width="18" height="18"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M15 12H3m12-4l4 4-4 4M9 4v4M9 16v4"/></svg>
+          <span>账号切换</span>
+        </button>
+        <button class="sidebar-item" id="navTitleSwitch">
+          <svg viewBox="0 0 24 24" width="18" height="18"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M7 3h10v4a5 5 0 0 1-10 0V3zM5 4H3v3a4 4 0 0 0 4 4M19 4h2v3a4 4 0 0 1-4 4M9 13.5V21l3-2 3 2v-7.5"/></svg>
+          <span>称号切换</span>
+        </button>
+        <button class="sidebar-item" id="navSettings">
+          <svg viewBox="0 0 24 24" width="18" height="18"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM19 12a7 7 0 0 0-.1-1.1l2-1.5-2-3.4-2.4.9a7 7 0 0 0-1.9-1.1L14 3h-4l-.5 2.7a7 7 0 0 0-1.9 1.1l-2.4-.9-2 3.4 2 1.5A7 7 0 0 0 5 12a7 7 0 0 0 .1 1.1l-2 1.5 2 3.4 2.4-.9a7 7 0 0 0 1.9 1.1L10 21h4l.5-2.7a7 7 0 0 0 1.9-1.1l2.4.9 2-3.4-2-1.5A7 7 0 0 0 19 12z"/></svg>
+          <span>设置</span>
+        </button>
+        <button class="sidebar-item" id="navGithubRepository" type="button">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 .8a11.2 11.2 0 0 0-3.5 21.85c.56.1.77-.24.77-.54v-2.1c-3.13.68-3.79-1.33-3.79-1.33-.51-1.3-1.25-1.65-1.25-1.65-1.02-.7.08-.69.08-.69 1.13.08 1.73 1.16 1.73 1.16 1 1.73 2.63 1.23 3.27.94.1-.73.39-1.23.71-1.51-2.5-.29-5.13-1.25-5.13-5.57 0-1.23.44-2.24 1.16-3.03-.12-.28-.5-1.43.11-2.98 0 0 .95-.3 3.1 1.16a10.8 10.8 0 0 1 5.65 0c2.15-1.46 3.09-1.16 3.09-1.16.62 1.55.23 2.7.12 2.98.72.79 1.16 1.8 1.16 3.03 0 4.33-2.64 5.28-5.15 5.56.4.35.76 1.03.76 2.08v3.08c0 .3.2.65.78.54A11.2 11.2 0 0 0 12 .8z"/></svg>
+          <span>GITHUB REPOSITORY</span>
+        </button>
+        <button class="sidebar-item sidebar-settings" id="navBack">
+          <svg class="sidebar-item-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M19 12H5m6-6-6 6 6 6"/></svg>
+          <span>返回</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="sidebar-panel title-page" id="panelTitles" hidden>
+      <div class="title-topbar">
+        <button class="settings-back" id="titleBackTop" type="button">返回</button>
+      </div>
+      <div class="title-page-center">
+        <div class="sidebar-list title-list" id="titleList"></div>
+      </div>
+    </div>
+
+    <div class="sidebar-panel account-page" id="panelAccounts" hidden>
+      <div class="account-topbar">
+        <button class="settings-back account-logout-top" id="accountLogoutTop" type="button">退出登录</button>
+      </div>
+      <div class="account-page-center">
+        <form class="account-login-card" id="accountLoginForm">
+          <div class="account-login-fields">
+            <input class="login-input" id="accountLoginUser" type="text" placeholder="账号" autocomplete="username">
+            <input class="login-input" id="accountLoginPass" type="password" placeholder="密码" autocomplete="current-password">
+            <div class="login-error" id="accountLoginError"></div>
+            <div class="login-actions">
+              <button class="login-cancel" id="accountLoginClear" type="button">取消</button>
+              <button class="login-btn" id="accountLoginSubmit" type="submit">确认</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="sidebar-panel settings-page" id="panelSettings" hidden>
+      <div class="settings-topnav">
+        <button class="settings-back" id="settingsBack" type="button">返回</button>
+        <nav class="topnav settings-tabs" aria-label="设置分类">
+          <div class="topnav-thumb no-anim">
+            <div class="topnav-thumb-inner"></div>
+          </div>
+          <button class="topnav-item settings-tab active is-active" type="button" data-settings-tab="interface">
+            <img class="topnav-item-effect" alt="" aria-hidden="true">
+            <span class="topnav-item-label">界面</span>
+          </button>
+          <button class="topnav-item settings-tab" type="button" data-settings-tab="display">
+            <img class="topnav-item-effect" alt="" aria-hidden="true">
+            <span class="topnav-item-label">显示</span>
+          </button>
+          <button class="topnav-item settings-tab" type="button" data-settings-tab="control">
+            <img class="topnav-item-effect" alt="" aria-hidden="true">
+            <span class="topnav-item-label">控制</span>
+          </button>
+          <button class="topnav-item settings-tab" type="button" data-settings-tab="audio">
+            <img class="topnav-item-effect" alt="" aria-hidden="true">
+            <span class="topnav-item-label">音频</span>
+          </button>
+          <button class="topnav-item settings-tab" type="button" data-settings-tab="font">
+            <img class="topnav-item-effect" alt="" aria-hidden="true">
+            <span class="topnav-item-label">字体</span>
+          </button>
+          <button class="topnav-item settings-tab" type="button" data-settings-tab="sponsor">
+            <img class="topnav-item-effect" alt="" aria-hidden="true">
+            <span class="topnav-item-label">赞助</span>
+          </button>
+        </nav>
+      </div>
+      <div class="settings-layout">
+        <div class="settings-left">
+          <section class="settings-section" data-settings-panel="display">
+            <div class="sidebar-list theme-list">
+              <div class="theme-control toggle-option" id="performanceModeCard" role="button" tabindex="0">
+                <span class="settings-card-label">性能模式</span>
+                <div class="settings-card-control">
+                  <span class="theme-value" id="performanceModeVal">关闭</span>
+                  <input class="theme-toggle" id="performanceMode" type="checkbox" role="switch" aria-label="性能模式">
+                </div>
+              </div>
+              <div class="theme-control">
+                <span class="settings-card-label">画质</span>
+                <div class="settings-card-control">
+                  <span class="theme-value" id="imageQualityVal">极低</span>
+                  <div class="settings-stepper">
+                    <button class="settings-step-btn" id="imageQualityPrev" type="button" aria-label="降低画质">‹</button>
+                    <button class="settings-step-btn" id="imageQualityNext" type="button" aria-label="提高画质">›</button>
+                  </div>
+                  <select class="theme-select settings-native-select" id="imageQuality" aria-label="画质" hidden>
+                    <option value="1">极低</option>
+                    <option value="2">低</option>
+                    <option value="3">中</option>
+                    <option value="4">高</option>
+                    <option value="5">极高</option>
+                  </select>
+                </div>
+              </div>
+              <div class="quality-category-list" id="qualityCategoryList"></div>
+            </div>
+          </section>
+          <section class="settings-section" data-settings-panel="control" hidden>
+            <div class="sidebar-list theme-list keybind-list" id="keybindList"></div>
+          </section>
+          <section class="settings-section" data-settings-panel="audio" hidden>
+            <div class="sidebar-list theme-list">
+              <div class="theme-control">
+                <span class="settings-card-label">主音量</span>
+                <div class="settings-card-control">
+                  <span class="theme-value" id="mainVolumeVal">100%</span>
+                  <input class="theme-range" id="mainVolume" type="range" min="0" max="100" step="1" value="100">
+                </div>
+              </div>
+              <div class="theme-control">
+                <span class="settings-card-label">迷你游戏音量</span>
+                <div class="settings-card-control">
+                  <span class="theme-value" id="minigameVolumeVal">100%</span>
+                  <input class="theme-range" id="minigameVolume" type="range" min="0" max="100" step="1" value="100">
+                </div>
+              </div>
+            </div>
+          </section>
+          <section class="settings-section" data-settings-panel="font" hidden>
+            <div class="sidebar-list font-list" id="fontList"></div>
+          </section>
+          <section class="settings-section" data-settings-panel="sponsor" hidden>
+            <div class="sidebar-list theme-list">
+              <button class="theme-control sponsor-option" type="button" data-sponsor-image="wallpaper/wx.png">
+                <span class="settings-card-label">使用微信支付</span>
+                <span class="sponsor-arrow" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg>
+                </span>
+              </button>
+              <button class="theme-control sponsor-option" type="button" data-sponsor-image="wallpaper/zfb.jpg">
+                <span class="settings-card-label">使用支付宝支付</span>
+                <span class="sponsor-arrow" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg>
+                </span>
+              </button>
+            </div>
+          </section>
+          <section class="settings-section" data-settings-panel="interface" hidden>
+            <div class="sidebar-list theme-list">
+              <div class="theme-control">
+                <span class="settings-card-label">亮度</span>
+                <div class="settings-card-control">
+                  <span class="theme-value" id="wallpaperDimVal">35%</span>
+                  <input class="theme-range" id="wallpaperDim" type="range" min="0" max="100" step="1" value="35">
+                </div>
+              </div>
+              <div class="theme-control">
+                <span class="settings-card-label">模糊度</span>
+                <div class="settings-card-control">
+                  <span class="theme-value" id="cardBlurVal">0px</span>
+                  <input class="theme-range" id="cardBlur" type="range" min="0" max="24" step="1" value="0">
+                </div>
+              </div>
+              <div class="theme-control" id="fxLevelControl">
+                <span class="settings-card-label">沉浸光效</span>
+                <div class="settings-card-control">
+                  <span class="theme-value" id="fxLevelVal">3级</span>
+                  <input class="theme-range" id="fxLevel" type="range" min="0" max="3" step="1" value="3">
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+        <aside class="settings-description" id="settingsDescription">
+          <h3 id="settingsDescriptionTitle">显示</h3>
+          <p id="settingsDescriptionText">调整壁纸灰暗度、卡片模糊、性能模式和画质。</p>
+          <h4 class="settings-description-subtitle" id="settingsDescriptionSubtitle" hidden></h4>
+          <p id="settingsDescriptionExtra" hidden></p>
+        </aside>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-exp-hud" id="bottomExpHud" aria-hidden="true">
+    <div class="bottom-exp-main">
+      <div class="bottom-exp-title">
+        <span class="sidebar-level-badge" id="sidebarLevelBadge">Lv1</span>
+      </div>
+      <div class="sidebar-level-row" id="sidebarLevelRow">
+        <span class="bottom-exp-total" id="bottomExpTotal">0</span>
+        <div class="sidebar-exp-track" aria-hidden="true">
+          <div class="sidebar-exp-fill" id="sidebarExpFill"></div>
+        </div>
+        <span class="sidebar-exp-value" id="sidebarExpValue">223</span>
+      </div>
+    </div>
+  </div>
+  <aside class="pause-menu-ads" aria-label="广告位">
+    <div class="pause-ad-slot" data-leaderboard="experience"></div>
+    <div class="pause-ad-slot" data-leaderboard="value"></div>
+    <div class="pause-ad-slot" data-leaderboard="comments"></div>
+  </aside>
+</section>
+
+<!-- 侧边栏遮罩 -->
+<div class="sidebar-mask" id="sidebarMask"></div>
+
+<!-- 右侧边栏（数据管理） -->
+<aside class="sidebar sidebar-right" id="sidebarRight" data-side="right">
+  <div class="sidebar-inner">
+    <div class="sidebar-header">
+      <div class="sidebar-nickname">数据管理</div>
+    </div>
+    <div class="dm-body">
+      <div class="dm-cats" id="dmCats"></div>
+      <div class="dm-content" id="dmContent"></div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-tip">后续扩展更多数据项</div>
+    </div>
+  </div>
+</aside>
+
+<!-- 左侧边栏（管理员控制台） -->
+<aside class="sidebar sidebar-left" id="sidebarLeft" data-side="left" aria-hidden="true">
+  <div class="sidebar-inner">
+    <div class="sidebar-panel console-page" id="consoleMainPage">
+      <div class="sidebar-header">
+        <div class="sidebar-nickname">控制台</div>
+      </div>
+      <div class="console-body" id="consoleContent"></div>
+      <div class="console-footer">
+        <button class="console-ignored-btn" id="consoleIgnoredBtn" type="button"><span aria-hidden="true">→</span>查看已忽略提示</button>
+      </div>
+    </div>
+
+    <div class="sidebar-panel console-page" id="consoleIgnoredPage" hidden>
+      <div class="sidebar-header sidebar-header-row">
+        <button class="panel-back" id="consoleIgnoredBack" type="button" aria-label="返回控制台">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M20 12H4M12 4l-8 8 8 8"/></svg>
+        </button>
+        <div class="sidebar-nickname">已忽略提示</div>
+      </div>
+      <div class="console-body" id="consoleIgnoredContent"></div>
+    </div>
+  </div>
+</aside>
+
+<!-- 数据导入：隐藏文件选择（txt 数据源 / js 备份） -->
+<input type="file" id="dataFileInput" accept=".txt,.js" hidden>
+<input type="file" id="accountFileInput" accept=".txt,.js" hidden>
+<input type="file" id="titleFileInput" accept=".txt,.js" hidden>
+<input type="file" id="reviewFileInput" accept=".txt,.js" hidden>
+<input type="file" id="achvFileInput" accept=".txt,.js" hidden>
+<input type="file" id="scheduleFileInput" accept=".txt,.js" hidden>
+<input type="file" id="resourceListFileInput" accept=".txt,.js" hidden>
+<input type="file" id="shopFileInput" accept=".txt,.js" hidden>
+<input type="file" id="libraryFileInput" accept=".txt,.js" hidden>
+<input type="file" id="hotspotFileInput" accept=".txt,.js" hidden>
+<input type="file" id="hotspotPointsFileInput" accept=".txt,.js" hidden>
+
+<!-- 右下角编辑按钮（常驻，打开数据管理侧边栏） -->
+<button class="edit-btn" id="editBtn" type="button" aria-label="编辑" title="数据管理" hidden>
+  <svg viewBox="0 0 24 24" width="22" height="22"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+</button>
+
+<!-- 左下角控制台按钮（仅管理员） -->
+<button class="edit-btn console-btn" id="consoleBtn" type="button" aria-label="控制台" title="控制台" hidden>
+  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 5h16v14H4zM7 9l3 3-3 3m6 0h5"/></svg>
+</button>
+
+<!-- 赞助二维码弹窗 -->
+<div class="sponsor-overlay" id="sponsorOverlay" hidden>
+  <img id="sponsorImage" alt="赞助二维码">
+</div>
+
+<!-- 登录弹窗 -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-dialog">
+    <div class="login-title">账号登录</div>
+    <input class="login-input" id="loginUser" type="text" placeholder="账号" autocomplete="username">
+    <input class="login-input" id="loginPass" type="password" placeholder="密码" autocomplete="current-password">
+    <div class="login-error" id="loginError"></div>
+    <div class="login-actions">
+      <button class="login-cancel" id="loginCancel" type="button">取消</button>
+      <button class="login-btn" id="loginSubmit" type="button">确认</button>
+    </div>
+    <button class="login-logout" id="loginLogout" type="button">退出登录</button>
+  </div>
+</div>
+
+<!-- 跟随鼠标的称号主题光球 -->
+<div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+
+<script src="js/minigames.js"></script>
+<script src="js/emoji-manifest.js"></script>
+<script src="js/emoji-trim-data.js"></script>
+<script src="js/emoji-trim.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
