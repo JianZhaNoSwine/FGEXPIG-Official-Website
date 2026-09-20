@@ -34,6 +34,7 @@
   --text-primary: #fff;
   --text-secondary: rgba(255, 255, 255, 0.45);
   --accent-pink: #ff72b6;
+  --accent-pink-text-stroke: 0.28px;
   --accent-pink-rgb: 255, 114, 182;
   --wallpaper-dim-top: 0.175;
   --wallpaper-dim-bottom: 0.42;
@@ -176,22 +177,21 @@ html.ui-hidden .bg-tint {
   z-index: 1;
 }
 
-/* 页内板块子页：中间固定宽度，左右自适应且各自不超过中间卡片宽度的一半 */
+/* 页内板块子页：保持原始 1:2:1，左右自适应且各自不超过中间卡片宽度的一半 */
 .page-section {
   position: absolute;
   top: 0;
   left: 50%;
-  width: calc(var(--home-cards-width) + 32px);
+  width: min(100%, calc(var(--home-cards-width) + 32px));
   height: 100%;
   padding: 16px;
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: minmax(0, calc(var(--center-card-width) * 0.5)) var(--center-card-width) minmax(0, calc(var(--center-card-width) * 0.5));
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
   justify-content: center;
   grid-template-rows: 1fr;
   gap: var(--card-gap);
   transform: translateX(-50%);
-  zoom: var(--page-section-dpi-scale, 1);
   overflow: hidden;
   color: var(--text-primary);
   font-size: var(--text-large);
@@ -223,7 +223,9 @@ html.ui-hidden .bg-tint {
   min-width: 0;
   overflow: hidden;
   box-sizing: border-box;
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.22);
 }
+
 .section-card-title {
   position: relative;
   min-height: 34px;
@@ -1237,10 +1239,10 @@ html.ui-hidden .bg-tint {
   height: 3px;
   transform: translateX(-50%);
   border-radius: 999px;
-  background: #fff7e9;
+  background: var(--accent-pink);
   box-shadow:
-    0 0 4px rgba(255, 245, 226, 0.92),
-    0 0 10px rgba(215, 157, 96, 0.44);
+    0 0 4px rgba(var(--accent-pink-rgb), 0.92),
+    0 0 10px rgba(var(--accent-pink-rgb), 0.44);
 }
 /* 长按反馈不再拉伸指示条 */
 .topnav.pressing .topnav-thumb-inner { opacity: 0.74; }
@@ -1250,7 +1252,7 @@ html.ui-hidden .bg-tint {
   appearance: none;
   border: none;
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   font-family: inherit;
   font-size: var(--text-large);
   line-height: 1;
@@ -1291,10 +1293,17 @@ html.ui-hidden .bg-tint {
 }
 .topnav-item:hover { color: var(--text-primary); }
 .topnav-item.active {
-  color: var(--text-primary);
+  color: var(--accent-pink);
   text-shadow:
     0 1px 5px rgba(42, 24, 13, 0.5),
     0 0 12px rgba(239, 205, 158, 0.26);
+}
+.topnav-item.active .topnav-item-label {
+  -webkit-text-stroke: var(--accent-pink-text-stroke) currentColor;
+  text-shadow:
+    0 0 0.45px currentColor,
+    0 1px 5px rgba(42, 24, 13, 0.5),
+    0 0 9px rgba(var(--accent-pink-rgb), 0.28);
 }
 .topnav-item.active .topnav-item-effect {
   opacity: 0.34;
@@ -1366,7 +1375,7 @@ html.ui-hidden .bg-tint {
   width: 3px;
   height: 12px;
   border-radius: 2px;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--accent-pink);
   pointer-events: none;
 }
 
@@ -1431,7 +1440,7 @@ html.ui-hidden .bg-tint {
 /* 选中项：半透明白（更亮），不使用背景模糊 */
 .dock-item.active {
   background-color: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.55);
+  border-color: var(--accent-pink);
 }
 
 /* ===== 顶栏右区：曲名 / 专辑封面(内描边圆形进度) / 音量 ===== */
@@ -1691,7 +1700,7 @@ html.pause-menu-open .tb-avatar-level { display: none; }
   border-radius: 0;
   background: transparent;
   box-shadow: none;
-  color: #fff;
+  color: var(--accent-pink);
   font-size: var(--text-large);
 }
 .bottom-exp-hud .sidebar-exp-track {
@@ -1865,11 +1874,11 @@ html.pause-menu-open .account-page input { cursor: text !important; }
 .settings-tabs { gap: 0; }
 .settings-tab {
   padding: 0 22px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   font-size: var(--text-large);
 }
 .settings-tab:hover { color: var(--text-primary); }
-.settings-tab.is-active { color: #fff; }
+.settings-tab.is-active { color: var(--accent-pink); }
 .settings-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -2059,6 +2068,39 @@ html.pause-menu-open .account-page input { cursor: text !important; }
   outline: none !important;
   box-shadow: inset 0 0 0 2px #fff !important;
 }
+/* 设置项被鼠标悬停或手柄选中时，文本统一使用主题粉色。 */
+.pause-menu .settings-page .theme-control:hover .settings-card-label,
+.pause-menu .settings-page .theme-control:hover .theme-value,
+.pause-menu .settings-page .theme-control.is-gamepad-selected .settings-card-label,
+.pause-menu .settings-page .theme-control.is-gamepad-selected .theme-value,
+.pause-menu .settings-page .font-item:hover .font-item-name,
+.pause-menu .settings-page .font-item.is-gamepad-selected .font-item-name {
+  color: var(--accent-pink);
+}
+/* 粉色在白底/深色墙上会显得更细，所有粉色文字统一补同色微描边。 */
+:where(
+  .hotspot-keyword-pill.is-selected,
+  .hotspot-reply-more,
+  .hotspot-reply-target,
+  .topnav-item.active .topnav-item-label,
+  .pause-site-value-item.is-value,
+  .bottom-exp-hud .sidebar-level-badge,
+  .account-login-card .login-btn,
+  .keybind-button.is-capturing,
+  .pause-menu .settings-page .theme-control:hover .settings-card-label,
+  .pause-menu .settings-page .theme-control:hover .theme-value,
+  .pause-menu .settings-page .theme-control.is-gamepad-selected .settings-card-label,
+  .pause-menu .settings-page .theme-control.is-gamepad-selected .theme-value,
+  .pause-menu .settings-page .font-item:hover .font-item-name,
+  .pause-menu .settings-page .font-item.is-gamepad-selected .font-item-name,
+  .pause-menu .sidebar-item:hover > span,
+  .pause-menu .sidebar-item:focus-visible > span,
+  .pause-menu .sidebar-item.is-selected > span,
+  .pause-ad-title,
+  .resource-calendar-day.has-event .resource-calendar-day-number
+) {
+  -webkit-text-stroke: var(--accent-pink-text-stroke) currentColor;
+}
 .pause-menu .settings-page .font-item-name { font-size: var(--text-large); }
 .pause-menu .settings-page .font-item.is-active {
   border-color: rgba(255, 255, 255, 0.62);
@@ -2143,7 +2185,7 @@ html.has-card-blur .pause-menu .settings-page .font-item {
   border: 0;
   border-radius: 0;
   background: transparent;
-  color: rgba(255, 255, 255, 0.62);
+  color: var(--text-primary);
   font-size: 14px;
 }
 .pause-menu .sidebar-item::before {
@@ -2162,6 +2204,16 @@ html.has-card-blur .pause-menu .settings-page .font-item {
 .pause-menu .sidebar-item.is-selected {
   background: linear-gradient(90deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0));
   color: #fff;
+}
+.pause-menu .sidebar-item:hover > span,
+.pause-menu .sidebar-item:focus-visible > span,
+.pause-menu .sidebar-item.is-selected > span {
+  color: var(--accent-pink);
+}
+.pause-menu .sidebar-item:hover > svg,
+.pause-menu .sidebar-item:focus-visible > svg,
+.pause-menu .sidebar-item.is-selected > svg {
+  color: var(--accent-pink);
 }
 .pause-menu .sidebar-item:hover::before,
 .pause-menu .sidebar-item:focus-visible::before,
@@ -2697,7 +2749,7 @@ html.pause-settings-open .tb-left {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* 主题切换：壁纸灰暗度与卡片模糊度 */
+/* 主题切换：壁纸亮度与卡片模糊度 */
 .theme-list {
   justify-content: flex-start;
   gap: 14px;
@@ -4163,7 +4215,29 @@ body.minigame-open { overflow: hidden; }
   contain-intrinsic-size: none;
 }
 
+/* DPI 小数缩放下，滚动容器右沿会裁掉子卡片的 1px 边框；贴内描边不占布局。 */
+.section-card-body :where(
+  .home-achv,
+  .home-detail-logo-card,
+  .home-info-card,
+  .shop-version-card,
+  .review-overview-head,
+  .review-score-panel,
+  .review-item,
+  .achv-summary,
+  .achv-group-row,
+  .hotspot-search-wrap,
+  .hotspot-post-item,
+  .hotspot-reply-box,
+  .resource-browse-summary,
+  .resource-calendar
+) {
+  outline: 1px solid rgba(255, 255, 255, 0.14);
+  outline-offset: -1px;
+}
+
 .hotspot-comment-sort { position:absolute; right:-9px; top:50%; transform:translateY(-50%); width:34px; height:34px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; border:0; border-radius:50%; background:transparent; color:#fff; cursor:pointer; padding:0; }
+.hotspot-comment-sort-type { right:31px; }
 .hotspot-comment-sort:hover { background:transparent; }
 .hotspot-comment-sort:active { transform:translateY(-50%) scale(.92); }
 

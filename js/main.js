@@ -365,52 +365,10 @@
 
   var centerWidthFrame = 0;
   var centerWidthReady = false;
-  var pageSectionDpiScaleFrame = 0;
-
-  function syncPageSectionDpiScale() {
-    var sections = Array.prototype.slice.call(document.querySelectorAll('.page-section'));
-    if (!sections.length) return;
-    var sample = null;
-    var sampleCards = null;
-    for (var i = 0; i < sections.length; i++) {
-      var cards = Array.prototype.slice.call(sections[i].children).filter(function (child) {
-        return child.classList && child.classList.contains('section-card');
-      });
-      if (cards.length === 3) {
-        sample = sections[i];
-        sampleCards = cards;
-        break;
-      }
-    }
-    if (!sample || !sampleCards) return;
-
-    var gap = parseFloat(getComputedStyle(sample).columnGap) || 0;
-    var designWidth = 32 + gap * (sampleCards.length - 1);
-    sampleCards.forEach(function (card) {
-      designWidth += card.offsetWidth || 0;
-    });
-    if (!(designWidth > 0)) return;
-
-    // 仅留 2px 绘制缓冲，保持与之前一致的贴边对齐效果。
-    var availableWidth = Math.max(0, window.innerWidth - 4);
-    var scale = Math.min(1, availableWidth / designWidth);
-    if (!isFinite(scale) || !(scale > 0)) scale = 1;
-    document.documentElement.style.setProperty('--page-section-dpi-scale', scale.toFixed(4));
-  }
-
-  function schedulePageSectionDpiScale() {
-    if (pageSectionDpiScaleFrame) return;
-    pageSectionDpiScaleFrame = requestAnimationFrame(function () {
-      pageSectionDpiScaleFrame = 0;
-      syncPageSectionDpiScale();
-    });
-  }
-
   function setCenterCardWidth(width) {
     document.documentElement.style.setProperty('--center-card-width', width.toFixed(2) + 'px');
     // 窗口缩放时中间卡片宽度有过渡；顶栏左右端必须跟随每一帧，避免停留在旧视口位置。
     layoutTopbarEdges();
-    schedulePageSectionDpiScale();
   }
 
   // 第 2~6 张底栏卡片的最终视觉跨度：5.16 张基础卡宽 + 4 个间距
@@ -1614,6 +1572,18 @@
     commentsBackBtn.hidden = true;
     commentsBackBtn.onclick = function () { showHotspotCommentsOverview(id, section); };
     commentsCard.title.appendChild(commentsBackBtn);
+    var commentsSortModeBtn = document.createElement('button');
+    commentsSortModeBtn.className = 'hotspot-comment-sort hotspot-comment-sort-type';
+    commentsSortModeBtn.type = 'button';
+    commentsSortModeBtn.setAttribute('aria-label', '切换为热度排序');
+    commentsSortModeBtn.innerHTML = HOTSPOT_COMMENT_TIME_ICON;
+    commentsSortModeBtn.onclick = function () {
+      hotspotCommentSortMode = hotspotCommentSortMode === 'heat' ? 'time' : 'heat';
+      updateHotspotCommentSortButton(section);
+      renderHotspotComments(id, section);
+    };
+    commentsCard.title.appendChild(commentsSortModeBtn);
+
     var commentsSortBtn = document.createElement('button');
     commentsSortBtn.className = 'hotspot-comment-sort';
     commentsSortBtn.type = 'button';
@@ -1665,6 +1635,7 @@
       commentsBody: commentsCard.body,
       commentsBackBtn: commentsBackBtn,
       sortBtn: commentsSortBtn,
+      sortModeBtn: commentsSortModeBtn,
       commentsView: 'overview',
       activeComment: null,
       commentsOverviewScrollTop: 0
@@ -1688,13 +1659,42 @@
   }
 
   var hotspotCommentSortDesc = true;
-  function orderHotspotRows(rows, descending) {
-    var ordered = (rows || []).slice();
-    return descending ? ordered.reverse() : ordered;
+  var hotspotCommentSortMode = 'time';
+  var HOTSPOT_COMMENT_TIME_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg>';
+  var HOTSPOT_COMMENT_HEAT_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>';
+
+  function hotspotCommentReplyCount(comment) {
+    return hotspotCommentsCount(comment && comment.replies);
   }
+
+  function orderHotspotRows(rows, descending, mode) {
+    var ordered = (rows || []).slice();
+    if (mode !== 'heat') return descending ? ordered.reverse() : ordered;
+    return ordered.map(function (comment, index) {
+      return { comment: comment, index: index, heat: hotspotCommentReplyCount(comment) };
+    }).sort(function (a, b) {
+      var heatDiff = descending ? b.heat - a.heat : a.heat - b.heat;
+      if (heatDiff) return heatDiff;
+      return descending ? b.index - a.index : a.index - b.index;
+    }).map(function (entry) {
+      return entry.comment;
+    });
+  }
+
   function updateHotspotCommentSortButton(section) {
-    if (!section || !section._hotspot || !section._hotspot.sortBtn) return;
-    section._hotspot.sortBtn.classList.toggle('is-ascending', !hotspotCommentSortDesc);
+    if (!section || !section._hotspot) return;
+    var hotspot = section._hotspot;
+    var isHeat = hotspotCommentSortMode === 'heat';
+    if (hotspot.sortBtn) {
+      hotspot.sortBtn.classList.toggle('is-ascending', !hotspotCommentSortDesc);
+      hotspot.sortBtn.setAttribute('aria-label', isHeat ? '切换评论热度排序方向' : '切换评论时间排序方向');
+    }
+    if (hotspot.sortModeBtn) {
+      hotspot.sortModeBtn.classList.toggle('is-heat', isHeat);
+      hotspot.sortModeBtn.setAttribute('aria-label', isHeat ? '切换为时间排序' : '切换为热度排序');
+      hotspot.sortModeBtn.setAttribute('aria-pressed', isHeat ? 'true' : 'false');
+      hotspot.sortModeBtn.innerHTML = isHeat ? HOTSPOT_COMMENT_HEAT_ICON : HOTSPOT_COMMENT_TIME_ICON;
+    }
   }
   function hotspotCommentIdentity(comment) {
     comment = comment || {};
@@ -1827,6 +1827,7 @@
 
   function renderHotspotCommentDetail(id, section, comment, keepScrollTop) {
     if (section._hotspot.sortBtn) section._hotspot.sortBtn.hidden = true;
+    if (section._hotspot.sortModeBtn) section._hotspot.sortModeBtn.hidden = true;
     updateHotspotCommentSortButton(section);
     var body = section._hotspot.commentsBody;
     var oldTop = typeof keepScrollTop === 'number' ? keepScrollTop : body.scrollTop;
@@ -1863,6 +1864,7 @@
   function renderHotspotComments(id, section, keepScrollTop) {
     if (!section || !section._hotspot) return;
     if (section._hotspot.sortBtn) section._hotspot.sortBtn.hidden = false;
+    if (section._hotspot.sortModeBtn) section._hotspot.sortModeBtn.hidden = false;
     if (section._hotspot.commentsView === 'detail' && section._hotspot.activeComment) {
       renderHotspotCommentDetail(id, section, section._hotspot.activeComment, keepScrollTop);
       return;
@@ -1880,7 +1882,7 @@
     if (post && post.comments.length) {
       var list = document.createElement('div');
       list.className = 'hotspot-comment-list';
-      orderHotspotRows(dedupeConsecutiveComments(post.comments), hotspotCommentSortDesc).map(function (comment, index) {
+      orderHotspotRows(dedupeConsecutiveComments(post.comments), hotspotCommentSortDesc, hotspotCommentSortMode).map(function (comment, index) {
         return { comment: comment, index: index };
       }).forEach(function (entry) {
         list.appendChild(makeHotspotCommentNode(entry.comment, entry.index, id, state, section));
@@ -5084,14 +5086,15 @@
     applyThemeFromControls(!!persist);
   }
 
-  function applyThemeSettings(dim, blur, level, quality, persist) {
-    dim = Math.max(0, Math.min(100, Number(dim)));
+  function applyThemeSettings(brightness, blur, level, quality, persist) {
+    brightness = Math.max(0, Math.min(100, Number(brightness)));
     blur = Math.max(0, Math.min(24, Number(blur)));
     level = Math.max(0, Math.min(3, Math.round(Number(level))));
     quality = normalizeImageQuality(quality);
-    if (!isFinite(dim)) dim = 35;
+    if (!isFinite(brightness)) brightness = 65;
     if (!isFinite(blur)) blur = 0;
     if (!isFinite(level)) level = 3;
+    var dim = 100 - brightness;
 
     var performanceOn = !!(performanceModeInput && performanceModeInput.checked);
     var nextQualitySignature = qualityCategorySignature();
@@ -5121,9 +5124,9 @@
     root.dataset.imageQualityResources = String(imageQualityCategories.resources);
     root.dataset.imageQualityEmoji = String(imageQualityCategories.emoji);
 
-    wallpaperDimInput.value = String(dim);
+    wallpaperDimInput.value = String(brightness);
     cardBlurInput.value = String(blur);
-    wallpaperDimVal.textContent = dim + '%';
+    wallpaperDimVal.textContent = brightness + '%';
     cardBlurVal.textContent = blur + 'px';
     fxLevelInput.value = String(level);
     fxLevelVal.textContent = level + '级';
@@ -5201,7 +5204,9 @@
       else if (!saved.glow) level = 1;
       else if (!saved.border) level = 2;
     }
-    applyThemeSettings(saved ? saved.dim : 35, saved ? saved.blur : 0, level, quality, false);
+    var brightness = 65;
+    if (saved && Object.prototype.hasOwnProperty.call(saved, 'dim')) brightness = 100 - Number(saved.dim);
+    applyThemeSettings(brightness, saved ? saved.blur : 0, level, quality, false);
   }
 
   function fontOptionById(id) {
@@ -5495,12 +5500,12 @@
     if (minigameModeActive) return;
     minigameModeActive = true;
     minigameThemeSnapshot = {
-      dim: wallpaperDimInput.value,
+      brightness: wallpaperDimInput.value,
       blur: cardBlurInput.value,
       level: fxLevelInput.value,
       quality: imageQualityLevel
     };
-    applyThemeSettings(minigameThemeSnapshot.dim, minigameThemeSnapshot.blur, 0, minigameThemeSnapshot.quality, false);
+    applyThemeSettings(minigameThemeSnapshot.brightness, minigameThemeSnapshot.blur, 0, minigameThemeSnapshot.quality, false);
 
     minigameMusicSnapshot = {
       src: audio.dataset.src || audio.src || musicUrl(LOGOS[state.index]),
@@ -5525,7 +5530,7 @@
     minigameModeActive = false;
     if (minigameThemeSnapshot) {
       applyThemeSettings(
-        minigameThemeSnapshot.dim,
+        minigameThemeSnapshot.brightness,
         minigameThemeSnapshot.blur,
         minigameThemeSnapshot.level,
         minigameThemeSnapshot.quality,
@@ -9596,7 +9601,9 @@
   }
 
   var viewportResizeFrame = 0;
-  window.addEventListener('resize', function () {
+  function syncViewportMetrics() {
+    // 视口变化后重新绑定当前 DPR，防止漏掉后续跨屏切换事件。
+    watchDevicePixelRatio();
     if (viewportResizeFrame) return;
     viewportResizeFrame = requestAnimationFrame(function () {
       viewportResizeFrame = 0;
@@ -9606,8 +9613,46 @@
         moveThumb(navCache[curNavLogo].active, false);
       }
       layoutTopbarIdentity();
-      syncPageSectionDpiScale();
     });
-  }, { passive: true });
+  }
+
+  var dprMediaQuery = null;
+  var dprSettleTimers = [];
+
+  function onDevicePixelRatioChange() {
+    // Chromium 跨不同缩放比例的显示器时，DPR、视口宽度和布局可能分阶段更新。
+    // 立即同步一次，并在布局稳定后再校准，避免跨屏后卡片尺寸停留在旧视口。
+    syncViewportMetrics();
+    dprSettleTimers.forEach(function (timer) { window.clearTimeout(timer); });
+    dprSettleTimers = [80, 320, 800].map(function (delay) {
+      return window.setTimeout(function () {
+        watchDevicePixelRatio();
+        syncViewportMetrics();
+      }, delay);
+    });
+  }
+
+  function watchDevicePixelRatio() {
+    if (!window.matchMedia) return;
+    if (dprMediaQuery) {
+      if (dprMediaQuery.removeEventListener) {
+        dprMediaQuery.removeEventListener('change', onDevicePixelRatioChange);
+      } else if (dprMediaQuery.removeListener) {
+        dprMediaQuery.removeListener(onDevicePixelRatioChange);
+      }
+    }
+    dprMediaQuery = window.matchMedia('(resolution: ' + (window.devicePixelRatio || 1) + 'dppx)');
+    if (dprMediaQuery.addEventListener) {
+      dprMediaQuery.addEventListener('change', onDevicePixelRatioChange);
+    } else if (dprMediaQuery.addListener) {
+      dprMediaQuery.addListener(onDevicePixelRatioChange);
+    }
+  }
+
+  window.addEventListener('resize', syncViewportMetrics, { passive: true });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', syncViewportMetrics, { passive: true });
+  }
+  watchDevicePixelRatio();
   init();
 })();
