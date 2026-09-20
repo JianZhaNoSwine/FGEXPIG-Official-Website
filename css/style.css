@@ -180,8 +180,8 @@ html.ui-hidden .bg-tint {
 .page-section {
   position: absolute;
   top: 0;
-  left: 0;
-  width: 100%;
+  left: 50%;
+  width: calc(var(--home-cards-width) + 32px);
   height: 100%;
   padding: 16px;
   box-sizing: border-box;
@@ -190,6 +190,8 @@ html.ui-hidden .bg-tint {
   justify-content: center;
   grid-template-rows: 1fr;
   gap: var(--card-gap);
+  transform: translateX(-50%);
+  zoom: var(--page-section-dpi-scale, 1);
   overflow: hidden;
   color: var(--text-primary);
   font-size: var(--text-large);
@@ -637,7 +639,7 @@ html.ui-hidden .bg-tint {
 .hotspot-keyword-pill {
   appearance: none; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
   height: 18px; padding: 0 7px; border: 1px solid rgba(255, 255, 255, 0.18); box-sizing: border-box;
-  border-radius: 999px; background: rgba(255, 255, 255, 0.06); color: var(--text-secondary);
+  border-radius: 999px; background: rgba(255, 255, 255, 0.06); color: #fff;
   font: inherit; font-size: var(--text-small); line-height: 1; white-space: nowrap; cursor: pointer;
   transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
@@ -917,11 +919,14 @@ html.ui-hidden .bg-tint {
 .home-achv.r-iridescent {
   --achv-rgb: 218, 246, 255;
   --achv-color: #e9fbff;
+  isolation: isolate;
   overflow: hidden;
+  overflow: clip;
   background-color: rgba(238, 251, 255, 0.04);
 }
 .home-achv.r-iridescent::before {
   content: '';
+  border-radius: inherit;
   position: absolute;
   inset: -140% -55%;
   z-index: 0;
@@ -936,9 +941,8 @@ html.ui-hidden .bg-tint {
     radial-gradient(ellipse 30% 38% at 84% 70%, rgba(255, 227, 109, 0.7) 0%, rgba(255, 227, 109, 0.22) 36%, transparent 74%);
   background-repeat: no-repeat;
   mix-blend-mode: screen;
-  filter: saturate(1.38) blur(0.45px);
+  filter: saturate(1.38);
   transform-origin: center;
-  will-change: transform;
   animation: achv-iridescent 9s ease-in-out infinite alternate;
 }
 @keyframes achv-iridescent {
@@ -946,6 +950,18 @@ html.ui-hidden .bg-tint {
   to   { transform: translate3d(6%, 10%, 0) rotate(4deg) scale(1.12); }
 }
 .home-achv > * { position: relative; z-index: 1; }
+.home-achv:last-child::after {
+  content: '';
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  bottom: 1px;
+  z-index: 0;
+  height: 0;
+  border-bottom: 1px solid rgba(var(--achv-rgb), 0.64);
+  border-radius: 0 0 9px 9px;
+  pointer-events: none;
+}
 .home-achv-icon {
   width: var(--icon-size);
   height: var(--icon-size);
@@ -1558,6 +1574,28 @@ html.pause-menu-open .tb-avatar-level { display: none; }
   visibility: visible;
   pointer-events: auto;
 }
+.pause-site-value {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + clamp(16px, 3vh, 32px));
+  right: var(--pause-side-padding);
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  width: max-content;
+  font-size: var(--text-large);
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  pointer-events: none;
+}
+.pause-site-value-item {
+  white-space: nowrap;
+}
+.pause-site-value-item.is-visits { color: #fff; }
+.pause-site-value-item.is-value { color: var(--accent-pink); }
+.pause-menu.is-subpage-open .pause-site-value { display: none; }
 .pause-menu .pause-menu-inner {
   grid-column: 1;
   width: 100%;
@@ -4079,6 +4117,10 @@ body.minigame-open { overflow: hidden; }
     grid-column: 1;
     grid-row: 1;
     height: auto;
+  }
+  .pause-site-value {
+    top: calc(env(safe-area-inset-top, 0px) + 24px);
+    right: 24px;
   }
   .pause-menu-ads {
     grid-column: 1;

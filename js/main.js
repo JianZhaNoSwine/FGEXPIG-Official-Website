@@ -365,11 +365,52 @@
 
   var centerWidthFrame = 0;
   var centerWidthReady = false;
+  var pageSectionDpiScaleFrame = 0;
+
+  function syncPageSectionDpiScale() {
+    var sections = Array.prototype.slice.call(document.querySelectorAll('.page-section'));
+    if (!sections.length) return;
+    var sample = null;
+    var sampleCards = null;
+    for (var i = 0; i < sections.length; i++) {
+      var cards = Array.prototype.slice.call(sections[i].children).filter(function (child) {
+        return child.classList && child.classList.contains('section-card');
+      });
+      if (cards.length === 3) {
+        sample = sections[i];
+        sampleCards = cards;
+        break;
+      }
+    }
+    if (!sample || !sampleCards) return;
+
+    var gap = parseFloat(getComputedStyle(sample).columnGap) || 0;
+    var designWidth = 32 + gap * (sampleCards.length - 1);
+    sampleCards.forEach(function (card) {
+      designWidth += card.offsetWidth || 0;
+    });
+    if (!(designWidth > 0)) return;
+
+    // 仅留 2px 绘制缓冲，保持与之前一致的贴边对齐效果。
+    var availableWidth = Math.max(0, window.innerWidth - 4);
+    var scale = Math.min(1, availableWidth / designWidth);
+    if (!isFinite(scale) || !(scale > 0)) scale = 1;
+    document.documentElement.style.setProperty('--page-section-dpi-scale', scale.toFixed(4));
+  }
+
+  function schedulePageSectionDpiScale() {
+    if (pageSectionDpiScaleFrame) return;
+    pageSectionDpiScaleFrame = requestAnimationFrame(function () {
+      pageSectionDpiScaleFrame = 0;
+      syncPageSectionDpiScale();
+    });
+  }
 
   function setCenterCardWidth(width) {
     document.documentElement.style.setProperty('--center-card-width', width.toFixed(2) + 'px');
     // 窗口缩放时中间卡片宽度有过渡；顶栏左右端必须跟随每一帧，避免停留在旧视口位置。
     layoutTopbarEdges();
+    schedulePageSectionDpiScale();
   }
 
   // 第 2~6 张底栏卡片的最终视觉跨度：5.16 张基础卡宽 + 4 个间距
@@ -9565,6 +9606,7 @@
         moveThumb(navCache[curNavLogo].active, false);
       }
       layoutTopbarIdentity();
+      syncPageSectionDpiScale();
     });
   }, { passive: true });
   init();
