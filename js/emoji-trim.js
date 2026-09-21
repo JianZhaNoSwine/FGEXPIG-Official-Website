@@ -64,22 +64,9 @@
     }) && bounds[2] > 0 && bounds[3] > 0;
   }
 
-  function isFullCanvas(bounds) {
-    return bounds[0] === 0 && bounds[1] === 0 && bounds[2] === 1 && bounds[3] === 1;
-  }
-
   function apply(area, bounds) {
     if (!area || !validBounds(bounds)) return false;
-    if (isFullCanvas(bounds)) {
-      area.classList.remove('is-alpha-trimmed');
-      area.style.removeProperty('--emoji-aspect');
-      area.style.removeProperty('--emoji-image-width');
-      area.style.removeProperty('--emoji-image-height');
-      area.style.removeProperty('--emoji-image-left');
-      area.style.removeProperty('--emoji-image-top');
-      return false;
-    }
-
+    // 即使素材本身没有透明边缘，也使用显式尺寸，确保小尺寸整图能够放大到统一显示大小。
     var x = bounds[0];
     var y = bounds[1];
     var width = bounds[2];

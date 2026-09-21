@@ -334,7 +334,8 @@ html.ui-hidden .bg-tint {
 .home-info-grid { display: grid; grid-template-columns: auto 1fr; column-gap: 14px; row-gap: 0; font-size: var(--text-large); line-height: 20px; }
 .home-info-grid dt { color: var(--text-secondary); }
 .home-info-grid dd { color: var(--text-primary); margin: 0; overflow-wrap: anywhere; }
-.home-tags { display: flex; flex-wrap: wrap; align-items: center; width: fit-content; max-width: 100%; gap: 6px; margin-top: 8px; }.home-detail .home-tags { margin-top: 0; }
+.home-tags { display: flex; flex-wrap: wrap; align-items: center; width: fit-content; max-width: 100%; gap: 6px; margin-top: 8px; }
+.home-detail .home-tags { margin-top: 0; }
 .home-tag {
   display: inline-block; width: fit-content; max-width: 100%; padding: 2px 10px; border-radius: 6px; box-sizing: border-box;
   background: rgba(255, 255, 255, 0.14); color: var(--text-secondary); font-size: var(--text-small); overflow-wrap: anywhere;
@@ -1144,6 +1145,15 @@ html.ui-hidden .bg-tint {
   -webkit-text-fill-color: transparent;
   animation: title-topbar-flow 6s linear infinite;
 }
+/* P1 / P2 特殊称号：仅列表展示，统一使用绿色。 */
+.tb-ribbon.t-lv-p1, .title-badge.t-lv-p1,
+.tb-ribbon.t-lv-p2, .title-badge.t-lv-p2 {
+  color: #4fc878;
+  background-image: none;
+  -webkit-text-fill-color: #4fc878;
+  animation: none;
+}
+
 @keyframes title-topbar-flow {
   from { background-position: 0% 50%; }
   to   { background-position: 100% 50%; }
@@ -2364,6 +2374,12 @@ html.has-card-blur .pause-menu .settings-page .font-item {
 .pause-menu.open .pause-ad-slot:nth-child(1) { animation-delay: 0.08s; }
 .pause-menu.open .pause-ad-slot:nth-child(2) { animation-delay: 0.15s; }
 .pause-menu.open .pause-ad-slot:nth-child(3) { animation-delay: 0.22s; }
+.pause-menu.open .pause-site-value-item.is-visits {
+  animation: pause-control-in-right 0.46s var(--ease-out) 0.04s backwards;
+}
+.pause-menu.open .pause-site-value-item.is-value {
+  animation: pause-control-in-right 0.46s var(--ease-out) 0.10s backwards;
+}
 .pause-menu.open .settings-topnav {
   animation: pause-control-in-top 0.42s var(--ease-out) backwards;
 }
@@ -2699,6 +2715,13 @@ html.pause-settings-open .tb-left {
   word-break: break-word;
 }
 /* 选中：称号项使用圆角胶囊描边，不给文字加矩形边框 */
+.title-item.is-locked {
+  cursor: default;
+  opacity: 1;
+}
+.title-item.is-locked:hover {
+  background: transparent;
+}
 .title-item.is-selected,
 .title-item.is-selected:hover {
   border-radius: 999px;
@@ -2777,11 +2800,19 @@ html.pause-settings-open .tb-left {
   font-variant-numeric: tabular-nums;
 }
 .theme-range {
+  --range-progress: 0%;
   width: 100%;
   height: 4px;
   appearance: none;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.22);
+  background:
+    linear-gradient(
+      to right,
+      #fff 0,
+      #fff var(--range-progress),
+      rgba(255, 255, 255, 0.22) var(--range-progress),
+      rgba(255, 255, 255, 0.22) 100%
+    );
   outline: none;
 }
 .theme-range::-webkit-slider-thumb {

@@ -3463,9 +3463,9 @@
       if (unit === EMOJI_STICKER_SENTINEL) total += 10;
       else if (/^\s+$/u.test(unit)) continue;
       else total += LARGE_TEXT_GRAPHEME_RE.test(unit) ? 4 : 2;
-      if (total >= 50) return 50;
+      if (total >= 100) return 100;
     }
-    return Math.min(50, total);
+    return Math.min(100, total);
   }
 
   function hotspotExperienceForUser(name) {
@@ -3491,6 +3491,35 @@
     return total;
   }
 
+  function normalizeTitleLevel(value) {
+    var raw = String(value == null ? '' : value).trim().toUpperCase();
+    if (raw === 'P1' || raw === 'P2') return raw;
+    var level = parseInt(raw, 10);
+    if (!isFinite(level)) return 1;
+    return Math.max(1, Math.min(6, level));
+  }
+
+  function isSpecialTitleLevel(level) {
+    var value = String(level == null ? '' : level).trim().toUpperCase();
+    return value === 'P1' || value === 'P2';
+  }
+
+  function titleExperienceValue(level) {
+    if (level === 'P1') return 3000;
+    if (level === 'P2') return 2000;
+    return Number(level || 0) * 100;
+  }
+
+  function normalizeTitleRecord(title) {
+    var source = title || {};
+    var raw = String(source.raw || '').trim();
+    var match = raw.match(/^\[([^\]]+)\]/);
+    var level = normalizeTitleLevel(match ? match[1] : source.lv);
+    var text = String(source.text == null ? '' : source.text).trim();
+    if (!text && raw) text = raw.replace(/^\[[^\]]+\]\s*/, '').trim();
+    return { lv: level, text: text, raw: '[' + level + ']' + text };
+  }
+
   function ownedItemExperienceCount(name) {
     var record = libraryRecordFor(name);
     if (!record) return 0;
@@ -3504,16 +3533,16 @@
   }
 
   function titleExperienceForUser(name) {
-    var list = (titleStore.titles && titleStore.titles[name]) || [];
+    var list = titlesOf(name);
     var seen = {};
     var total = 0;
     list.forEach(function (title) {
       if (!title) return;
-      var level = Math.max(1, Math.min(6, parseInt(title.lv, 10) || 1));
+      var level = normalizeTitleLevel(title.lv);
       var key = level + '\u0000' + String(title.text || '').trim().toLowerCase();
       if (seen[key]) return;
       seen[key] = true;
-      total += level * 100;
+      total += titleExperienceValue(level);
     });
     return total;
   }
@@ -3805,12 +3834,14 @@
       var list = [];
       parts.slice(1).forEach(function (seg) {
         if (!seg) return;
-        var m = seg.match(/^\[(\d+)\]\s*(.*)$/);
+        var m = seg.match(/^\[([Pp][12]|\d+)\]\s*(.*)$/);
         if (m) {
+          var level = normalizeTitleLevel(m[1]);
+          var titleText = m[2].trim();
           list.push({
-            lv: Math.max(1, Math.min(6, parseInt(m[1], 10))),
-            text: m[2],
-            raw: '[' + m[1] + ']' + m[2]
+            lv: level,
+            text: titleText,
+            raw: '[' + level + ']' + titleText
           });
         }
       });
@@ -3841,6 +3872,12 @@
 
   function applyTitleData() {
     var meta = document.getElementById('titleMeta');
+    if (titleStore && titleStore.titles) {
+      Object.keys(titleStore.titles).forEach(function (nick) {
+        var list = titleStore.titles[nick];
+        if (Array.isArray(list)) titleStore.titles[nick] = list.map(normalizeTitleRecord);
+      });
+    }
     var n = Object.keys(titleStore.titles || {}).length;
     if (meta) meta.textContent = n ? ('已加载 ' + n + ' 个成员称号') : '未加载';
     applyUserTitle();
@@ -3911,15 +3948,16 @@
   }
 
   function titlesOf(nick) {
-    return (titleStore.titles && titleStore.titles[nick]) || [];
+    var list = titleStore && titleStore.titles && titleStore.titles[nick];
+    return Array.isArray(list) ? list.map(normalizeTitleRecord) : [];
   }
   // 默认称号：等级最高者；同级有多个时取列表中靠后的
   function defaultTitle(nick) {
     var list = titlesOf(nick);
-    if (!list.length) return null;
-    var best = list[0];
-    for (var i = 1; i < list.length; i++) {
-      if (list[i].lv >= best.lv) best = list[i];
+    var best = null;
+    for (var i = 0; i < list.length; i++) {
+      if (isSpecialTitleLevel(list[i].lv)) continue;
+      if (!best || list[i].lv >= best.lv) best = list[i];
     }
     return best;
   }
@@ -3929,7 +3967,7 @@
     var raw = titleSelMap[nick];
     if (raw) {
       for (var i = 0; i < list.length; i++) {
-        if (list[i].raw === raw) return list[i];
+        if (list[i].raw === raw && !isSpecialTitleLevel(list[i].lv)) return list[i];
       }
     }
     return defaultTitle(nick);
@@ -4838,6 +4876,18 @@
     }
   };
 
+  function syncSettingsRangeFill(input) {
+    if (!input || input.type !== 'range') return;
+    var min = Number(input.min);
+    var max = Number(input.max);
+    var value = Number(input.value);
+    if (!isFinite(min)) min = 0;
+    if (!isFinite(max) || max === min) max = min + 1;
+    if (!isFinite(value)) value = min;
+    var ratio = Math.max(0, Math.min(1, (value - min) / (max - min)));
+    input.style.setProperty('--range-progress', (ratio * 100).toFixed(3) + '%');
+  }
+
   function normalizeAudioVolume(value) {
     var number = Number(value);
     if (!isFinite(number)) return 1;
@@ -4855,6 +4905,8 @@
     if (minigameVolumeInput) minigameVolumeInput.value = String(Math.round(audioSettings.minigameVolume * 100));
     if (mainVolumeVal) mainVolumeVal.textContent = Math.round(audioSettings.mainVolume * 100) + '%';
     if (minigameVolumeVal) minigameVolumeVal.textContent = Math.round(audioSettings.minigameVolume * 100) + '%';
+    syncSettingsRangeFill(mainVolumeInput);
+    syncSettingsRangeFill(minigameVolumeInput);
     if (persist) {
       try {
         localStorage.setItem(AUDIO_KEY, JSON.stringify({
@@ -5135,6 +5187,9 @@
     if (performanceModeVal) performanceModeVal.textContent = performanceOn ? '开启' : '关闭';
     if (imageQualityInput) imageQualityInput.value = String(imageQualityLevel);
     if (imageQualityVal) imageQualityVal.textContent = qualityLabel(imageQualityLevel);
+    syncSettingsRangeFill(wallpaperDimInput);
+    syncSettingsRangeFill(cardBlurInput);
+    syncSettingsRangeFill(fxLevelInput);
     renderQualityControls();
 
     if (qualityChanged && track && track.children.length) {
@@ -5359,27 +5414,42 @@
       return;
     }
 
-    // 排序：高等级在上；同等级越靠文件后部（越新）越在上
+    // 正常称号优先；P1、P2 放在正常称号后面，并保持数据中的原始顺序。
+    function titleSortRank(title) {
+      if (isSpecialTitleLevel(title.lv)) return 0;
+      return 10 + Number(title.lv || 0);
+    }
     var ordered = list.map(function (t, i) { return { t: t, i: i }; })
       .sort(function (a, b) {
-        return b.t.lv - a.t.lv || b.i - a.i;
+        var rankDiff = titleSortRank(b.t) - titleSortRank(a.t);
+        if (rankDiff) return rankDiff;
+        if (isSpecialTitleLevel(a.t.lv) && isSpecialTitleLevel(b.t.lv)) return b.i - a.i;
+        return b.i - a.i;
       });
 
     ordered.forEach(function (entry) {
       var t = entry.t;
+      var special = isSpecialTitleLevel(t.lv);
+      var levelClass = String(t.lv).toLowerCase();
       var item = document.createElement('button');
       item.type = 'button';
-      item.className = 'title-item' + (t.lv === 5 ? ' title-item-lv-5' : '') + (t.raw === titlePendingRaw ? ' is-selected' : '');
+      item.className = 'title-item' + (t.lv === 5 ? ' title-item-lv-5' : '') +
+        (special ? ' title-item-special is-locked' : '') +
+        (t.raw === titlePendingRaw ? ' is-selected' : '');
+      if (special) {
+        item.disabled = true;
+        item.setAttribute('aria-disabled', 'true');
+      }
 
       var badge = document.createElement('span');
-      badge.className = 'title-badge t-lv-' + t.lv;
+      badge.className = 'title-badge t-lv-' + levelClass;
       badge.textContent = formatTitleText(t.text);
 
       item.appendChild(badge);
-      item.addEventListener('click', function () {
+      if (!special) item.addEventListener('click', function () {
         titlePendingRaw = t.raw;
-        titleSelectionIndex = Array.prototype.indexOf.call(titleListEl.querySelectorAll('.title-item'), item);
-        var items = titleListEl.querySelectorAll('.title-item');
+        titleSelectionIndex = titleItems().indexOf(item);
+        var items = titleItems();
         for (var i = 0; i < items.length; i++) {
           items[i].classList.toggle('is-selected', items[i] === item);
         }
@@ -5400,7 +5470,7 @@
   }
 
   function titleItems() {
-    return titleListEl ? Array.prototype.slice.call(titleListEl.querySelectorAll('.title-item')) : [];
+    return titleListEl ? Array.prototype.slice.call(titleListEl.querySelectorAll('.title-item:not(.is-locked)')) : [];
   }
   function resetTitleSelection() {
     var items = titleItems();
