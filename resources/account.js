@@ -76,7 +76,7 @@
       "nick": "掉线",
       "user": "fgexpig013",
       "pass": "diaoxian",
-      "media": ""
+      "media": "RTF"
     },
     {
       "nick": "脆",

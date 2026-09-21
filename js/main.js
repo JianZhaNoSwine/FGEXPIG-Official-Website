@@ -6754,7 +6754,26 @@
   var reviewStore = { reviews: {} };
   var reviewFetchPromises = {};
 
+  // 测评正文里的少量转义：\n 换行、\t 制表符、\\ 反斜杠（与热点内容的写法一致）
+  // 想保留字面量就写 \\n，这样不会变成换行
+  function decodeReviewEscapes(value) {
+    var text = String(value == null ? '' : value);
+    if (text.indexOf('\\') < 0) return text;
+    var result = '';
+    for (var i = 0; i < text.length; i += 1) {
+      var ch = text.charAt(i);
+      if (ch !== '\\') { result += ch; continue; }
+      var next = text.charAt(i + 1);
+      if (next === 'n') { result += '\n'; i += 1; continue; }
+      if (next === 't') { result += '\t'; i += 1; continue; }
+      if (next === '\\') { result += '\\'; i += 1; continue; }
+      result += ch;
+    }
+    return result;
+  }
+
   // 每行「机构名：分数，测评文本」或「机构名，分数，测评文本」
+  // 正文里写 \n 就是换行（TXT 一行一条，所以多行正文只能这样写）
   function parseReviewTxt(text) {
     var rows = [];
     String(text).split(/\r?\n/).forEach(function (line) {
@@ -6770,7 +6789,7 @@
       var score, reviewText;
       if (sep2 >= 0) {
         score = rest.slice(0, sep2).trim();
-        reviewText = rest.slice(sep2 + 1).trim();
+        reviewText = decodeReviewEscapes(rest.slice(sep2 + 1)).trim();
       } else {
         score = rest;
         reviewText = '';
@@ -6840,6 +6859,19 @@
   function reviewTextOf(review) {
     var text = String(review && review.text !== undefined && review.text !== null ? review.text : '').trim();
     return text === '无' ? '' : text;
+  }
+
+  // 段落字数（按汉字计）：1 个汉字/全角字符 = 1，字母、数字等半角字符 = 0.5
+  // 也就是题目里的「1 汉字 = 2 字母」
+  function reviewParagraphWeight(text) {
+    var units = graphemesOf(String(text == null ? '' : text));
+    var total = 0;
+    for (var i = 0; i < units.length; i += 1) {
+      var unit = units[i];
+      if (/^\s+$/u.test(unit)) continue;
+      total += LARGE_TEXT_GRAPHEME_RE.test(unit) ? 1 : 0.5;
+    }
+    return total;
   }
 
   function reviewStats(reviews) {
@@ -9346,7 +9378,23 @@
         view.appendChild(head);
         var text = document.createElement('div');
         text.className = 'review-detail-text';
-        text.textContent = reviewTextOf(review) || '暂无评测内容';
+        var body = reviewTextOf(review) || '暂无评测内容';
+        // 首行缩进条件：段落数 ≥ 2，且至少有一段 ≥ 120 个汉字（1 汉字 = 2 字母）
+        // 不满足时按原样显示（换行仍然保留，只是不缩进）
+        var paragraphs = body.split('\n').map(function (line) { return String(line).replace(/\r$/, ''); });
+        var filledParagraphs = paragraphs.filter(function (line) { return line.trim() !== ''; });
+        var hasLongParagraph = filledParagraphs.some(function (line) { return reviewParagraphWeight(line) >= 120; });
+        if (filledParagraphs.length >= 2 && hasLongParagraph) {
+          text.classList.add('is-paragraphs');
+          paragraphs.forEach(function (line) {
+            var p = document.createElement('div');
+            p.className = 'review-detail-paragraph' + (line.trim() === '' ? ' is-blank' : '');
+            p.textContent = line;
+            text.appendChild(p);
+          });
+        } else {
+          text.textContent = body;
+        }
         view.appendChild(text);
         return view;
       }

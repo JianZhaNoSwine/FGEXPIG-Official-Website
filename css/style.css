@@ -596,6 +596,15 @@ html.ui-hidden .bg-tint {
   margin-top: 16px; color: var(--text-primary);
   font-size: var(--text-large); line-height: 20px; white-space: pre-wrap; overflow-wrap: anywhere;
 }
+/* 两段及以上的测评：每段首行缩进 2 个字符 */
+.review-detail-text.is-paragraphs .review-detail-paragraph {
+  text-indent: 2em;
+}
+/* 空行保留原来的行高，段与段之间的空行不会被吃掉 */
+.review-detail-text.is-paragraphs .review-detail-paragraph.is-blank {
+  height: 20px;
+  text-indent: 0;
+}
 /* 热点：标题 / 内容 / 评论 */
 .hotspot-section { --hotspot-line-height: 20px; }
 .hotspot-section .section-card-title { line-height: var(--hotspot-line-height); }
