@@ -18,6 +18,10 @@
   // 中心两侧各显示的槽位数
   var SIDE_SLOTS = 3;
 
+  // 站点名：网页标题默认值，并作为各活动页标题的后缀（便于搜索引擎分别收录各活动）
+  var SITE_NAME = '糖豆人探索の主宰';
+  var SITE_DESCRIPTION = '糖豆人探索の主宰官方网站：收录 2026 糖豆人拜年纪、奥林PIG运动会、煎炸镇步行街等活动的预告、说明、成就、日程、测评与实绩资料。';
+
   var IMAGE_QUALITY_MIN = 1;
   var IMAGE_QUALITY_MAX = 5;
   var imageQualityLevel = 1;
@@ -332,7 +336,7 @@
     for (var k = 0; k < pages.length; k++) {
       pages[k].classList.toggle('active', k === state.index);
     }
-    document.title = activityTitle(cur);
+    applyPageMeta(cur);
     updateStartupLogo(cur);
     try { history.replaceState(null, '', '#' + cur); } catch (e) {}
     buildNav(cur);
@@ -3042,7 +3046,7 @@
     for (var k = 0; k < pages.length; k++) {
       pages[k].classList.toggle('active', k === i);
     }
-    document.title = activityTitle(name);
+    applyPageMeta(name);
 
     // render 可能在 items 为空等极端情况下抛错，用 try-catch 保护后续逻辑
     try { render(); } catch (err) {}
@@ -6563,6 +6567,33 @@
     return info && info.name ? info.name : id;
   }
 
+  // 网页标题：活动数据未知时用站点名，已知时用「活动名 - 站点名」
+  function pageTitle(id) {
+    var name = activityTitle(id);
+    if (!name || name === id || name === SITE_NAME) return SITE_NAME;
+    return name + ' - ' + SITE_NAME;
+  }
+
+  // 网页描述：活动数据已知时带上活动名，便于搜索引擎生成摘要
+  function pageDescription(id) {
+    var info = infoOf(id);
+    var name = info && info.name ? info.name : '';
+    return name ? (name + '（' + SITE_NAME + '）：活动预告、说明、成就、日程、测评与实绩资料。') : SITE_DESCRIPTION;
+  }
+
+  // 同步 <title> 与 description / og:title / og:description
+  function applyPageMeta(id) {
+    var title = pageTitle(id);
+    var desc = pageDescription(id);
+    document.title = title;
+    var metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.setAttribute('content', desc);
+    var ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle) ogTitle.setAttribute('content', title);
+    var ogDesc = document.querySelector('meta[property="og:description"]');
+    if (ogDesc) ogDesc.setAttribute('content', desc);
+  }
+
   /* ---------- 测评数据：resources/<id>/review.txt（机构名：分数，测评文本） ---------- */
   var REVIEW_KEY = 'fgexpig_reviews_v1';
   var REVIEW_MAGIC = 'FGEXPIG-REVIEW-BACKUP';
@@ -7600,6 +7631,8 @@
         : '未加载';
     }
     syncDockWithData();
+    // 核心数据到位后按真实活动名刷新标题/描述（列表未变化时 syncDockWithData 会提前返回）
+    applyPageMeta(LOGOS[state.index]);
     refreshPlayerMedia();
   }
 
@@ -9659,7 +9692,7 @@
     for (var k = 0; k < pages.length; k++) {
       pages[k].classList.toggle('active', k === initial);
     }
-    document.title = activityTitle(LOGOS[initial]);
+    applyPageMeta(LOGOS[initial]);
     try { history.replaceState(null, '', '#' + LOGOS[initial]); } catch (err) {}
 
     buildNav(LOGOS[initial]);
@@ -9724,5 +9757,15 @@
     window.visualViewport.addEventListener('resize', syncViewportMetrics, { passive: true });
   }
   watchDevicePixelRatio();
+
+  // hash 直链 / 浏览器前进后退：切换活动并同步网页标题（搜索引擎按 #活动ID 收录时也生效）
+  window.addEventListener('hashchange', function () {
+    var id = hashActivityId();
+    var idx = LOGOS.indexOf(id);
+    if (idx < 0) return;
+    if (idx !== state.index || state.offset !== 0) select(idx);
+    else applyPageMeta(id);
+  });
+
   init();
 })();
