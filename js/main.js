@@ -3536,11 +3536,107 @@
     return Object.keys(seen).length;
   }
 
-  function titleExperienceForUser(name) {
-    var list = titlesOf(name);
+  /* ---------- 成就型称号：由网站数据实时计算，无需导入任何数据文件 ----------
+     每组 6 档，恰好对应称号等级 1~6（[1]青铜 … [6]幻彩）；
+     数据变化后重新计算，达标即自动获得，未达标不发放。 */
+  var ACHIEVEMENT_TITLE_GROUPS = [
+    {
+      id: 'level',
+      name: '老登等级榜',
+      tiers: [
+        { text: '初来乍到', need: 5 },
+        { text: '小试牛刀', need: 10 },
+        { text: '崭露头角', need: 20 },
+        { text: '老当益壮', need: 30 },
+        { text: '登峰造极', need: 40 },
+        { text: '傲视群雄', need: 50 }
+      ]
+    },
+    {
+      id: 'value',
+      name: '全勤价值榜',
+      tiers: [
+        { text: '白手起家', need: 10 },
+        { text: '积少成多', need: 20 },
+        { text: '日进斗金', need: 40 },
+        { text: '富甲一方', need: 60 },
+        { text: '腰缠万贯', need: 80 },
+        { text: '富可敌国', need: 100 }
+      ]
+    },
+    {
+      id: 'comment',
+      name: '水军发言榜',
+      tiers: [
+        { text: '潜水摸鱼', need: 5000 },
+        { text: '侃侃而谈', need: 10000 },
+        { text: '滔滔不绝', need: 20000 },
+        { text: '口若悬河', need: 30000 },
+        { text: '覆水难收', need: 40000 },
+        { text: '龙王驾到', need: 50000 }
+      ]
+    }
+  ];
+
+  // 第 1 档 = [1]，第 6 档 = [6]
+  function achievementTitleLevel(index) {
+    return Math.max(1, Math.min(6, Number(index) + 1));
+  }
+
+  // 按当前数值挑出已达成的那几档
+  function achievementTitleRecords(state) {
+    var list = [];
+    ACHIEVEMENT_TITLE_GROUPS.forEach(function (group) {
+      var current = Number(state[group.id]) || 0;
+      group.tiers.forEach(function (tier, index) {
+        if (current + 1e-9 < tier.need) return;
+        var lv = achievementTitleLevel(index);
+        list.push({ lv: lv, text: tier.text, raw: '[' + lv + ']' + tier.text });
+      });
+    });
+    return list;
+  }
+
+  // 某个用户的成就数值与已达成称号。
+  // 等级榜看的是等级，而成就称号本身也加经验，所以多算几轮直到不再变化。
+  function achievementStateForUser(nick) {
+    var name = String(nick == null ? '' : nick);
+    var state = { level: 1, value: 0, comment: 0, earned: [] };
+    if (!name) return state;
+
+    var importedKeys = {};
+    importedTitlesOf(name).forEach(function (title) {
+      importedKeys[title.lv + '\u0000' + String(title.text || '').trim().toLowerCase()] = true;
+    });
+
+    var baseExp = baseExperienceForUser(name);
+    state.value = accountValueForUser(name);
+    state.comment = hotspotCharacterCountForUser(name);
+
+    var earned = [];
+    for (var pass = 0; pass < 8; pass += 1) {
+      // 与导入称号重名的成就称号不重复加经验
+      var extraExp = titleExperienceSum(earned.filter(function (title) {
+        return !importedKeys[title.lv + '\u0000' + String(title.text || '').trim().toLowerCase()];
+      }));
+      state.level = userLevelMetrics(baseExp + extraExp).level;
+      var next = achievementTitleRecords(state);
+      if (next.length === earned.length) break;
+      earned = next;
+    }
+    state.earned = earned;
+    return state;
+  }
+
+  // 当前已获得的成就称号（字段与普通称号完全一样，直接混进称号列表）
+  function earnedAchievementTitles(nick) {
+    return achievementStateForUser(nick).earned;
+  }
+
+  function titleExperienceSum(list) {
     var seen = {};
     var total = 0;
-    list.forEach(function (title) {
+    (list || []).forEach(function (title) {
       if (!title) return;
       var level = normalizeTitleLevel(title.lv);
       var key = level + '\u0000' + String(title.text || '').trim().toLowerCase();
@@ -3549,6 +3645,16 @@
       total += titleExperienceValue(level);
     });
     return total;
+  }
+
+  // 只统计导入的称号（成就型称号另外算，避免两边互相调用）
+  function importedTitleExperienceForUser(name) {
+    return titleExperienceSum(importedTitlesOf(name));
+  }
+
+  // 全部称号（导入 + 成就型）带来的经验
+  function titleExperienceForUser(name) {
+    return titleExperienceSum(titlesOf(name));
   }
 
   function userLevelTierClass(level) {
@@ -3606,6 +3712,14 @@
     return Number(value || 0).toLocaleString('en-US');
   }
 
+  // 不含成就型称号的基础经验（成就称号由当前数据实时算出，计入总量时另加）
+  function baseExperienceForUser(name) {
+    var hotspotExp = hotspotExperienceForUser(name);
+    var inventoryExp = ownedItemExperienceCount(name) * 100;
+    return hotspotExp + inventoryExp + importedTitleExperienceForUser(name);
+  }
+
+  // 用户总经验 = 评论 + 库存 + 全部称号（含成就型称号）
   function totalExperienceForUser(name) {
     var hotspotExp = hotspotExperienceForUser(name);
     var inventoryExp = ownedItemExperienceCount(name) * 100;
@@ -3630,6 +3744,8 @@
     }
     setUserExpRing(metrics.ratio);
     schedulePauseLeaderboardRender();
+    // 数据变化后成就型称号可能新增，称号页开着时同步刷新
+    if (titleListEl && currentSidebarPanel === 'titles') renderTitleList();
   }
 
   var startupLandingShown = false;
@@ -3951,9 +4067,14 @@
       .replace(/([A-Za-z0-9])([\u3400-\u9FFF])/g, '$1\u2009$2');
   }
 
-  function titlesOf(nick) {
+  // 导入的称号（resources/title.txt 或数据管理导入）
+  function importedTitlesOf(nick) {
     var list = titleStore && titleStore.titles && titleStore.titles[nick];
     return Array.isArray(list) ? list.map(normalizeTitleRecord) : [];
+  }
+  // 全部可用称号 = 导入称号 + 成就型称号（成就型由网站数据实时算出，不写入数据文件）
+  function titlesOf(nick) {
+    return importedTitlesOf(nick).concat(earnedAchievementTitles(nick));
   }
   // 默认称号：等级最高者；同级有多个时取列表中靠后的
   function defaultTitle(nick) {
@@ -4445,17 +4566,19 @@
     sidebarRight.classList.remove('open');
     if (sidebarLeft) sidebarLeft.classList.remove('open');
     sidebarMask.classList.remove('show');
-    resetSidebarPanel();
+    sidebarPanelOrigin = 'menu';
+    resetSidebarPanelCore();
     setPauseMenuOpen(true);
   }
   function closeSidebars() {
+    sidebarPanelOrigin = 'menu';
     var replayHomeAnimation = !!(pauseMenu && pauseMenu.classList.contains('open'));
     if (replayHomeAnimation) playInterfaceAnimation(true);
     setPauseMenuOpen(false);
     sidebarRight.classList.remove('open');
     if (sidebarLeft) sidebarLeft.classList.remove('open');
     sidebarMask.classList.remove('show');
-    resetSidebarPanel();
+    resetSidebarPanelCore();
   }
 
   var HOTSPOT_CONSOLE_EMOJI_NAMES = (function () {
@@ -4789,6 +4912,9 @@
   var minigameVolumeVal = document.getElementById('minigameVolumeVal');
   var titlePendingRaw = null; // 称号页当前选中项
   var currentSidebarPanel = 'menu';
+  // 二级页的来源：'menu' = 从暂停菜单进的，'home' = 从首页顶栏快捷入口进的
+  // 返回时按来源回到对应位置
+  var sidebarPanelOrigin = 'menu';
 
   var THEME_KEY = 'fgexpig_theme_v1';
   var FONT_KEY = 'fgexpig_font_v1';
@@ -4947,7 +5073,17 @@
     document.documentElement.classList.toggle('pause-settings-open', which === 'settings');
     invalidateCursorTargetCache();
   }
+  // 二级页“返回”：从首页进来的直接回首页，从暂停菜单进来的回暂停菜单
   function resetSidebarPanel() {
+    if (sidebarPanelOrigin === 'home') {
+      closeSidebars();
+      return;
+    }
+    resetSidebarPanelCore();
+  }
+
+  // 只把侧栏面板复位到主菜单（不改变来源，供关闭侧栏时直接调用）
+  function resetSidebarPanelCore() {
     var previous = currentSidebarPanel;
     showSidebarPanel('menu');
     if (previous === 'settings') resetSettingsStickAcceleration();
@@ -5408,6 +5544,7 @@
 
   function renderTitleList() {
     titleListEl.innerHTML = '';
+    // 成就型称号已经混在 titlesOf 里，按普通称号一样排序显示：只显示已获得的
     var list = titlesOf(user.name);
 
     if (!list.length) {
@@ -5674,6 +5811,23 @@
   });
 
   userMenuBtn.addEventListener('click', function () { openSidebar('left'); });
+
+  // 顶栏文字快捷入口：用户名 → 切换账号；称号 → 切换称号；音乐名 → 设置页的音频
+  // 记下来源为首页，这些二级页按“返回”时直接回首页
+  function openTopbarShortcutPanel(openPanel) {
+    openSidebar('left');
+    sidebarPanelOrigin = 'home';
+    openPanel();
+  }
+  if (userPillNameEl) userPillNameEl.addEventListener('click', function () {
+    openTopbarShortcutPanel(openAccountPanel);
+  });
+  if (userTitleEl) userTitleEl.addEventListener('click', function () {
+    openTopbarShortcutPanel(openTitlePanel);
+  });
+  if (playerName) playerName.addEventListener('click', function () {
+    openTopbarShortcutPanel(function () { openSettingsPanel('audio'); });
+  });
   editBtn.addEventListener('click', function () {
     dmActiveCat = 'all';
     renderDmCats();
@@ -6960,6 +7114,7 @@
       meta.textContent = total ? ('已加载 ' + total + ' 个活动商店') : '未加载';
     }
     schedulePauseLeaderboardRender();
+    refreshUserExperience();
   }
 
   function exportShopData() {

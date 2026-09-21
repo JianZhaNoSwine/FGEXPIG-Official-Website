@@ -1092,6 +1092,18 @@ html.ui-hidden .bg-tint {
 /* 无称号时隐藏顶栏称号 */
 .tb-ribbon.is-hidden { display: none; }
 
+/* 顶栏可点文字：用户名（切换账号） / 称号（切换称号） / 音乐名（音频设置） */
+#userPillName,
+#userTitle,
+#playerName {
+  cursor: pointer;
+}
+#userPillName:hover,
+#playerName:hover {
+  color: #fff;
+}
+/* 顶栏称号悬停不做变暗/变色处理，保持原样 */
+
 /* 称号等级配色：顶栏与侧栏预览共用同一套文字效果 */
 /* 等级顺序统一：1 青铜 / 2 白银 / 3 黄金 / 4 铂金 / 5 紫金 / 6 幻彩 */
 .tb-ribbon.t-lv-1, .title-badge.t-lv-1 { color: #f0ad78; }
@@ -1839,7 +1851,8 @@ html.pause-menu-open .account-page input { cursor: text !important; }
   width: 100%;
   max-width: 100%;
   max-height: 100%;
-  padding: 0;
+  /* 顶部留出“返回”按钮条的高度、底部留白：避免最上/最下的称号被压住点不到 */
+  padding: 62px 10px 34px;
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
