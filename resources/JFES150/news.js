@@ -565,7 +565,7 @@
                 "replies": [
                   {
                     "name": "咖啡豆",
-                    "text": "Tellmewhy",
+                    "text": "\\Tellmewhy",
                     "replies": []
                   },
                   {

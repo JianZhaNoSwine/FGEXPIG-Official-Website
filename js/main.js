@@ -122,6 +122,12 @@
   var pagesWrap = document.getElementById('pages');
   var bgA = document.getElementById('bgA');
   var bgB = document.getElementById('bgB');
+  var innerActivityButton = document.getElementById('innerActivityButton');
+  var innerActivityButtonImg = document.getElementById('innerActivityButtonImg');
+  var outerActivityButton = document.getElementById('outerActivityButton');
+  var outerActivityButtonImg = document.getElementById('outerActivityButtonImg');
+  var innerActivityPicker = document.getElementById('innerActivityPicker');
+  var innerActivityTrack = document.getElementById('innerActivityTrack');
 
   /* ---------- 状态 ---------- */
   var state = {
@@ -301,6 +307,218 @@
     invalidateCursorTargetCache();
   }
 
+  /* ---------- 内屏活动选择页 ---------- */
+  var innerPickerItems = [];
+  var innerPickerPosition = 0;
+  var innerPickerDrag = null;
+  var innerPickerSnapTimer = 0;
+  var innerPickerAnimFrame = 0;
+  var innerPickerMoving = false;
+  var innerPickerIgnoreClickUntil = 0;
+
+  function innerPickerStep() {
+    var item = innerPickerItems[0];
+    return (item ? item.offsetHeight : 58) + 18;
+  }
+
+  function clampInnerPickerPosition(value) {
+    return Math.max(0, Math.min(innerPickerItems.length - 1, value));
+  }
+
+  function renderInnerActivityPicker() {
+    if (!innerActivityTrack || !innerPickerItems.length) return;
+    var step = innerPickerStep();
+    innerPickerItems.forEach(function (item, index) {
+      var distance = index - innerPickerPosition;
+      var abs = Math.abs(distance);
+      var scale = Math.max(1, 1.16 - Math.min(1, abs) * 0.16);
+      var opacity = Math.max(0.12, 1 - abs * 0.24);
+      item.style.transform = 'translate(-50%, -50%) translate3d(0,' + (distance * step).toFixed(2) + 'px,0) scale(' + scale.toFixed(3) + ')';
+      item.style.opacity = opacity.toFixed(3);
+      item.style.zIndex = String(100 - Math.round(abs * 10));
+      item.classList.toggle('is-centered', !innerPickerMoving && abs < 0.16);
+    });
+  }
+
+  function animateInnerPickerTo(target) {
+    if (innerPickerAnimFrame) cancelAnimationFrame(innerPickerAnimFrame);
+    innerPickerMoving = true;
+    var start = innerPickerPosition;
+    var end = clampInnerPickerPosition(target);
+    var started = 0;
+    function frame(now) {
+      if (!started) started = now;
+      var progress = Math.min(1, (now - started) / 220);
+      var eased = 1 - Math.pow(1 - progress, 3);
+      innerPickerPosition = start + (end - start) * eased;
+      renderInnerActivityPicker();
+      if (progress < 1) innerPickerAnimFrame = requestAnimationFrame(frame);
+      else {
+        innerPickerAnimFrame = 0;
+        innerPickerMoving = false;
+        renderInnerActivityPicker();
+      }
+    }
+    innerPickerAnimFrame = requestAnimationFrame(frame);
+  }
+
+  function scheduleInnerPickerSnap() {
+    if (innerPickerSnapTimer) clearTimeout(innerPickerSnapTimer);
+    innerPickerSnapTimer = setTimeout(function () {
+      innerPickerSnapTimer = 0;
+      animateInnerPickerTo(Math.round(innerPickerPosition));
+    }, 120);
+  }
+
+  function buildInnerActivityPicker() {
+    if (!innerActivityTrack) return;
+    var ids = activityIds().slice();
+    innerActivityTrack.innerHTML = '';
+    innerPickerItems = [];
+    ids.forEach(function (id, index) {
+      var item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'inner-activity-picker-item';
+      item.dataset.index = String(index);
+      item.setAttribute('aria-label', activityTitle(id));
+      var img = document.createElement('img');
+      img.alt = activityTitle(id);
+      img.draggable = false;
+      item.appendChild(img);
+      bindResponsiveAsset(img, 'logo/' + id + '.png');
+      innerActivityTrack.appendChild(item);
+      innerPickerItems.push(item);
+    });
+    innerPickerPosition = Math.max(0, Math.min(ids.length - 1, state.index));
+    innerPickerMoving = false;
+    requestAnimationFrame(renderInnerActivityPicker);
+    renderInnerActivityPicker();
+  }
+
+  function openInnerActivityPicker() {
+    if (!innerActivityPicker) return;
+    buildInnerActivityPicker();
+    innerActivityPicker.classList.add('open');
+    innerActivityPicker.setAttribute('aria-hidden', 'false');
+    document.documentElement.classList.add('inner-picker-open');
+    requestAnimationFrame(renderInnerActivityPicker);
+  }
+
+  function closeInnerActivityPicker() {
+    if (!innerActivityPicker) return;
+    innerActivityPicker.classList.remove('open');
+    innerActivityPicker.setAttribute('aria-hidden', 'true');
+    document.documentElement.classList.remove('inner-picker-open');
+  }
+
+  function syncInnerActivityButton(logo) {
+    var id = logo || LOGOS[state.index];
+    if (!id) return;
+    var title = activityTitle(id);
+    if (innerActivityButton && innerActivityButtonImg) {
+      innerActivityButtonImg.alt = title;
+      innerActivityButton.setAttribute('aria-label', '选择活动：' + title);
+      bindResponsiveAsset(innerActivityButtonImg, 'logo/' + id + '.png');
+    }
+    if (outerActivityButton && outerActivityButtonImg) {
+      outerActivityButtonImg.alt = title;
+      outerActivityButton.setAttribute('aria-label', '选择活动：' + title);
+      bindResponsiveAsset(outerActivityButtonImg, 'logo/' + id + '.png');
+    }
+  }
+
+  function initInnerActivityPicker() {
+    if (!innerActivityPicker || !innerActivityTrack) return;
+    if (innerActivityButton && innerActivityButton.dataset.ready !== '1') {
+      innerActivityButton.dataset.ready = '1';
+      innerActivityButton.addEventListener('click', openInnerActivityPicker);
+    }
+    if (outerActivityButton && outerActivityButton.dataset.ready !== '1') {
+      outerActivityButton.dataset.ready = '1';
+      outerActivityButton.addEventListener('click', openInnerActivityPicker);
+    }
+    innerActivityPicker.addEventListener('click', function (e) {
+      if (e.target === innerActivityPicker) closeInnerActivityPicker();
+    });
+    innerActivityTrack.addEventListener('pointerdown', function (e) {
+      if (e.button && e.button !== 0) return;
+      if (innerPickerAnimFrame) { cancelAnimationFrame(innerPickerAnimFrame); innerPickerAnimFrame = 0; }
+      if (innerPickerSnapTimer) { clearTimeout(innerPickerSnapTimer); innerPickerSnapTimer = 0; }
+      innerPickerIgnoreClickUntil = 0;
+      innerPickerDrag = {
+        startY: e.clientY,
+        startPosition: innerPickerPosition,
+        moved: false,
+        pointerId: e.pointerId,
+        step: Math.max(1, innerPickerStep())
+      };
+      innerPickerMoving = true;
+      renderInnerActivityPicker();
+      innerActivityTrack.classList.add('pressing');
+      try { innerActivityTrack.setPointerCapture(e.pointerId); } catch (err) {}
+    });
+    innerActivityTrack.addEventListener('pointermove', function (e) {
+      if (!innerPickerDrag) return;
+      var dy = e.clientY - innerPickerDrag.startY;
+      if (!innerPickerDrag.moved && Math.abs(dy) < 3) return;
+      innerPickerDrag.moved = true;
+      if (e.cancelable) e.preventDefault();
+      var nextPosition = clampInnerPickerPosition(innerPickerDrag.startPosition - dy / innerPickerDrag.step);
+      if (Math.abs(nextPosition - innerPickerPosition) < 0.001) return;
+      innerPickerPosition = nextPosition;
+      renderInnerActivityPicker();
+    });
+    function endPickerDrag() {
+      if (!innerPickerDrag) return;
+      var drag = innerPickerDrag;
+      innerPickerDrag = null;
+      try { innerActivityTrack.releasePointerCapture(drag.pointerId); } catch (err2) {}
+      innerActivityTrack.classList.remove('pressing');
+      var moved = drag.moved;
+      if (moved) {
+        innerPickerIgnoreClickUntil = performance.now() + 120;
+        animateInnerPickerTo(Math.round(innerPickerPosition));
+      } else {
+        innerPickerMoving = false;
+        renderInnerActivityPicker();
+      }
+    }
+    innerActivityTrack.addEventListener('pointerup', endPickerDrag);
+    innerActivityTrack.addEventListener('pointercancel', endPickerDrag);
+    innerActivityTrack.addEventListener('lostpointercapture', endPickerDrag);
+    innerActivityTrack.addEventListener('click', function (e) {
+      var item = e.target.closest ? e.target.closest('.inner-activity-picker-item') : null;
+      if (!item && e.clientX != null && e.clientY != null) {
+        var hit = document.elementFromPoint(e.clientX, e.clientY);
+        item = hit && hit.closest ? hit.closest('.inner-activity-picker-item') : null;
+      }
+      if (!item) return;
+      if (performance.now() < innerPickerIgnoreClickUntil) { innerPickerIgnoreClickUntil = 0; return; }
+      var index = Number(item.dataset.index);
+      if (Math.abs(innerPickerPosition - index) > 0.05) {
+        animateInnerPickerTo(index);
+        return;
+      }
+      select(index);
+      closeInnerActivityPicker();
+    });
+    innerActivityTrack.addEventListener('wheel', function (e) {
+      if (!innerActivityPicker.classList.contains('open')) return;
+      e.preventDefault();
+      innerPickerMoving = true;
+      innerPickerPosition = clampInnerPickerPosition(innerPickerPosition + e.deltaY / innerPickerStep());
+      renderInnerActivityPicker();
+      scheduleInnerPickerSnap();
+    }, { passive: false });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && innerActivityPicker.classList.contains('open')) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeInnerActivityPicker();
+      }
+    }, true);
+    window.addEventListener('resize', renderInnerActivityPicker);
+  }
   // 统一取槽位元素：j<0 为开头占位，j>=活动数 为结尾占位
   function slotElAt(j) {
     if (j < 0) return prePh[-1 - j];
@@ -438,6 +656,33 @@
 
   var portraitLayoutActive = false;
   var portraitLayoutReady = false;
+  var innerScreenLayoutActive = false;
+  var innerScreenLayoutReady = false;
+  var outerScreenLayoutActive = false;
+  var outerScreenLayoutReady = false;
+
+  // 折叠屏内屏分界：小于底栏第 1~7 张卡片的完整视觉跨度 + 2 个卡片间距。
+  function shouldUseInnerScreenLayout() {
+    if (!items.length) return false;
+    readSlotSize();
+    var cardW = parseFloat(getComputedStyle(items[0]).width);
+    if (!isFinite(cardW) || cardW <= 0) cardW = items[0].offsetWidth || slotSize;
+    var gap = slotSize - cardW;
+    if (!(gap > 0)) gap = 10;
+    var firstToSeventh = (6 + CENTER_SCALE) * cardW + 6 * gap;
+    var viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+    return viewportWidth < firstToSeventh + 2 * gap;
+  }
+
+  // 外屏分界：内屏时顶部导航左边界与右列卡片左边界对齐的位置。
+  function shouldUseOuterScreenLayout() {
+    var viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+    var rootStyle = getComputedStyle(document.documentElement);
+    var gap = parseFloat(rootStyle.getPropertyValue('--card-gap')) || 10;
+    var navWidth = 224;
+    var rightColumnLeft = 16 + (viewportWidth - 32 - gap) / 3 + gap;
+    return viewportWidth / 2 - navWidth / 2 < rightColumnLeft;
+  }
 
   // 正屏分界：右侧自适应列小于底栏一张未选中卡片宽度的 2 倍时，切换为两列布局。
   function shouldUsePortraitLayout() {
@@ -455,17 +700,43 @@
   }
 
   function updateResponsiveLayoutMode() {
-    var nextPortrait = shouldUsePortraitLayout();
-    if (portraitLayoutReady && nextPortrait === portraitLayoutActive) return;
+    var nextOuterScreen = shouldUseOuterScreenLayout();
+    var nextInnerScreen = shouldUseInnerScreenLayout() || nextOuterScreen;
+    var nextPortrait = nextInnerScreen || shouldUsePortraitLayout();
+    if (
+      innerScreenLayoutReady && nextInnerScreen === innerScreenLayoutActive &&
+      portraitLayoutReady && nextPortrait === portraitLayoutActive &&
+      outerScreenLayoutReady && nextOuterScreen === outerScreenLayoutActive
+    ) return;
+    innerScreenLayoutReady = true;
     portraitLayoutReady = true;
+    outerScreenLayoutReady = true;
+    innerScreenLayoutActive = nextInnerScreen;
     portraitLayoutActive = nextPortrait;
+    outerScreenLayoutActive = nextOuterScreen;
+    document.documentElement.classList.toggle('inner-screen-layout', nextInnerScreen);
     document.documentElement.classList.toggle('portrait-layout', nextPortrait);
+    document.documentElement.classList.toggle('outer-screen-layout', nextOuterScreen);
+    if (!nextOuterScreen) {
+      var outerStateSections = document.querySelectorAll('.outer-show-viewer, .outer-show-secondary');
+      for (var outerStateIndex = 0; outerStateIndex < outerStateSections.length; outerStateIndex++) {
+        outerStateSections[outerStateIndex].classList.remove('outer-show-viewer', 'outer-show-secondary');
+      }
+    } else {
+      var outerFilesSections = document.querySelectorAll('.files-section');
+      for (var outerFilesIndex = 0; outerFilesIndex < outerFilesSections.length; outerFilesIndex++) {
+        outerFilesSections[outerFilesIndex].classList.remove('portrait-show-schedule');
+      }
+    }
+    if (!nextInnerScreen && innerActivityPicker && innerActivityPicker.classList.contains('open')) closeInnerActivityPicker();
     if (nextPortrait) {
       var cards = document.querySelectorAll('.section-card');
       for (var i = 0; i < cards.length; i++) cards[i].style.removeProperty('width');
     }
     var section = pagesWrap ? pagesWrap.querySelector('.page.active .page-section.active') : null;
     scheduleSectionCardSnap(section || document);
+    syncLiquidGlassRenderer(true);
+    requestAnimationFrame(function () { syncLiquidGlassRenderer(true); });
   }
 
   function render() {
@@ -628,6 +899,7 @@
   function settleActiveSectionCards() {
     var section = pagesWrap ? pagesWrap.querySelector('.page.active .page-section.active') : null;
     scheduleSectionCardSnap(section || document);
+    syncLiquidGlassRenderer(true);
   }
 
   // 卡片被重建或页面被清空时，主动释放观察器和动画帧，避免分离 DOM 被长期持有。
@@ -1556,6 +1828,18 @@
     return { card: card, title: titleEl, body: body };
   }
 
+  function makeOuterBackButton(onBack, label) {
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'achv-detail-back achv-title-back outer-secondary-back';
+    button.setAttribute('aria-label', label || '返回列表');
+    button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M20 12H4M12 4l-8 8 8 8"/></svg>';
+    button.onclick = function () {
+      if (typeof onBack === 'function') onBack();
+    };
+    return button;
+  }
+
   function enableHotspotKeywordScroll(scroller) {
     if (!scroller) return;
     var drag = null;
@@ -1771,6 +2055,12 @@
       renderHotspotComments(id, section);
     };
     commentsCard.title.appendChild(commentsSortBtn);
+    contentCard.title.appendChild(makeOuterBackButton(function () {
+      section.classList.remove('outer-show-secondary');
+    }, '返回标题列表'));
+    commentsCard.title.appendChild(makeOuterBackButton(function () {
+      section.classList.remove('outer-show-secondary');
+    }, '返回标题列表'));
 
     var searchWrap = document.createElement('div');
     searchWrap.className = 'hotspot-search-wrap';
@@ -2146,6 +2436,12 @@
               resetHotspotCommentsView(section);
             }
             renderHotspotSection(id, section);
+            if (document.documentElement.classList.contains('outer-screen-layout')) {
+              section._hotspot.portraitView = 'content';
+              section.classList.remove('portrait-show-comments');
+              updateHotspotPortraitTabs(section);
+              section.classList.add('outer-show-secondary');
+            }
           };
           section._hotspot.postList.appendChild(item);
         });
@@ -2544,6 +2840,8 @@
     var tx = 0;
     var ty = 0;
     var drag = null;
+    var pointers = Object.create(null);
+    var pinch = null;
 
     function applyTransform() {
       image.style.transform = 'translate3d(' + tx.toFixed(2) + 'px,' + ty.toFixed(2) + 'px,0) scale(' + scale.toFixed(4) + ')';
@@ -2560,6 +2858,64 @@
       var maxY = Math.max(0, (scaledHeight - viewportHeight) / 2);
       tx = Math.max(-maxX, Math.min(maxX, tx));
       ty = Math.max(-maxY, Math.min(maxY, ty));
+    }
+
+    function pointerList() {
+      var list = [];
+      for (var id in pointers) {
+        if (Object.prototype.hasOwnProperty.call(pointers, id)) list.push(pointers[id]);
+      }
+      return list;
+    }
+
+    function pointerCount() {
+      return pointerList().length;
+    }
+
+    function beginPinch() {
+      var points = pointerList();
+      if (points.length < 2) return;
+      var a = points[0];
+      var b = points[1];
+      var dx = b.x - a.x;
+      var dy = b.y - a.y;
+      var distance = Math.sqrt(dx * dx + dy * dy);
+      if (distance < 1) return;
+      var rect = viewer.getBoundingClientRect();
+      pinch = {
+        startDistance: distance,
+        startScale: scale,
+        startTx: tx,
+        startTy: ty,
+        startMidX: (a.x + b.x) / 2 - (rect.left + rect.width / 2),
+        startMidY: (a.y + b.y) / 2 - (rect.top + rect.height / 2)
+      };
+      drag = null;
+      viewer.classList.remove('is-pressing', 'is-dragging');
+      viewer.classList.add('is-pinching');
+    }
+
+    function updatePinch() {
+      if (!pinch) return;
+      var points = pointerList();
+      if (points.length < 2) return;
+      var a = points[0];
+      var b = points[1];
+      var dx = b.x - a.x;
+      var dy = b.y - a.y;
+      var distance = Math.sqrt(dx * dx + dy * dy);
+      if (distance < 1) return;
+      var rect = viewer.getBoundingClientRect();
+      var midX = (a.x + b.x) / 2 - (rect.left + rect.width / 2);
+      var midY = (a.y + b.y) / 2 - (rect.top + rect.height / 2);
+      var nextScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, pinch.startScale * distance / pinch.startDistance));
+      var localX = (pinch.startMidX - pinch.startTx) / pinch.startScale;
+      var localY = (pinch.startMidY - pinch.startTy) / pinch.startScale;
+      scale = nextScale;
+      tx = midX - localX * scale;
+      ty = midY - localY * scale;
+      clampTranslation(scale);
+      applyTransform();
     }
 
     viewer.addEventListener('wheel', function (event) {
@@ -2586,6 +2942,17 @@
 
     viewer.addEventListener('pointerdown', function (event) {
       if (event.pointerType === 'mouse' && event.button !== 0) return;
+      pointers[event.pointerId] = {
+        id: event.pointerId,
+        x: event.clientX,
+        y: event.clientY,
+        pointerType: event.pointerType || ''
+      };
+      try { viewer.setPointerCapture(event.pointerId); } catch (err) {}
+      if (event.pointerType !== 'mouse' && pointerCount() >= 2) {
+        beginPinch();
+        return;
+      }
       drag = {
         pointerId: event.pointerId,
         startX: event.clientX,
@@ -2595,10 +2962,22 @@
         moved: false
       };
       viewer.classList.add('is-pressing');
-      try { viewer.setPointerCapture(event.pointerId); } catch (err) {}
     });
 
     viewer.addEventListener('pointermove', function (event) {
+      var pointer = pointers[event.pointerId];
+      if (!pointer) return;
+      pointer.x = event.clientX;
+      pointer.y = event.clientY;
+
+      if (pinch) {
+        if (pointerCount() >= 2) {
+          event.preventDefault();
+          updatePinch();
+        }
+        return;
+      }
+
       if (!drag || drag.pointerId !== event.pointerId) return;
       var dx = event.clientX - drag.startX;
       var dy = event.clientY - drag.startY;
@@ -2614,20 +2993,38 @@
       applyTransform();
     });
 
-    function endViewerDrag(event) {
-      if (!drag || (event.pointerId != null && drag.pointerId !== event.pointerId)) return;
-      try {
-        if (viewer.hasPointerCapture && viewer.hasPointerCapture(drag.pointerId)) {
-          viewer.releasePointerCapture(drag.pointerId);
-        }
-      } catch (err) {}
-      drag = null;
-      viewer.classList.remove('is-pressing', 'is-dragging');
+    function endViewerPointer(event) {
+      if (event && event.pointerId != null) delete pointers[event.pointerId];
+      if (pinch && pointerCount() < 2) {
+        pinch = null;
+        viewer.classList.remove('is-pinching');
+      }
+      if (drag && (!event || event.pointerId == null || drag.pointerId === event.pointerId)) {
+        try {
+          if (viewer.hasPointerCapture && viewer.hasPointerCapture(drag.pointerId)) {
+            viewer.releasePointerCapture(drag.pointerId);
+          }
+        } catch (err) {}
+        drag = null;
+        viewer.classList.remove('is-pressing', 'is-dragging');
+      }
+      if (!drag && !pinch && pointerCount() === 1 && (!event || event.pointerType !== 'mouse')) {
+        var remaining = pointerList()[0];
+        drag = {
+          pointerId: remaining.id,
+          startX: remaining.x,
+          startY: remaining.y,
+          startTx: tx,
+          startTy: ty,
+          moved: false
+        };
+        viewer.classList.add('is-pressing');
+      }
     }
 
-    viewer.addEventListener('pointerup', endViewerDrag);
-    viewer.addEventListener('pointercancel', endViewerDrag);
-    viewer.addEventListener('lostpointercapture', endViewerDrag);
+    viewer.addEventListener('pointerup', endViewerPointer);
+    viewer.addEventListener('pointercancel', endViewerPointer);
+    viewer.addEventListener('lostpointercapture', endViewerPointer);
     viewer.addEventListener('contextmenu', function (event) { event.preventDefault(); });
     viewer.addEventListener('dblclick', function (event) {
       event.preventDefault();
@@ -2852,7 +3249,15 @@
     var selected = (state.items || []).filter(function (item) {
       return item.file === file;
     })[0] || null;
-    renderResourceViewer(id, section, selected, true);
+    var outerViewer = document.documentElement.classList.contains('outer-screen-layout');
+    renderResourceViewer(id, section, selected, !outerViewer);
+    if (outerViewer) {
+      section.classList.add('outer-show-viewer');
+      if (section._files && section._files.viewerBody) {
+        section._files.viewerBody.scrollTop = 0;
+        requestAnimationFrame(function () { animateCardBody(section._files.viewerBody, 0); });
+      }
+    }
   }
 
   function renderFilesPage(id, section) {
@@ -2961,6 +3366,10 @@
     var browseCard = makeHotspotCard('浏览', 'files-browse-card');
     var viewerCard = makeHotspotCard('观赏', 'files-viewer-card');
     var scheduleCard = makeHotspotCard('日程', 'files-schedule-card', false);
+    viewerCard.title.appendChild(makeOuterBackButton(function () {
+      section.classList.remove('outer-show-viewer');
+      requestAnimationFrame(function () { animateCardBody(browseCard.body, 0); });
+    }, '返回浏览卡片'));
     browseCard.title.appendChild(makeFilesPortraitPageButton(section));
     scheduleCard.title.appendChild(makeFilesPortraitPageButton(section));
     section.appendChild(browseCard.card);
@@ -3051,9 +3460,161 @@
   var thumbX = 0;        // 白色滑动胶囊当前 translateX
   var thumbW = 0;        // 白色滑动胶囊当前宽
   var navDrag = null;    // 导航拖动状态
+  var navThumbAnimFrame = 0;
+  var navColorOverlay = null;
+  var navColorItems = [];
+
+  // 液体玻璃高光跟随指针移动；仅内屏模式的样式会使用这两个变量。
+  function updateNavGlassPointer(e) {
+    var rect = navEl.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    var x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+    var y = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
+    navEl.style.setProperty('--glass-pointer-x', (x / rect.width * 100).toFixed(2) + '%');
+    navEl.style.setProperty('--glass-pointer-y', (y / rect.height * 100).toFixed(2) + '%');
+    liquidGlassPointer.x = x;
+    liquidGlassPointer.y = y;
+    liquidGlassPointer.active = true;
+    scheduleLiquidGlassRender();
+  }
+  navEl.addEventListener('pointermove', updateNavGlassPointer);
+  navEl.addEventListener('pointerleave', function () {
+    navEl.style.setProperty('--glass-pointer-x', '50%');
+    navEl.style.setProperty('--glass-pointer-y', '50%');
+    liquidGlassPointer.active = false;
+    scheduleLiquidGlassRender();
+  });
+  function clearNavLabelMask(label) {
+    if (!label) return;
+    label.style.webkitMaskImage = '';
+    label.style.maskImage = '';
+    label.style.webkitMaskRepeat = '';
+    label.style.maskRepeat = '';
+    label.style.webkitMaskSize = '';
+    label.style.maskSize = '';
+  }
+
+  function clearNavColorMasks() {
+    for (var i = 0; i < navColorItems.length; i++) {
+      clearNavLabelMask(navColorItems[i].label);
+    }
+  }
+
+  function syncNavColorOverlay() {
+    if (!navColorOverlay || !navEl) return;
+    var navRect = navEl.getBoundingClientRect();
+    var scale = liquidGlass ? 1 + 0.392 * liquidGlass.press : 1;
+    var left = thumbX - (thumbW * (scale - 1) * 0.5);
+    var top = 4 - (28 * (scale - 1) * 0.5);
+    var width = thumbW * scale;
+    var height = 28 * scale;
+    navColorOverlay.style.left = left.toFixed(2) + "px";
+    navColorOverlay.style.top = top.toFixed(2) + "px";
+    navColorOverlay.style.width = width.toFixed(2) + "px";
+    navColorOverlay.style.height = height.toFixed(2) + "px";
+    for (var i = 0; i < navColorItems.length; i++) {
+      var item = navColorItems[i];
+      var rect = item.button.getBoundingClientRect();
+      item.copy.style.left = (rect.left - navRect.left - left).toFixed(2) + "px";
+      item.copy.style.top = "50%";
+      item.copy.style.transform = "translateY(-50%)";
+      var labelRect = item.label.getBoundingClientRect();
+      var capsuleLeft = navRect.left + left;
+      var capsuleRight = capsuleLeft + width;
+      if (labelRect.right <= capsuleLeft - 2 || labelRect.left >= capsuleRight + 2) {
+        clearNavLabelMask(item.label);
+        continue;
+      }
+      var maskX = (navRect.left + left + width * 0.5) - labelRect.left;
+      var maskY = (navRect.top + top + height * 0.5) - labelRect.top;
+      var maskRx = width * 0.5 + 4;
+      var maskRy = height * 0.5 + 4;
+      var maskImage = "radial-gradient(ellipse " + maskRx.toFixed(2) + "px " + maskRy.toFixed(2) + "px at " + maskX.toFixed(2) + "px " + maskY.toFixed(2) + "px, transparent 0 98%, #000 100%)";
+      item.label.style.webkitMaskImage = maskImage;
+      item.label.style.maskImage = maskImage;
+      item.label.style.webkitMaskRepeat = "no-repeat";
+      item.label.style.maskRepeat = "no-repeat";
+      item.label.style.webkitMaskSize = "100% 100%";
+      item.label.style.maskSize = "100% 100%";
+    }
+  }
+
+
+  function buildNavColorOverlay(buttons) {
+    navColorOverlay = document.createElement("div");
+    navColorOverlay.className = "topnav-color-overlay";
+    navColorOverlay.setAttribute("aria-hidden", "true");
+    navColorItems = [];
+    var navRect = navEl.getBoundingClientRect();
+    for (var i = 0; i < buttons.length; i++) {
+      var btn = buttons[i];
+      var label = btn.querySelector(".topnav-item-label");
+      if (!label) continue;
+      var rect = btn.getBoundingClientRect();
+      var style = getComputedStyle(label);
+      var copy = document.createElement("span");
+      copy.className = "topnav-color-label";
+      copy.textContent = label.textContent;
+      copy.style.left = (rect.left - navRect.left) + "px";
+      copy.style.top = (rect.top - navRect.top) + "px";
+      copy.style.width = rect.width + "px";
+      copy.style.height = rect.height + "px";
+      copy.style.fontFamily = style.fontFamily;
+      copy.style.fontSize = style.fontSize;
+      copy.style.fontWeight = style.fontWeight;
+      copy.style.lineHeight = style.lineHeight;
+      navColorOverlay.appendChild(copy);
+      navColorItems.push({ button: btn, label: label, copy: copy });
+    }
+    navEl.appendChild(navColorOverlay);
+    syncNavColorOverlay();
+    requestAnimationFrame(syncNavColorOverlay);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(syncNavColorOverlay);
+  }
+
 
   function navItems() {
     return navEl.querySelectorAll('.topnav-item');
+  }
+
+  function innerNavThumbWidth(btns) {
+    var width = 54;
+    for (var i = 0; i < btns.length; i++) {
+      width = Math.max(width, Math.round(btns[i].offsetWidth));
+    }
+    return width;
+  }
+
+  function applyNavThumbPosition() {
+    var thumb = navEl.querySelector('.topnav-thumb');
+    if (!thumb) return;
+    thumb.style.width = thumbW + 'px';
+    thumb.style.transform = 'translateX(' + thumbX + 'px) scale(var(--glass-thumb-scale, 1))';
+    scheduleLiquidGlassRender();
+    syncNavColorOverlay();
+  }
+
+  function animateNavThumbTo(targetX, targetW) {
+    if (navThumbAnimFrame) cancelAnimationFrame(navThumbAnimFrame);
+    navEl.classList.add('nav-thumb-animating');
+    var startX = thumbX;
+    thumbW = targetW;
+    var started = 0;
+    navThumbAnimFrame = requestAnimationFrame(function frame(now) {
+      if (!started) started = now;
+      var progress = Math.min(1, (now - started) / 380);
+      var eased = 1 - Math.pow(1 - progress, 3);
+      thumbX = startX + (targetX - startX) * eased;
+      applyNavThumbPosition();
+      if (progress < 1) {
+        navThumbAnimFrame = requestAnimationFrame(frame);
+      } else {
+        navThumbAnimFrame = 0;
+        thumbX = targetX;
+        navEl.classList.remove('nav-thumb-animating');
+        applyNavThumbPosition();
+      }
+    });
   }
 
   // 将选中短指示条移动到目标项目
@@ -3064,11 +3625,23 @@
     for (var i = 0; i < btns.length; i++) {
       if (btns[i].dataset.key === key) {
         // 选中层与当前项目等宽，短指示条始终居中于文字
-        thumbW = Math.max(54, Math.round(btns[i].offsetWidth));
-        thumbX = Math.round(btns[i].offsetLeft + btns[i].offsetWidth / 2 - thumbW / 2);
+        var nextW = innerScreenLayoutActive
+          ? innerNavThumbWidth(btns)
+          : Math.max(54, Math.round(btns[i].offsetWidth));
+        var nextX = Math.round(btns[i].offsetLeft + btns[i].offsetWidth / 2 - nextW / 2);
+        if (animate && innerScreenLayoutActive && liquidGlass) {
+          animateNavThumbTo(nextX, nextW);
+          break;
+        }
+        if (navThumbAnimFrame) {
+          cancelAnimationFrame(navThumbAnimFrame);
+          navThumbAnimFrame = 0;
+        }
+        navEl.classList.remove('nav-thumb-animating');
+        thumbW = nextW;
+        thumbX = nextX;
         if (!animate) thumb.classList.add('no-anim');
-        thumb.style.width = thumbW + 'px';
-        thumb.style.transform = 'translateX(' + thumbX + 'px)';
+        applyNavThumbPosition();
         if (!animate) {
           void thumb.offsetWidth; // 强制应用后再恢复过渡
           thumb.classList.remove('no-anim');
@@ -3138,6 +3711,12 @@
     if (!data || !data.items.length) {
       navEl.classList.add('empty');
       navEl.innerHTML = '';
+      if (liquidGlassCanvas) liquidGlassCanvas.remove();
+      liquidGlassCanvas = null;
+      liquidGlass = null;
+      navColorOverlay = null;
+      liquidGlassFailed = false;
+      navEl.classList.remove('liquid-glass-ready');
       curNavLogo = null;
       return;
     }
@@ -3145,9 +3724,11 @@
     ensureSections(logo);
     curNavLogo = logo;
     navEl.classList.remove('empty');
+    navEl.classList.remove('liquid-glass-ready');
     navEl.innerHTML = '';
+    liquidGlassCanvas = ensureLiquidGlassCanvas();
 
-    // 独立滑动选中层：仅保留底部短指示条
+    // 独立滑动选中层：仅作为命中范围和阴影载体，玻璃本体由 WebGL 着色器绘制。
     var thumb = document.createElement('div');
     thumb.className = 'topnav-thumb no-anim';
     var inner = document.createElement('div');
@@ -3177,14 +3758,19 @@
       })(data.items[i][0], data.items[i][1]);
     }
 
+    buildNavColorOverlay(Array.prototype.slice.call(navEl.querySelectorAll('.topnav-item')));
+
     // 初始定位选中短指示条（无动画）并显示默认子页
     moveThumb(data.active, false);
     showSection(logo, data.active);
+    syncLiquidGlassRenderer(true);
   }
 
   /* 顶部导航交互：轻点切换（下划线滑动过去），按住左右拖动（下划线跟手，松手吸附最近项） */
   navEl.addEventListener('pointerdown', function (e) {
     if (!curNavLogo) return;
+    if (navThumbAnimFrame) { cancelAnimationFrame(navThumbAnimFrame); navThumbAnimFrame = 0; }
+    navEl.classList.remove('nav-thumb-animating');
     var btn = e.target.closest ? e.target.closest('.topnav-item') : null;
     var data = navCache[curNavLogo];
     navDrag = {
@@ -3196,6 +3782,7 @@
       pointerId: e.pointerId
     };
     navEl.classList.add('pressing'); // 长按反馈：选中层轻微变淡
+    scheduleLiquidGlassRender();
     try { navEl.setPointerCapture(e.pointerId); } catch (err) {}
   });
 
@@ -3220,7 +3807,9 @@
 
     thumbX = Math.max(min, Math.min(max, navDrag.startTX + dx));
     var thumb = navEl.querySelector('.topnav-thumb');
-    thumb.style.transform = 'translateX(' + thumbX.toFixed(2) + 'px)';
+    thumb.style.transform = 'translateX(' + thumbX.toFixed(2) + 'px) scale(var(--glass-thumb-scale, 1))';
+    scheduleLiquidGlassRender();
+    syncNavColorOverlay();
 
     // 选中层中心覆盖到哪项即实时标记哪项（松手时正式选中）
     var hit = hitKeyAt(thumbX + thumbW / 2);
@@ -3239,6 +3828,7 @@
       try { navEl.releasePointerCapture(navDrag.pointerId); } catch (err) {}
     }
     navEl.classList.remove('pressing', 'dragging');
+    scheduleLiquidGlassRender();
 
     if (navDrag.moved) {
       selectNav(nearestNavKey(thumbX + thumbW / 2), true);
@@ -3249,6 +3839,479 @@
   }
   navEl.addEventListener('pointerup', endNavDrag);
   navEl.addEventListener('pointercancel', endNavDrag);
+
+  /* ---------- 折叠屏顶栏：WebGL 液态玻璃 ----------
+     将圆角 SDF 折射、色散、高光和按压缩放实现为 WebGL2。
+     浏览器不支持 WebGL2 时保留前面的 CSS 近似作为兼容回退。 */
+  var LIQUID_GLASS_PADDING = 18;
+  var liquidGlassCanvas = null;
+  var liquidGlass = null;
+  var liquidGlassWallpaperImage = null;
+  var liquidGlassRenderFrame = 0;
+  var liquidGlassFailed = false;
+  var liquidGlassPointer = { x: 0, y: 0, active: false };
+  var liquidGlassTextureSize = [0, 0];
+
+  var LIQUID_GLASS_VERTEX = [
+    '#version 300 es',
+    'in vec2 aPos;',
+    'void main() {',
+    '  gl_Position = vec4(aPos, 0.0, 1.0);',
+    '}'
+  ].join('\n');
+
+  var LIQUID_GLASS_FRAGMENT = [
+    '#version 300 es',
+    'precision highp float;',
+    'out vec4 outColor;',
+    '',
+    'uniform sampler2D uBackdrop;',
+    'uniform vec2 uCanvasSize;',
+    'uniform vec2 uViewportSize;',
+    'uniform vec2 uCanvasOrigin;',
+    'uniform float uDpr;',
+    'uniform float uHasTexture;',
+    'uniform float uDimTop;',
+    'uniform float uDimBottom;',
+    'uniform vec2 uBaseCenter;',
+    'uniform vec2 uBaseHalf;',
+    'uniform float uBaseRadius;',
+    'uniform float uBaseRefractionHeight;',
+    'uniform float uBaseRefractionAmount;',
+    'uniform vec2 uThumbCenter;',
+    'uniform vec2 uThumbHalf;',
+    'uniform float uThumbRadius;',
+    'uniform float uThumbRefractionHeight;',
+    'uniform float uThumbRefractionAmount;',
+    'uniform float uThumbMagnification;',
+    'uniform float uPress;',
+    'uniform vec2 uPointer;',
+    '',
+    'const vec3 DARK = vec3(0.031372549, 0.035294118, 0.054901961);',
+    'const vec3 SURFACE = vec3(0.98, 0.98, 0.98);',
+    '',
+    'float radiusAt(vec2 coord, vec4 radii) {',
+    '  if (coord.x >= 0.0) {',
+    '    if (coord.y <= 0.0) return radii.y;',
+    '    return radii.z;',
+    '  }',
+    '  if (coord.y <= 0.0) return radii.x;',
+    '  return radii.w;',
+    '}',
+    '',
+    'float sdRoundedRect(vec2 coord, vec2 halfSize, float radius) {',
+    '  vec2 cornerCoord = abs(coord) - (halfSize - vec2(radius));',
+    '  float outside = length(max(cornerCoord, vec2(0.0))) - radius;',
+    '  float inside = min(max(cornerCoord.x, cornerCoord.y), 0.0);',
+    '  return outside + inside;',
+    '}',
+    '',
+    'vec2 gradSdRoundedRect(vec2 coord, vec2 halfSize, float radius) {',
+    '  vec2 cornerCoord = abs(coord) - (halfSize - vec2(radius));',
+    '  if (cornerCoord.x >= 0.0 || cornerCoord.y >= 0.0) {',
+    '    return sign(coord) * normalize(max(cornerCoord, vec2(0.0)));',
+    '  }',
+    '  float gradX = step(cornerCoord.y, cornerCoord.x);',
+    '  return sign(coord) * vec2(gradX, 1.0 - gradX);',
+    '}',
+    '',
+    'vec2 safeNormalize(vec2 value) {',
+    '  float len = length(value);',
+    '  return len > 0.0001 ? value / len : vec2(0.0, 1.0);',
+    '}',
+    'float circleMap(float x) {',
+    '  x = clamp(x, 0.0, 1.0);',
+    '  return 1.0 - sqrt(max(0.0, 1.0 - x * x));',
+    '}',
+    '',
+    'float coverage(float sd) {',
+    '  float aa = max(fwidth(sd), 0.65);',
+    '  return 1.0 - smoothstep(-aa, aa, sd);',
+    '}',
+    '',
+    'vec3 fallbackBackdrop(vec2 coord) {',
+    '  vec2 uv = (coord + uCanvasOrigin) / max(uViewportSize, vec2(1.0));',
+    '  vec3 c = mix(vec3(0.06, 0.07, 0.11), vec3(0.25, 0.15, 0.35), uv.y);',
+    '  c += vec3(0.12, 0.11, 0.18) * (1.0 - uv.x);',
+    '  return c;',
+    '}',
+    '',
+    'vec3 sampleBackdrop(vec2 coord) {',
+    '  vec3 c;',
+    '  if (uHasTexture > 0.5) {',
+    '    vec2 uv = (coord + uCanvasOrigin) / max(uViewportSize, vec2(1.0));',
+    '    uv.y = 1.0 - uv.y;',
+    '    // 屏幕顶部直接对应纹理 v=0。',
+    '    c = texture(uBackdrop, uv).rgb;',
+    '  } else {',
+    '    c = fallbackBackdrop(coord);',
+    '  }',
+
+    '  vec2 screenCoord = coord + uCanvasOrigin;',
+    '  float dim = mix(uDimTop, uDimBottom, clamp(screenCoord.y / max(uViewportSize.y, 1.0), 0.0, 1.0));',
+    '  c = mix(c, DARK, dim);',
+    '  return clamp(c, 0.0, 1.0);',
+    '}',
+    '',
+    'vec3 baseLayer(vec2 coord) {',
+    '  vec2 centered = coord - uBaseCenter;',
+    '  float sd = sdRoundedRect(centered, uBaseHalf, uBaseRadius);',
+    '  float cov = coverage(sd);',
+    '  vec3 raw = sampleBackdrop(coord);',
+    '  vec3 surface;',
+    '  if (-sd >= uBaseRefractionHeight) {',
+    '    surface = mix(raw, SURFACE, 0.10);',
+    '  } else {',
+    '    float insideSd = min(sd, 0.0);',
+    '    float d = circleMap(1.0 + insideSd / max(uBaseRefractionHeight, 0.001)) * uBaseRefractionAmount;',
+    '    float gradRadius = min(uBaseRadius * 1.5, min(uBaseHalf.x, uBaseHalf.y));',
+    '    vec2 grad = safeNormalize(gradSdRoundedRect(centered, uBaseHalf, max(gradRadius, 1.0)));',
+    '    vec2 refractedCoord = coord + d * grad;',
+    '    surface = mix(sampleBackdrop(refractedCoord), SURFACE, 0.10);',
+    '  }',
+    '  return mix(raw, surface, cov);',
+    '}',
+    '',
+    'vec3 selectedLayer(vec2 coord) {',
+    '  vec2 centered = coord - uThumbCenter;',
+    '  float sd = sdRoundedRect(centered, uThumbHalf, uThumbRadius);',
+    '  float cov = coverage(sd);',
+    '  vec3 raw = baseLayer(coord);',
+    '  if (cov <= 0.001) return raw;',
+    '  vec2 magnifiedCoord = uThumbCenter + centered / max(uThumbMagnification, 1.0);',
+    '  vec3 visible;',
+    '  if (-sd >= uThumbRefractionHeight) {',
+    '    visible = baseLayer(magnifiedCoord);',
+    '  } else {',
+    '    float insideSd = min(sd, 0.0);',
+    '    float d = circleMap(1.0 + insideSd / max(uThumbRefractionHeight, 0.001)) * uThumbRefractionAmount;',
+    '    float gradRadius = min(uThumbRadius * 1.5, min(uThumbHalf.x, uThumbHalf.y));',
+    '    vec2 grad = safeNormalize(gradSdRoundedRect(centered, uThumbHalf, max(gradRadius, 1.0)));',
+    '    vec2 refractedCoord = magnifiedCoord + d * grad;',
+    '    float dispersionIntensity = clamp((centered.x * centered.y) / max(uThumbHalf.x * uThumbHalf.y, 1.0), -1.0, 1.0);',
+    '    vec2 dispersedCoord = d * grad * dispersionIntensity;',
+    '    vec3 c = vec3(0.0);',
+    '    c.r += baseLayer(refractedCoord + dispersedCoord).r / 3.5;',
+    '    c.r += baseLayer(refractedCoord + dispersedCoord * (2.0 / 3.0)).r / 3.5;',
+    '    c.g += baseLayer(refractedCoord + dispersedCoord * (2.0 / 3.0)).g / 7.0;',
+    '    c.r += baseLayer(refractedCoord + dispersedCoord * (1.0 / 3.0)).r / 3.5;',
+    '    c.g += baseLayer(refractedCoord + dispersedCoord * (1.0 / 3.0)).g / 3.5;',
+    '    c.g += baseLayer(refractedCoord).g / 3.5;',
+    '    c.g += baseLayer(refractedCoord - dispersedCoord * (1.0 / 3.0)).g / 3.5;',
+    '    c.b += baseLayer(refractedCoord - dispersedCoord * (1.0 / 3.0)).b / 3.0;',
+    '    c.b += baseLayer(refractedCoord - dispersedCoord * (2.0 / 3.0)).b / 3.0;',
+    '    c.r += baseLayer(refractedCoord - dispersedCoord).r / 7.0;',
+    '    c.b += baseLayer(refractedCoord - dispersedCoord).b / 3.0;',
+    '    visible = c;',
+    '  }',
+    '  visible = mix(visible, vec3(1.0), 0.1 * (1.0 - uPress));',
+    '  visible = mix(visible, vec3(0.0), 0.03 * uPress);',
+    '  return mix(raw, visible, cov);',
+    '}',
+    '',
+    'float highlight(vec2 coord, vec2 center, vec2 halfSize, float radius) {',
+    '  vec2 centered = coord - center;',
+    '  float sd = sdRoundedRect(centered, halfSize, radius);',
+    '  float ring = 1.0 - smoothstep(0.0, 1.5, abs(sd));',
+    '  float gradRadius = min(radius * 1.5, min(halfSize.x, halfSize.y));',
+    '  vec2 grad = safeNormalize(gradSdRoundedRect(centered, halfSize, max(gradRadius, 1.0)));',
+    '  float d = dot(grad, vec2(0.70710678, 0.70710678));',
+    '  return ring * pow(abs(d), 1.0) * 0.5;',
+    '}',
+    '',
+    'float innerShadow(vec2 coord) {',
+    '  if (uPress <= 0.001) return 0.0;',
+    '  vec2 centered = coord - uThumbCenter;',
+    '  float sd = sdRoundedRect(centered, uThumbHalf, uThumbRadius);',
+    '  float edge = 1.0 - smoothstep(0.0, 8.0 * uPress, max(-sd, 0.0));',
+    '  float bottom = smoothstep(-uThumbHalf.y * 0.2, uThumbHalf.y, centered.y);',
+    '  return edge * bottom * 0.15 * uPress;',
+    '}',
+    '',
+    'float interactiveHighlight(vec2 coord) {',
+    '  if (uPress <= 0.001) return 0.0;',
+    '  float radius = min(uThumbHalf.x, uThumbHalf.y) * 1.5;',
+    '  float radial = 1.0 - smoothstep(radius * 0.5, radius, distance(coord, uPointer));',
+    '  return 0.03 * uPress * radial;',
+    '}',
+    '',
+    'void main() {',
+    '  vec2 coord = vec2(gl_FragCoord.x, uCanvasSize.y * uDpr - gl_FragCoord.y) / uDpr;',
+    '  vec3 color = baseLayer(coord);',
+    '  float baseCoverage = coverage(sdRoundedRect(coord - uBaseCenter, uBaseHalf, uBaseRadius));',
+    '  float thumbCoverage = coverage(sdRoundedRect(coord - uThumbCenter, uThumbHalf, uThumbRadius));',
+    '  vec3 selected = selectedLayer(coord);',
+    '  selected += vec3(highlight(coord, uThumbCenter, uThumbHalf, uThumbRadius));',
+    '  selected += vec3(interactiveHighlight(coord));',
+    '  selected -= vec3(innerShadow(coord));',
+    '  color += vec3(highlight(coord, uBaseCenter, uBaseHalf, uBaseRadius));',
+    '  color = mix(color, selected, thumbCoverage);',
+    '  float alpha = max(baseCoverage, thumbCoverage);',
+    '  outColor = vec4(clamp(color, 0.0, 1.0), alpha);',
+    '}'
+  ].join('\n');
+
+  function ensureLiquidGlassCanvas() {
+    if (!liquidGlassCanvas) {
+      liquidGlassCanvas = document.createElement('canvas');
+      liquidGlassCanvas.className = 'topnav-liquid-glass';
+      liquidGlassCanvas.setAttribute('aria-hidden', 'true');
+      if (navEl && navEl.parentElement) navEl.parentElement.insertBefore(liquidGlassCanvas, navEl);
+    }
+    return liquidGlassCanvas;
+  }
+
+  function compileLiquidGlassShader(gl, type, source) {
+    var shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      var message = gl.getShaderInfoLog(shader);
+      gl.deleteShader(shader);
+      throw new Error(message || 'shader compile error');
+    }
+    return shader;
+  }
+
+  function initLiquidGlassRenderer() {
+    if (liquidGlass || liquidGlassFailed || !liquidGlassCanvas) return liquidGlass;
+    var gl = liquidGlassCanvas.getContext('webgl2', {
+      alpha: true,
+      antialias: true,
+      premultipliedAlpha: false,
+      preserveDrawingBuffer: false,
+      powerPreference: 'high-performance'
+    });
+    if (!gl) {
+      liquidGlassFailed = true;
+      console.warn('Liquid Glass WebGL2 unavailable');
+      return null;
+    }
+    try {
+      var vertex = compileLiquidGlassShader(gl, gl.VERTEX_SHADER, LIQUID_GLASS_VERTEX);
+      var fragment = compileLiquidGlassShader(gl, gl.FRAGMENT_SHADER, LIQUID_GLASS_FRAGMENT);
+      var program = gl.createProgram();
+      gl.attachShader(program, vertex);
+      gl.attachShader(program, fragment);
+      gl.linkProgram(program);
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        throw new Error(gl.getProgramInfoLog(program) || 'program link error');
+      }
+      gl.deleteShader(vertex);
+      gl.deleteShader(fragment);
+      var vbo = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+      var position = gl.getAttribLocation(program, 'aPos');
+      gl.enableVertexAttribArray(position);
+      gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+      var uniformNames = [
+        'uBackdrop', 'uCanvasSize', 'uViewportSize', 'uCanvasOrigin', 'uDpr', 'uHasTexture',
+        'uDimTop', 'uDimBottom', 'uBaseCenter', 'uBaseHalf', 'uBaseRadius',
+        'uBaseRefractionHeight', 'uBaseRefractionAmount', 'uThumbCenter',
+        'uThumbHalf', 'uThumbRadius', 'uThumbRefractionHeight',
+        'uThumbRefractionAmount', 'uThumbMagnification', 'uPress', 'uPointer'
+      ];
+      var uniforms = {};
+      uniformNames.forEach(function (name) { uniforms[name] = gl.getUniformLocation(program, name); });
+      var texture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.useProgram(program);
+      gl.uniform1i(uniforms.uBackdrop, 0);
+      liquidGlass = {
+        gl: gl,
+        program: program,
+        uniforms: uniforms,
+        texture: texture,
+        textureCanvas: document.createElement('canvas'),
+        width: 0,
+        height: 0,
+        dpr: 1,
+        press: 0,
+        lastTime: 0,
+        hasTexture: false
+      };
+      navEl.classList.add('liquid-glass-ready');
+      liquidGlassCanvas.classList.add('is-ready');
+      syncLiquidGlassRenderer(true);
+      return liquidGlass;
+    } catch (err) {
+      liquidGlassFailed = true;
+      liquidGlass = null;
+      navEl.classList.remove('liquid-glass-ready');
+      if (liquidGlassCanvas) liquidGlassCanvas.classList.remove('is-ready');
+      console.warn('Liquid Glass WebGL2 init failed', err);
+      return null;
+    }
+  }
+
+  function uploadLiquidGlassTexture() {
+    if (!liquidGlass || !liquidGlassWallpaperImage) return;
+    var image = liquidGlassWallpaperImage;
+    var viewportWidth = Math.max(1, window.innerWidth);
+    var viewportHeight = Math.max(1, window.innerHeight);
+    var textureDpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    var canvas = liquidGlass.textureCanvas;
+    var pixelWidth = Math.max(1, Math.round(viewportWidth * textureDpr));
+    var pixelHeight = Math.max(1, Math.round(viewportHeight * textureDpr));
+    if (canvas.width !== pixelWidth) canvas.width = pixelWidth;
+    if (canvas.height !== pixelHeight) canvas.height = pixelHeight;
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    var naturalWidth = image.naturalWidth || image.width || viewportWidth;
+    var naturalHeight = image.naturalHeight || image.height || viewportHeight;
+    var cover = Math.max(viewportWidth / naturalWidth, viewportHeight / naturalHeight);
+    var drawWidth = naturalWidth * cover;
+    var drawHeight = naturalHeight * cover;
+    ctx.filter = 'saturate(150%) blur(' + (1.5 * textureDpr).toFixed(2) + 'px)';
+    ctx.drawImage(
+      image,
+      (viewportWidth - drawWidth) * 0.5 * textureDpr,
+      (viewportHeight - drawHeight) * 0.5 * textureDpr,
+      drawWidth * textureDpr,
+      drawHeight * textureDpr
+    );
+    ctx.filter = 'none';
+    var gl = liquidGlass.gl;
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, liquidGlass.texture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
+    liquidGlass.hasTexture = true;
+    liquidGlassTextureSize = [viewportWidth, viewportHeight];
+    scheduleLiquidGlassRender();
+  }
+
+  function updateLiquidGlassWallpaper(image) {
+    liquidGlassWallpaperImage = image || null;
+    if (liquidGlass && liquidGlassWallpaperImage) uploadLiquidGlassTexture();
+  }
+
+  function resizeLiquidGlassRenderer() {
+    if (!liquidGlass || !liquidGlassCanvas) return false;
+    var rect = navEl.getBoundingClientRect();
+    var navWidth = Math.max(1, rect.width);
+    var navHeight = Math.max(1, rect.height);
+    var pad = LIQUID_GLASS_PADDING;
+    var width = navWidth + pad * 2;
+    var height = navHeight + pad * 2;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var pixelWidth = Math.max(1, Math.round(width * dpr));
+    var pixelHeight = Math.max(1, Math.round(height * dpr));
+    var changed = false;
+    if (liquidGlassCanvas.width !== pixelWidth) {
+      liquidGlassCanvas.width = pixelWidth;
+      changed = true;
+    }
+    if (liquidGlassCanvas.height !== pixelHeight) {
+      liquidGlassCanvas.height = pixelHeight;
+      changed = true;
+    }
+    liquidGlass.width = width;
+    liquidGlass.height = height;
+    liquidGlass.navWidth = navWidth;
+    liquidGlass.navHeight = navHeight;
+    liquidGlass.padding = pad;
+    liquidGlass.dpr = dpr;
+    liquidGlassCanvas.style.left = (rect.left - pad) + 'px';
+    if (document.documentElement.classList.contains('outer-screen-layout')) {
+      liquidGlassCanvas.style.top = '';
+    } else {
+      var topbarRect = navEl.parentElement.getBoundingClientRect();
+      liquidGlassCanvas.style.top = (rect.top - topbarRect.top - pad) + 'px';
+    }
+    liquidGlassCanvas.style.width = width + 'px';
+    liquidGlassCanvas.style.height = height + 'px';
+    liquidGlass.gl.viewport(0, 0, pixelWidth, pixelHeight);
+    if (
+      liquidGlassTextureSize[0] !== window.innerWidth ||
+      liquidGlassTextureSize[1] !== window.innerHeight
+    ) uploadLiquidGlassTexture();
+    return changed;
+  }
+
+  function scheduleLiquidGlassRender() {
+    if (!liquidGlass || liquidGlassRenderFrame || !innerScreenLayoutActive) return;
+    liquidGlassRenderFrame = requestAnimationFrame(renderLiquidGlass);
+  }
+
+  function renderLiquidGlass(now) {
+    liquidGlassRenderFrame = 0;
+    if (!liquidGlass || !innerScreenLayoutActive || navEl.classList.contains('empty')) return;
+    if (document.documentElement.classList.contains('ui-hidden') || document.hidden) return;
+    resizeLiquidGlassRenderer();
+    var gl = liquidGlass.gl;
+    var uniforms = liquidGlass.uniforms;
+    var targetPress = navEl.classList.contains('pressing') ? 1 : 0;
+    var dt = liquidGlass.lastTime ? Math.min(48, now - liquidGlass.lastTime) : 16;
+    liquidGlass.lastTime = now;
+    var mix = 1 - Math.exp(-dt / 72);
+    liquidGlass.press += (targetPress - liquidGlass.press) * mix;
+    if (Math.abs(liquidGlass.press - targetPress) < 0.002) liquidGlass.press = targetPress;
+    var baseScale = 1;
+    var baseHalfWidth = liquidGlass.navWidth * baseScale * 0.5;
+    var baseHalfHeight = liquidGlass.navHeight * baseScale * 0.5;
+    var thumbScale = 1 + ((78 / 56) - 1) * liquidGlass.press;
+    var thumbCenterX = liquidGlass.padding + thumbX + thumbW * 0.5;
+    var thumbCenterY = liquidGlass.padding + 4 + 14;
+    var pointerX = liquidGlassPointer.active ? liquidGlass.padding + liquidGlassPointer.x : thumbCenterX;
+    var pointerY = liquidGlassPointer.active ? liquidGlass.padding + liquidGlassPointer.y : thumbCenterY;
+    gl.useProgram(liquidGlass.program);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, liquidGlass.texture);
+    var rootStyle = getComputedStyle(document.documentElement);
+    gl.uniform2f(uniforms.uCanvasSize, liquidGlass.width, liquidGlass.height);
+    var navRect = navEl.getBoundingClientRect();
+    gl.uniform2f(uniforms.uViewportSize, window.innerWidth, window.innerHeight);
+    gl.uniform2f(uniforms.uCanvasOrigin, navRect.left - liquidGlass.padding, navRect.top - liquidGlass.padding);
+    gl.uniform1f(uniforms.uDpr, liquidGlass.dpr);
+    gl.uniform1f(uniforms.uHasTexture, liquidGlass.hasTexture ? 1 : 0);
+    gl.uniform1f(uniforms.uDimTop, parseFloat(rootStyle.getPropertyValue('--wallpaper-dim-top')) || 0.175);
+    gl.uniform1f(uniforms.uDimBottom, parseFloat(rootStyle.getPropertyValue('--wallpaper-dim-bottom')) || 0.42);
+    gl.uniform2f(uniforms.uBaseCenter, liquidGlass.padding + liquidGlass.navWidth * 0.5, liquidGlass.padding + liquidGlass.navHeight * 0.5);
+    gl.uniform2f(uniforms.uBaseHalf, baseHalfWidth, baseHalfHeight);
+    gl.uniform1f(uniforms.uBaseRadius, Math.min(baseHalfWidth, baseHalfHeight));
+    gl.uniform1f(uniforms.uBaseRefractionHeight, 12);
+    gl.uniform1f(uniforms.uBaseRefractionAmount, -12);
+    gl.uniform2f(uniforms.uThumbCenter, thumbCenterX, thumbCenterY);
+    gl.uniform2f(uniforms.uThumbHalf, Math.max(14, thumbW * thumbScale * 0.5), 14 * thumbScale);
+    gl.uniform1f(uniforms.uThumbRadius, Math.min(Math.max(14, thumbW * thumbScale * 0.5), 14 * thumbScale));
+    gl.uniform1f(uniforms.uThumbRefractionHeight, 5 * thumbScale);
+    gl.uniform1f(uniforms.uThumbRefractionAmount, -7 * thumbScale);
+    gl.uniform1f(uniforms.uThumbMagnification, thumbScale);
+    gl.uniform1f(uniforms.uPress, liquidGlass.press);
+    gl.uniform2f(uniforms.uPointer, pointerX, pointerY);
+    navEl.style.setProperty('--glass-shadow-alpha', (liquidGlass.press * 0.1).toFixed(3));
+    syncNavColorOverlay();
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    if (Math.abs(liquidGlass.press - targetPress) > 0.002) scheduleLiquidGlassRender();
+  }
+
+  function syncLiquidGlassRenderer(force) {
+    if (!innerScreenLayoutActive || !liquidGlassCanvas) {
+      clearNavColorMasks();
+      if (navEl) navEl.classList.remove('liquid-glass-ready');
+      if (liquidGlassCanvas) liquidGlassCanvas.classList.remove('is-ready');
+      return;
+    }
+    if (!liquidGlass && !initLiquidGlassRenderer()) return;
+    if (!liquidGlass) return;
+    navEl.classList.add('liquid-glass-ready');
+    liquidGlassCanvas.classList.add('is-ready');
+    resizeLiquidGlassRenderer();
+    if (force && liquidGlassWallpaperImage) uploadLiquidGlassTexture();
+    scheduleLiquidGlassRender();
+  }
+
+  window.addEventListener('resize', function () {
+    if (!liquidGlass) return;
+    syncLiquidGlassRenderer(false);
+  }, { passive: true });
 
   function select(i) {
     i = Math.max(0, Math.min(LOGOS.length - 1, i));
@@ -3311,6 +4374,7 @@
       im.onerror = null;
       show.style.backgroundImage = "url('" + url + "')";
       show.classList.add('show');
+      updateLiquidGlassWallpaper(im);
       hide.classList.remove('show');
       bgFrontIsA = !bgFrontIsA;
     };
@@ -3385,6 +4449,7 @@
     var logo = LOGOS[state.index];
     setTrackName(trackTitle(logo));
     if (playerCoverArt) bindResponsiveAsset(playerCoverArt, 'music/' + logo + '.jpg');
+    syncInnerActivityButton(logo);
   }
 
   function applyMusic(name) {
@@ -3395,6 +4460,7 @@
     setRing(0);
     setTrackName(trackTitle(name));
     if (playerCoverArt) bindResponsiveAsset(playerCoverArt, 'music/' + name + '.jpg');
+    syncInnerActivityButton(name);
     if (interacted && !musicPausedByUser) {
       audio.currentTime = 0;
       var p = audio.play();
@@ -4387,6 +5453,12 @@
 
   function updateCursorGlowPosition() {
     if (!cursorGlowEl) return;
+    var overNav = false;
+    if (innerScreenLayoutActive && navEl) {
+      var navRect = navEl.getBoundingClientRect();
+      overNav = cursorX >= navRect.left - 6 && cursorX <= navRect.right + 6 && cursorY >= navRect.top - 6 && cursorY <= navRect.bottom + 6;
+    }
+    cursorGlowEl.classList.toggle('is-over-nav', overNav);
     cursorGlowEl.style.transform = 'translate3d(' + (cursorX - 10.5) + 'px,' + (cursorY - 10.5) + 'px,0)';
   }
 
@@ -10380,6 +11452,7 @@
 
     // 先用已缓存的核心数据构建；没有缓存时回退到内置列表，后续同步数据时再重建。
     buildDock(activityIds());
+    initInnerActivityPicker();
 
     // 显示值为 11 的活动优先；没有默认值时再用 hash，最后用最后一个活动。
     var initialId = initialActivityId();

@@ -3685,7 +3685,8 @@ html.performance-mode .dock-item::after {
   pointer-events: none;
 }
 .resource-viewer.is-pressing,
-.resource-viewer.is-dragging { cursor: grabbing; }
+.resource-viewer.is-dragging,
+.resource-viewer.is-pinching { cursor: grabbing; }
 .resource-viewer img {
   display: block;
   max-width: 100%;
@@ -4387,12 +4388,7 @@ body.minigame-open { overflow: hidden; }
 html:not(.portrait-layout) .home-right-column > .card-scroll-track { display: none; }
 
 /* ===== 正屏两列布局：严格按底栏卡片跨度分栏 ===== */
-html.portrait-layout {
-  --card-h: min(
-    clamp(36px, 7.6vh, 66px),
-    calc((100vw - 16px - 6 * clamp(8px, 1.4vw, 14px)) / 14.32)
-  );
-}
+/* 底栏卡片沿用宽屏尺寸规则，不随网页宽度变小而等比缩小。 */
 html.portrait-layout .page-section {
   --portrait-left-column-width: calc(2 * var(--card-w) + var(--card-gap));
   --portrait-right-column-width: calc(5.16 * var(--card-w) + 4 * var(--card-gap));
@@ -4607,3 +4603,541 @@ html.portrait-layout .hotspot-content-card-title > .hotspot-card-title-label,
 html.portrait-layout .hotspot-comments-card-title > .hotspot-card-title-label {
   display: none;
 }
+
+.topbar > .topnav-liquid-glass { display: none; }
+.topnav-color-overlay { display: none; }
+html:not(.inner-screen-layout) .topnav-item-label {
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
+
+/* ===== 折叠屏内屏：双列 1:2 + 液态玻璃顶部导航 ===== */
+html.inner-screen-layout .page-section {
+  width: 100%;
+  padding: 16px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+}
+
+/* 玻璃胶囊只在更窄的折叠屏内屏模式启用，不改变普通正屏导航。 */
+html.inner-screen-layout .topnav {
+  height: 36px;
+  padding: 0 4px;
+  max-width: calc(100vw - 16px);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05) 42%, rgba(255, 255, 255, 0.13)),
+    rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+    0 10px 28px rgba(25, 18, 22, 0.2);
+  -webkit-backdrop-filter: blur(18px) saturate(185%) brightness(1.06);
+  backdrop-filter: blur(18px) saturate(185%) brightness(1.06);
+  isolation: isolate;
+}
+html.inner-screen-layout .topnav::before {
+  inset: 1px;
+  width: auto;
+  height: auto;
+  border: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(
+      circle at var(--glass-pointer-x, 50%) var(--glass-pointer-y, 50%),
+      rgba(255, 255, 255, 0.34),
+      rgba(255, 255, 255, 0.08) 30%,
+      transparent 62%
+    ),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.24), transparent 38%, rgba(255, 255, 255, 0.1) 78%, transparent);
+  opacity: 1;
+  z-index: 0;
+  pointer-events: none;
+  transition: background 0.16s ease-out;
+}
+html.inner-screen-layout .topnav::after {
+  inset: 0;
+  height: auto;
+  border: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.9),
+    rgba(255, 255, 255, 0.12) 28%,
+    rgba(255, 255, 255, 0.02) 52%,
+    rgba(255, 255, 255, 0.42) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0.9;
+  z-index: 3;
+  pointer-events: none;
+}
+html.inner-screen-layout .topnav-thumb {
+  --glass-thumb-scale: 1;
+  top: 4px;
+  height: 28px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 999px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.08) 52%, rgba(255, 255, 255, 0.14)),
+    rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -6px 12px rgba(255, 255, 255, 0.04),
+    0 6px 16px rgba(22, 16, 20, 0.14);
+  -webkit-backdrop-filter: blur(16px) saturate(210%) brightness(1.1);
+  backdrop-filter: blur(16px) saturate(210%) brightness(1.1);
+  transition:
+    transform 0.38s cubic-bezier(0.33, 1.3, 0.35, 1),
+    width 0.38s cubic-bezier(0.33, 1.3, 0.35, 1),
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+html.inner-screen-layout .topnav-thumb::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: radial-gradient(
+    92% 130% at 28% -28%,
+    rgba(255, 255, 255, 0.72),
+    rgba(255, 255, 255, 0.18) 38%,
+    transparent 72%
+  );
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+html.inner-screen-layout .topnav-thumb-inner {
+  position: relative;
+  z-index: 1;
+}
+html.inner-screen-layout .topnav-thumb-inner::after {
+  display: none;
+}
+html.inner-screen-layout .topnav.pressing .topnav-thumb {
+  --glass-thumb-scale: 0.96;
+  border-color: rgba(255, 255, 255, 0.38);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.64),
+    inset 0 -7px 14px rgba(255, 255, 255, 0.06),
+    0 8px 20px rgba(22, 16, 20, 0.18);
+}
+html.inner-screen-layout .topnav.dragging .topnav-thumb {
+  --glass-thumb-scale: 1.04;
+}
+html.inner-screen-layout .topnav-item-effect {
+  display: none;
+}
+html.inner-screen-layout .topnav-item {
+  height: 28px;
+  padding: 0 22px;
+  color: #fff;
+  text-shadow: none;
+}
+html.inner-screen-layout .topnav-item.active {
+  color: #fff;
+  text-shadow: none;
+}
+
+/* WebGL 就绪后，CSS 只负责布局、命中范围和阴影，玻璃视觉完全由着色器绘制。 */
+html.inner-screen-layout .topbar > .topnav-liquid-glass {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  display: none;
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  pointer-events: none;
+}
+html.inner-screen-layout .topbar > .topnav-liquid-glass.is-ready {
+  display: block;
+}
+html.inner-screen-layout .topnav.liquid-glass-ready {
+  border-width: 0;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+html.inner-screen-layout .topnav.liquid-glass-ready::before,
+html.inner-screen-layout .topnav.liquid-glass-ready::after {
+  display: none;
+}
+html.inner-screen-layout .topnav.liquid-glass-ready .topnav-thumb {
+  visibility: hidden;
+  overflow: visible;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, var(--glass-shadow-alpha, 0));
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+html.inner-screen-layout .topnav.liquid-glass-ready .topnav-thumb::before {
+  display: none;
+}
+html.inner-screen-layout .topnav.liquid-glass-ready .topnav-item.active .topnav-item-label {
+  position: relative;
+  z-index: 5;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 0;
+  font-family: inherit;
+  text-shadow: none;
+}
+html.inner-screen-layout .topnav.nav-thumb-animating.liquid-glass-ready .topnav-item.active .topnav-item-label {
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
+/* 内屏兼容回退：WebGL 不可用时也必须保持透明、无模糊。 */
+html.inner-screen-layout .topnav:not(.liquid-glass-ready) {
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    0 8px 24px rgba(20, 14, 18, 0.12);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+html.inner-screen-layout .topnav:not(.liquid-glass-ready)::before,
+html.inner-screen-layout .topnav:not(.liquid-glass-ready)::after {
+  display: none;
+}
+html.inner-screen-layout .topnav:not(.liquid-glass-ready) .topnav-thumb {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+html.inner-screen-layout .topnav-item,
+html.inner-screen-layout .topnav-item.active .topnav-item-label {
+  text-shadow: none !important;
+}
+
+html.inner-screen-layout .topnav-color-overlay {
+  display: block;
+  position: absolute;
+  z-index: 4;
+  overflow: hidden;
+  border-radius: 999px;
+  pointer-events: none;
+  background: transparent;
+  will-change: left, top, width, height;
+}
+html.inner-screen-layout .topnav-color-label {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-pink);
+  -webkit-text-fill-color: var(--accent-pink);
+  -webkit-text-stroke: 0;
+  paint-order: stroke fill;
+  white-space: nowrap;
+  text-shadow: none !important;
+  pointer-events: none;
+}
+.cursor-glow.is-over-nav {
+  opacity: 0 !important;
+}
+
+/* 内屏模式：禁用沉浸光感，只保留系统鼠标。 */
+html.inner-screen-layout,
+html.inner-screen-layout body,
+html.inner-screen-layout body * {
+  cursor: default !important;
+}
+html.inner-screen-layout #cursorGlow {
+  display: none !important;
+}
+html.inner-screen-layout .section-card,
+html.inner-screen-layout .dock-item,
+html.inner-screen-layout .review-item,
+html.inner-screen-layout .home-achv,
+html.inner-screen-layout .achv-summary,
+html.inner-screen-layout .achv-group-row {
+  background-image: none !important;
+}
+html.inner-screen-layout .section-card::after,
+html.inner-screen-layout .dock-item::after,
+html.inner-screen-layout .review-item::after,
+html.inner-screen-layout .home-achv::after,
+html.inner-screen-layout .achv-summary::after,
+html.inner-screen-layout .achv-group-row::after {
+  display: none !important;
+}
+
+/* ===== 内屏活动选择页 ===== */
+html.inner-screen-layout .dock-wrap { display: none !important; }
+html.inner-screen-layout .tb-ribbon,
+html.inner-screen-layout .tb-songname { display: none !important; }
+
+.inner-activity-button { display: none; }
+html.inner-screen-layout .inner-activity-button {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: flex-end;
+  width: auto;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+}
+html.inner-screen-layout .inner-activity-button img {
+  display: block;
+  width: auto;
+  max-width: none;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 0;
+}
+html.inner-screen-layout .inner-activity-button:active {
+  transform: scale(0.94);
+}
+
+.inner-activity-picker { display: none; }
+html.inner-screen-layout .inner-activity-picker.open {
+  position: fixed;
+  inset: 0;
+  z-index: 75;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.82);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.inner-activity-picker-panel {
+  position: relative;
+  width: min(300px, 72vw);
+  height: min(72vh, 640px);
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.inner-activity-picker-track {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+  cursor: grab;
+}
+.inner-activity-picker-track.pressing { cursor: grabbing; }
+.inner-activity-picker-track.pressing .inner-activity-picker-item { transition-duration: 0s; }
+.inner-activity-picker-item {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--card-w);
+  height: var(--card-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.09);
+  transform: translate(-50%, -50%);
+  transform-origin: center;
+  opacity: 0.28;
+  transition: opacity 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  will-change: transform, opacity;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: auto;
+}
+.inner-activity-picker-item img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+.inner-activity-picker-item.is-centered {
+  border-color: var(--accent-pink);
+  background: rgba(255, 255, 255, 0.16);
+  opacity: 1;
+}
+.inner-activity-picker-item.is-empty { background: rgba(255, 255, 255, 0.04); }
+.inner-activity-picker-ruler {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 9px;
+  height: 253px;
+  transform: translateY(-50%);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 4.75px,
+    rgba(255, 255, 255, 0.5) 4.75px,
+    rgba(255, 255, 255, 0.5) 6.25px,
+    transparent 6.25px,
+    transparent 11px
+  );
+  background-size: 100% 11px;
+  background-repeat: repeat-y;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
+  pointer-events: none;
+}
+.inner-activity-picker-ruler::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  right: auto;
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--accent-pink);
+  box-shadow: 0 0 8px rgba(var(--accent-pink-rgb), 0.8);
+  transform: translate(-50%, -50%);
+}
+
+/* 内屏模式底栏已隐藏，不再为底栏预留页面底部空间。 */
+html.inner-screen-layout .page {
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+}
+
+/* ===== 外屏模式：移动端单列、底部导航 ===== */
+.outer-activity-button { display: none; }
+
+html.outer-screen-layout .topbar {
+  z-index: 40;
+}
+html.outer-screen-layout .tb-nick,
+html.outer-screen-layout .tb-ribbon,
+html.outer-screen-layout .tb-songname,
+html.outer-screen-layout .inner-activity-button {
+  display: none !important;
+}
+html.outer-screen-layout .outer-activity-button {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(164px, 44vw);
+  height: 46px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  z-index: 3;
+}
+html.outer-screen-layout .outer-activity-button img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+html.outer-screen-layout .outer-activity-button:active { transform: translate(-50%, -50%) scale(0.95); }
+
+html.outer-screen-layout .page {
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 88px);
+}
+html.outer-screen-layout .page-section {
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 16px;
+  grid-template-columns: none;
+  grid-template-rows: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+html.outer-screen-layout .page-section::-webkit-scrollbar { width: 0; height: 0; }
+html.outer-screen-layout .section-card {
+  width: 100%;
+  flex: 0 0 auto;
+  min-height: 0;
+  overflow: visible;
+}
+html.outer-screen-layout .section-card-body {
+  flex: 0 0 auto;
+  min-height: 0;
+  overflow: visible;
+  padding-bottom: 0;
+}
+html.outer-screen-layout .card-scroll-track { display: none !important; }
+
+html.outer-screen-layout .topnav {
+  position: fixed;
+  top: auto;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+}
+html.outer-screen-layout .topbar > .topnav-liquid-glass {
+  position: fixed;
+  inset: auto;
+  bottom: calc(env(safe-area-inset-bottom, 0px) - 2px);
+  z-index: 29;
+}
+
+/* 商店：详情 → 实绩 → 测评 */
+html.outer-screen-layout .home-right-column,
+html.outer-screen-layout .home-right-column-body { display: contents; }
+html.outer-screen-layout .home-detail-card { order: 1; display: flex !important; }
+html.outer-screen-layout .home-achv-card { order: 2; display: flex !important; }
+html.outer-screen-layout .home-review-card { order: 3; display: flex !important; }
+
+/* 资源：目录 → 观赏二级页 */
+html.outer-screen-layout .files-portrait-page-btn { display: none !important; }
+html.outer-screen-layout .files-schedule-card { display: none !important; }
+html.outer-screen-layout .files-browse-card,
+html.outer-screen-layout .files-viewer-card { display: flex; }
+html.outer-screen-layout .files-section:not(.outer-show-viewer) .files-browse-card { display: flex !important; }
+html.outer-screen-layout .files-section:not(.outer-show-viewer) .files-viewer-card { display: none !important; }
+html.outer-screen-layout .files-section.outer-show-viewer .files-browse-card { display: none !important; }
+html.outer-screen-layout .files-section.outer-show-viewer .files-viewer-card {
+  display: flex !important;
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
+}
+html.outer-screen-layout .files-viewer-card > .section-card-body {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* 热点：标题列表 → 内容 / 评论二级页 */
+html.outer-screen-layout .hotspot-title-card { display: flex; }
+html.outer-screen-layout .hotspot-section:not(.outer-show-secondary) .hotspot-content-card,
+html.outer-screen-layout .hotspot-section:not(.outer-show-secondary) .hotspot-comments-card { display: none !important; }
+html.outer-screen-layout .hotspot-section.outer-show-secondary .hotspot-title-card { display: none !important; }
+html.outer-screen-layout .hotspot-section.outer-show-secondary:not(.portrait-show-comments) .hotspot-content-card { display: flex !important; }
+html.outer-screen-layout .hotspot-section.outer-show-secondary.portrait-show-comments .hotspot-comments-card { display: flex !important; }
+
+.outer-secondary-back { display: none !important; }
+html.outer-screen-layout .outer-secondary-back { display: grid !important; }

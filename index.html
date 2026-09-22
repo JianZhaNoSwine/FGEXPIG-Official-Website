@@ -14,7 +14,7 @@
 <link rel="icon" href="favicon.ico?v=7" type="image/x-icon">
 <link rel="shortcut icon" href="favicon.ico?v=7">
 <link rel="apple-touch-icon" href="favicon.ico?v=7">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=20260923aj">
 </head>
 <body>
 
@@ -55,9 +55,17 @@
   <!-- 中部导航 -->
   <nav class="topnav" id="topnav"></nav>
 
+  <!-- 外屏模式：顶部居中活动 logo -->
+  <button class="outer-activity-button" id="outerActivityButton" type="button" aria-label="选择活动">
+    <img id="outerActivityButtonImg" alt="" draggable="false">
+  </button>
+
   <!-- 右侧区（从右向左：曲名 / 专辑(外描边圆形进度)） -->
   <div class="tb-right">
     <span class="tb-songname" id="playerName">未播放</span>
+    <button class="inner-activity-button" id="innerActivityButton" type="button" aria-label="选择活动">
+      <img id="innerActivityButtonImg" alt="" draggable="false">
+    </button>
     <div class="tb-cover" id="playerCover" title="播放/暂停；点边缘圆环拖动进度">
       <div class="tb-cover-art" id="playerCoverArt"></div>
       <svg class="tb-cover-ring" viewBox="0 0 40 40" aria-hidden="true">
@@ -76,6 +84,14 @@
   <div class="ruler" aria-hidden="true"></div>
   <div class="ruler-major" aria-hidden="true"></div>
 </div>
+
+<!-- 内屏活动选择页 -->
+<section class="inner-activity-picker" id="innerActivityPicker" aria-hidden="true">
+  <div class="inner-activity-picker-panel" role="dialog" aria-label="选择活动">
+    <div class="inner-activity-picker-ruler" aria-hidden="true"></div>
+    <div class="inner-activity-picker-track" id="innerActivityTrack"></div>
+  </div>
+</section>
 
 <!-- 全屏暂停菜单 -->
 <section class="pause-menu" id="pauseMenu" aria-hidden="true">
@@ -391,6 +407,6 @@
 <script src="js/emoji-manifest.js"></script>
 <script src="js/emoji-trim-data.js"></script>
 <script src="js/emoji-trim.js"></script>
-<script src="js/main.js"></script>
+<script src="js/main.js?v=20260923aj"></script>
 </body>
 </html>
