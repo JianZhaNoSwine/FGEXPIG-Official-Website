@@ -173,6 +173,11 @@
           "name": "标准版",
           "price": "1.98",
           "contents": [
+            "369 Parkour Lv1 Remake",
+            "Colorblind Party",
+            "Happy Everyday",
+            "E33 Mini Games",
+            "Mascot Party",
             "EASY^ ^",
             "PEAK GUYS - SHORE",
             "Let's go",
@@ -184,6 +189,11 @@
           "name": "黄金版",
           "price": "2.48",
           "contents": [
+            "369 Parkour Lv1 Remake",
+            "Colorblind Party",
+            "Happy Everyday",
+            "E33 Mini Games",
+            "Mascot Party",
             "EASY^ ^",
             "PEAK GUYS - SHORE",
             "Let's go",
@@ -197,6 +207,11 @@
           "name": "支持者版",
           "price": "2.98",
           "contents": [
+            "369 Parkour Lv1 Remake",
+            "Colorblind Party",
+            "Happy Everyday",
+            "E33 Mini Games",
+            "Mascot Party",
             "EASY^ ^",
             "PEAK GUYS - SHORE",
             "Let's go",
@@ -226,6 +241,11 @@
         }
       ],
       "codes": {
+        "369 Parkour Lv1 Remake": "3291-9182-3669",
+        "Colorblind Party": "1107-7016-3766",
+        "Happy Everyday": "0369-5479-1912",
+        "E33 Mini Games": "0303-7447-5604",
+        "Mascot Party": "9300-1266-4388",
         "EASY^ ^": "8892-8203-9978",
         "PEAK GUYS - SHORE": "7796-5366-5579",
         "Let's go": "3190-7587-6852",
@@ -233,7 +253,7 @@
         "飞行棋大作战 但猫猫头": "7125-9065-6748",
         "表情塔": "8003-0970-0460",
         "表情塔-为了奶茶": "7670-0454-0140",
-        "表情塔-为了奶茶国际版": ""
+        "表情塔-为了奶茶国际版": "2762-8368-4902"
       }
     },
     "JFES170": {
@@ -316,7 +336,7 @@
         "糖豆节-第八赛季网关简单版": "4907-6930-9460",
         "糖豆节-第九赛季网关": "8693-7516-8062",
         "糖豆节-第九赛季网关简单版": "2511-9061-4852",
-        "糖豆节-第九赛季网关国际版": ""
+        "糖豆节-第九赛季网关国际版": "0972-1586-5716"
       }
     },
     "JFES175": {
@@ -474,7 +494,7 @@
         "残奥会-坏脚": "7578-1480-0669",
         "残奥会-色雾": "4917-9643-9704",
         "马拉松": "",
-        "奥林PIG运动会第二季-800m国际版": ""
+        "奥林PIG运动会第二季-800m国际版": "6572-2648-0603"
       }
     },
     "JFES190": {

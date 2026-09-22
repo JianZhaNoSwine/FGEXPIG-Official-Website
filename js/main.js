@@ -708,6 +708,7 @@
       portraitLayoutReady && nextPortrait === portraitLayoutActive &&
       outerScreenLayoutReady && nextOuterScreen === outerScreenLayoutActive
     ) return;
+    var outerModeChanged = outerScreenLayoutReady && nextOuterScreen !== outerScreenLayoutActive;
     innerScreenLayoutReady = true;
     portraitLayoutReady = true;
     outerScreenLayoutReady = true;
@@ -717,6 +718,7 @@
     document.documentElement.classList.toggle('inner-screen-layout', nextInnerScreen);
     document.documentElement.classList.toggle('portrait-layout', nextPortrait);
     document.documentElement.classList.toggle('outer-screen-layout', nextOuterScreen);
+    if (outerModeChanged && curNavLogo) buildNav(curNavLogo);
     if (!nextOuterScreen) {
       var outerStateSections = document.querySelectorAll('.outer-show-viewer, .outer-show-secondary');
       for (var outerStateIndex = 0; outerStateIndex < outerStateSections.length; outerStateIndex++) {
@@ -833,15 +835,28 @@
     ['files', '资源'],
     ['news', '热点']
   ];
+  // 外屏底栏使用实心图形图标，图标随按钮 currentColor 同步变色。
+  var NAV_ICON_PATHS = {
+    home: 'M994.742857 970.093714a53.833143 53.833143 0 0 1-53.686857 53.906286H82.944a53.833143 53.833143 0 0 1-53.686857-53.906286V394.093714a54.125714 54.125714 0 0 1 20.333714-42.276571L478.72 11.629714a53.467429 53.467429 0 0 1 66.486857 0l429.056 340.041143c12.873143 10.24 20.333714 25.819429 20.333714 42.349714v576.073143h0.146286zM243.858286 538.916571A268.873143 268.873143 0 0 0 512 808.448a268.873143 268.873143 0 0 0 268.214857-269.531429H673.060571c0 89.234286-72.045714 161.645714-160.914285 161.645715-88.868571 0-160.914286-72.411429-160.914286-161.645715H243.858286z',
+    files: 'M74.752 285.257143V378.88h874.496V285.403429l30.72 34.596571c30.866286 34.742857 52.882286 44.032 40.521143 117.394286-5.339429 31.817143-19.748571 125.952-34.962286 226.450285l-5.412571 35.620572c-18.066286 119.149714-35.986286 238.08-40.594286 265.801143a65.024 65.024 0 0 1-62.098286 58.733714h-729.965714a65.170286 65.170286 0 0 1-63.049143-58.660571c-7.753143-47.323429-54.125714-357.888-74.020571-485.083429l-3.218286-20.48L3.657143 437.394286C-8.996571 364.032 13.165714 354.742857 43.958857 320l30.72-34.742857z m600.064 397.458286H349.184a51.2 51.2 0 0 0 0 102.4h325.632a51.2 51.2 0 0 0 0-102.4z m146.432-520.777143c4.242286 0.146286 51.638857 3.145143 51.638857 67.364571v67.510857H144.749714v-67.437714c0-67.510857 52.004571-67.510857 52.004572-67.510857l624.493714 0.146286zM719.945143 0H303.908571s-51.931429 0-51.931428 92.891429h520.045714C771.949714 0 719.872 0 719.872 0z',
+    news: 'M140.666976 0h742.666048c37.301525 0.07314 67.581586 28.744116 67.508446 64.070855v895.74858c0 48.638263-54.855184 79.503446-99.836434 56.244848l-306.750188-158.568051a70.726617 70.726617 0 0 0-64.509696 0l-306.750188 158.568051C127.940574 1039.322881 73.15853 1008.457698 73.15853 959.819435V64.070855C73.08539 28.744116 103.292311 0.07314 140.666976 0z m408.561409 191.04232c-11.044177-27.573872-52.148995-27.573872-63.193172 0l-44.68869 111.904575a33.644513 33.644513 0 0 1-29.9875 20.552409l-125.874362 5.851219c-31.011464 1.462805-43.737867 38.471769-19.528445 56.903111L364.256705 461.222385a31.157744 31.157744 0 0 1 11.409878 33.425092l-33.05939 115.488447c-8.191707 28.451555 25.087104 51.344452 51.051891 35.107317l105.468233-65.533659a35.253598 35.253598 0 0 1 37.008964 0l105.468233 65.6068c26.037927 16.163994 59.243598-6.728903 51.125031-35.180458l-33.132531-115.488447a31.084604 31.084604 0 0 1 11.409879-33.425092l98.300489-74.895611c24.282561-18.431342 11.556159-55.513446-19.528446-56.976251L623.904575 323.572444a33.644513 33.644513 0 0 1-29.91436-20.625549l-44.68869-111.904575z',
+    settings: 'M256.146286 256A256 256 0 0 1 512.292571 0a256 256 0 1 1-256.146285 256z m716.653714 512l33.792-38.473143A51.2 51.2 0 0 1 1024 768v204.8a51.2 51.2 0 0 1-51.2 51.2H51.2a51.2 51.2 0 0 1-51.2-51.2v-204.8a51.2 51.2 0 0 1 17.408-38.473143L51.2 768c-11.264-12.8-22.528-25.6-33.718857-38.546286l0.950857-0.731428 1.974857-1.755429a561.737143 561.737143 0 0 1 32.768-24.868571c30.354286-21.211429 62.171429-40.082286 95.158857-56.612572C229.668571 604.525714 372.077714 563.2 512.292571 563.2c140.214857 0 282.038857 41.398857 363.373715 82.285714 40.740571 20.48 72.923429 40.96 95.085714 56.612572 11.264 7.899429 22.235429 16.237714 32.841143 24.868571l1.974857 1.682286 0.658286 0.512-33.426286 38.838857z'
+  };
   var navEl = document.getElementById('topnav');
   var navCache = {};
   var activeNavKey = SECTIONS[0][0]; // 跨活动保持当前导航栏目
 
+  function navItemsForLayout() {
+    if (!document.documentElement.classList.contains('outer-screen-layout')) return SECTIONS;
+    return SECTIONS.concat([['settings', '设置']]);
+  }
+
   function buildNav(logo) {
-    var hasActive = SECTIONS.some(function (item) { return item[0] === activeNavKey; });
+    var itemsForLayout = navItemsForLayout();
+    var hasActive = itemsForLayout.some(function (item) { return item[0] === activeNavKey; });
     navCache[logo] = {
-      items: SECTIONS,
-      active: hasActive ? activeNavKey : SECTIONS[0][0]
+      items: itemsForLayout,
+      active: hasActive ? activeNavKey : itemsForLayout[0][0]
     };
     renderNav(logo);
     layoutTopbarIdentity();
@@ -3403,7 +3418,7 @@
       div.dataset.section = data.items[i][0];
 
       // 非首页板块：3 列空卡片占位；热点与资源使用各自的专用布局
-      if (data.items[i][0] !== 'home' && data.items[i][0] !== 'news' && data.items[i][0] !== 'files') {
+      if (data.items[i][0] !== 'home' && data.items[i][0] !== 'news' && data.items[i][0] !== 'files' && data.items[i][0] !== 'settings') {
         [1, 2, 3].forEach(function (n) {
           var c = document.createElement('div');
           c.className = 'section-card';
@@ -3432,6 +3447,12 @@
   function showSection(logo, key) {
     var page = pages[LOGOS.indexOf(logo)];
     if (!page) return;
+    if (key === 'settings' && !page.querySelector('.page-section[data-section="settings"]')) {
+      var settingsSection = document.createElement('div');
+      settingsSection.className = 'page-section';
+      settingsSection.dataset.section = 'settings';
+      page.appendChild(settingsSection);
+    }
     // 兜底：若板块子页尚未创建，先创建再切换
     if (!page.querySelector('.page-section')) {
       ensureSections(logo);
@@ -3461,6 +3482,8 @@
   var thumbW = 0;        // 白色滑动胶囊当前宽
   var navDrag = null;    // 导航拖动状态
   var navThumbAnimFrame = 0;
+  var navDragFollowFrame = 0;
+  var navDragFollowTime = 0;
   var navColorOverlay = null;
   var navColorItems = [];
 
@@ -3503,11 +3526,21 @@
   function syncNavColorOverlay() {
     if (!navColorOverlay || !navEl) return;
     var navRect = navEl.getBoundingClientRect();
-    var scale = liquidGlass ? 1 + 0.392 * liquidGlass.press : 1;
+    var thumbEl = navEl.querySelector('.topnav-thumb');
+    var thumbHeight = 28;
+    var thumbTop = 4;
+    if (thumbEl) {
+      var thumbStyle = getComputedStyle(thumbEl);
+      var computedHeight = parseFloat(thumbStyle.height);
+      var computedTop = parseFloat(thumbStyle.top);
+      if (isFinite(computedHeight)) thumbHeight = computedHeight;
+      if (isFinite(computedTop)) thumbTop = computedTop;
+    }
+    var scale = liquidGlass ? 1 + ((74 / 56) - 1) * liquidGlass.press : 1;
     var left = thumbX - (thumbW * (scale - 1) * 0.5);
-    var top = 4 - (28 * (scale - 1) * 0.5);
+    var top = thumbTop - (thumbHeight * (scale - 1) * 0.5);
     var width = thumbW * scale;
-    var height = 28 * scale;
+    var height = thumbHeight * scale;
     navColorOverlay.style.left = left.toFixed(2) + "px";
     navColorOverlay.style.top = top.toFixed(2) + "px";
     navColorOverlay.style.width = width.toFixed(2) + "px";
@@ -3549,12 +3582,12 @@
     for (var i = 0; i < buttons.length; i++) {
       var btn = buttons[i];
       var label = btn.querySelector(".topnav-item-label");
-      if (!label) continue;
+      var content = btn.querySelector(".topnav-item-content");
+      if (!label || !content) continue;
       var rect = btn.getBoundingClientRect();
       var style = getComputedStyle(label);
-      var copy = document.createElement("span");
+      var copy = content.cloneNode(true);
       copy.className = "topnav-color-label";
-      copy.textContent = label.textContent;
       copy.style.left = (rect.left - navRect.left) + "px";
       copy.style.top = (rect.top - navRect.top) + "px";
       copy.style.width = rect.width + "px";
@@ -3564,7 +3597,7 @@
       copy.style.fontWeight = style.fontWeight;
       copy.style.lineHeight = style.lineHeight;
       navColorOverlay.appendChild(copy);
-      navColorItems.push({ button: btn, label: label, copy: copy });
+      navColorItems.push({ button: btn, label: content, copy: copy });
     }
     navEl.appendChild(navColorOverlay);
     syncNavColorOverlay();
@@ -3594,15 +3627,16 @@
     syncNavColorOverlay();
   }
 
-  function animateNavThumbTo(targetX, targetW) {
+  function animateNavThumbTo(targetX, targetW, duration) {
     if (navThumbAnimFrame) cancelAnimationFrame(navThumbAnimFrame);
     navEl.classList.add('nav-thumb-animating');
+    var animationDuration = Math.max(1, Number(duration) || 380);
     var startX = thumbX;
     thumbW = targetW;
     var started = 0;
     navThumbAnimFrame = requestAnimationFrame(function frame(now) {
       if (!started) started = now;
-      var progress = Math.min(1, (now - started) / 380);
+      var progress = Math.min(1, (now - started) / animationDuration);
       var eased = 1 - Math.pow(1 - progress, 3);
       thumbX = startX + (targetX - startX) * eased;
       applyNavThumbPosition();
@@ -3615,6 +3649,35 @@
         applyNavThumbPosition();
       }
     });
+  }
+
+  function stopNavDragFollow() {
+    if (navDragFollowFrame) cancelAnimationFrame(navDragFollowFrame);
+    navDragFollowFrame = 0;
+    navDragFollowTime = 0;
+  }
+
+  function stepNavDragFollow(now) {
+    navDragFollowFrame = 0;
+    if (!navDrag || !navDrag.moved || typeof navDrag.targetX !== 'number') return;
+    var dt = navDragFollowTime ? Math.min(32, Math.max(8, now - navDragFollowTime)) : 16;
+    navDragFollowTime = now;
+    var diff = navDrag.targetX - thumbX;
+    if (Math.abs(diff) < 0.08) {
+      thumbX = navDrag.targetX;
+      applyNavThumbPosition();
+      return;
+    }
+    var response = 1 - Math.exp(-dt / 18);
+    thumbX += diff * response;
+    applyNavThumbPosition();
+    navDragFollowFrame = requestAnimationFrame(stepNavDragFollow);
+  }
+
+  function startNavDragFollow() {
+    if (!navDrag || !navDrag.moved || navDragFollowFrame) return;
+    navDragFollowTime = performance.now();
+    navDragFollowFrame = requestAnimationFrame(stepNavDragFollow);
   }
 
   // 将选中短指示条移动到目标项目
@@ -3748,11 +3811,28 @@
         effect.decoding = 'async';
         effect.draggable = false;
         effect.setAttribute('aria-hidden', 'true');
+        var content = document.createElement('span');
+        content.className = 'topnav-item-content';
+        if (NAV_ICON_PATHS[key]) {
+          var icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          icon.classList.add('topnav-item-icon');
+          icon.setAttribute('viewBox', '0 0 1024 1024');
+          icon.setAttribute('aria-hidden', 'true');
+          icon.setAttribute('focusable', 'false');
+          var iconPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          iconPath.setAttribute('fill', 'currentColor');
+          iconPath.setAttribute('fill-rule', 'nonzero');
+          iconPath.setAttribute('clip-rule', 'nonzero');
+          iconPath.setAttribute('d', NAV_ICON_PATHS[key]);
+          icon.appendChild(iconPath);
+          content.appendChild(icon);
+        }
         var text = document.createElement('span');
         text.className = 'topnav-item-label';
         text.textContent = label;
+        content.appendChild(text);
         btn.appendChild(effect);
-        btn.appendChild(text);
+        btn.appendChild(content);
         btn.dataset.key = key;
         navEl.appendChild(btn);
       })(data.items[i][0], data.items[i][1]);
@@ -3769,17 +3849,36 @@
   /* 顶部导航交互：轻点切换（下划线滑动过去），按住左右拖动（下划线跟手，松手吸附最近项） */
   navEl.addEventListener('pointerdown', function (e) {
     if (!curNavLogo) return;
+    stopNavDragFollow();
     if (navThumbAnimFrame) { cancelAnimationFrame(navThumbAnimFrame); navThumbAnimFrame = 0; }
     navEl.classList.remove('nav-thumb-animating');
     var btn = e.target.closest ? e.target.closest('.topnav-item') : null;
     var data = navCache[curNavLogo];
+    var pressTargetX = thumbX;
+    if (btn && btn.dataset.key) {
+      var btns = navItems();
+      var targetW = innerScreenLayoutActive
+        ? innerNavThumbWidth(btns)
+        : Math.max(54, Math.round(btn.offsetWidth));
+      var navRect = navEl.getBoundingClientRect();
+      var borderLeft = parseFloat(getComputedStyle(navEl).borderLeftWidth) || 0;
+      var pointerX = e.clientX - navRect.left - borderLeft;
+      var firstC = btns[0].offsetLeft + btns[0].offsetWidth / 2;
+      var lastC = btns[btns.length - 1].offsetLeft + btns[btns.length - 1].offsetWidth / 2;
+      pressTargetX = Math.max(firstC - targetW / 2, Math.min(lastC - targetW / 2, pointerX - targetW / 2));
+      animateNavThumbTo(pressTargetX, targetW);
+      for (var i = 0; i < btns.length; i++) {
+        btns[i].classList.toggle('active', btns[i] === btn);
+      }
+    }
     navDrag = {
       startX: e.clientX,
-      startTX: thumbX,
+      startTX: pressTargetX,
       moved: false,
       downKey: btn ? btn.dataset.key : null,
-      hitKey: data ? data.active : null,
-      pointerId: e.pointerId
+      hitKey: btn ? btn.dataset.key : (data ? data.active : null),
+      pointerId: e.pointerId,
+      snapUntil: performance.now() + 160
     };
     navEl.classList.add('pressing'); // 长按反馈：选中层轻微变淡
     scheduleLiquidGlassRender();
@@ -3790,11 +3889,16 @@
     if (!navDrag || !curNavLogo) return;
     var dx = e.clientX - navDrag.startX;
 
-    if (!navDrag.moved && Math.abs(dx) > 6) {
+    if (!navDrag.moved) {
+      if (Math.abs(dx) <= 4) return;
+      if (navThumbAnimFrame) {
+        cancelAnimationFrame(navThumbAnimFrame);
+        navThumbAnimFrame = 0;
+      }
+      navEl.classList.remove('nav-thumb-animating');
       navDrag.moved = true;
       navEl.classList.add('dragging');
     }
-    if (!navDrag.moved) return;
 
     var btns = navItems();
     if (!btns.length) return;
@@ -3804,15 +3908,12 @@
     var lastC = last.offsetLeft + last.offsetWidth / 2;
     var min = firstC - thumbW / 2;
     var max = lastC - thumbW / 2;
-
-    thumbX = Math.max(min, Math.min(max, navDrag.startTX + dx));
-    var thumb = navEl.querySelector('.topnav-thumb');
-    thumb.style.transform = 'translateX(' + thumbX.toFixed(2) + 'px) scale(var(--glass-thumb-scale, 1))';
-    scheduleLiquidGlassRender();
-    syncNavColorOverlay();
+    var targetX = Math.max(min, Math.min(max, navDrag.startTX + dx));
+    navDrag.targetX = targetX;
+    startNavDragFollow();
 
     // 选中层中心覆盖到哪项即实时标记哪项（松手时正式选中）
-    var hit = hitKeyAt(thumbX + thumbW / 2);
+    var hit = hitKeyAt(targetX + thumbW / 2);
     if (hit && hit !== navDrag.hitKey) {
       navDrag.hitKey = hit;
       for (var i = 0; i < btns.length; i++) {
@@ -3827,11 +3928,13 @@
     if (navDrag.pointerId != null && navEl.releasePointerCapture) {
       try { navEl.releasePointerCapture(navDrag.pointerId); } catch (err) {}
     }
+    stopNavDragFollow();
     navEl.classList.remove('pressing', 'dragging');
     scheduleLiquidGlassRender();
 
     if (navDrag.moved) {
-      selectNav(nearestNavKey(thumbX + thumbW / 2), true);
+      var finalThumbX = typeof navDrag.targetX === 'number' ? navDrag.targetX : thumbX;
+      selectNav(nearestNavKey(finalThumbX + thumbW / 2), true);
     } else if (navDrag.downKey) {
       selectNav(navDrag.downKey, true);
     }
@@ -3953,9 +4056,17 @@
     '  return clamp(c, 0.0, 1.0);',
     '}',
     '',
-    'vec3 baseLayer(vec2 coord) {',
+    'vec2 baseHalfSize() {',
+    '  return max(uBaseHalf - vec2(3.0 * uPress), vec2(1.0));',
+    '}',
+    '',
+    'float baseRadiusSize() {',
+    '  return max(uBaseRadius - 3.0 * uPress, 1.0);',
+    '}',
+    '',
+    'vec3 baseLayerAt(vec2 coord, vec2 baseHalf, float baseRadius) {',
     '  vec2 centered = coord - uBaseCenter;',
-    '  float sd = sdRoundedRect(centered, uBaseHalf, uBaseRadius);',
+    '  float sd = sdRoundedRect(centered, baseHalf, baseRadius);',
     '  float cov = coverage(sd);',
     '  vec3 raw = sampleBackdrop(coord);',
     '  vec3 surface;',
@@ -3964,12 +4075,20 @@
     '  } else {',
     '    float insideSd = min(sd, 0.0);',
     '    float d = circleMap(1.0 + insideSd / max(uBaseRefractionHeight, 0.001)) * uBaseRefractionAmount;',
-    '    float gradRadius = min(uBaseRadius * 1.5, min(uBaseHalf.x, uBaseHalf.y));',
-    '    vec2 grad = safeNormalize(gradSdRoundedRect(centered, uBaseHalf, max(gradRadius, 1.0)));',
+    '    float gradRadius = min(baseRadius * 1.5, min(baseHalf.x, baseHalf.y));',
+    '    vec2 grad = safeNormalize(gradSdRoundedRect(centered, baseHalf, max(gradRadius, 1.0)));',
     '    vec2 refractedCoord = coord + d * grad;',
     '    surface = mix(sampleBackdrop(refractedCoord), SURFACE, 0.10);',
     '  }',
     '  return mix(raw, surface, cov);',
+    '}',
+    '',
+    'vec3 baseLayer(vec2 coord) {',
+    '  return baseLayerAt(coord, uBaseHalf, uBaseRadius);',
+    '}',
+    '',
+    'vec3 innerBaseLayer(vec2 coord) {',
+    '  return baseLayerAt(coord, baseHalfSize(), baseRadiusSize());',
     '}',
     '',
     'vec3 selectedLayer(vec2 coord) {',
@@ -4015,8 +4134,9 @@
     '  float ring = 1.0 - smoothstep(0.0, 1.5, abs(sd));',
     '  float gradRadius = min(radius * 1.5, min(halfSize.x, halfSize.y));',
     '  vec2 grad = safeNormalize(gradSdRoundedRect(centered, halfSize, max(gradRadius, 1.0)));',
-    '  float d = dot(grad, vec2(0.70710678, 0.70710678));',
-    '  return ring * pow(abs(d), 1.0) * 0.5;',
+    '  float d = abs(dot(grad, vec2(0.70710678, 0.70710678)));',
+    '  float directional = 0.65 + 0.35 * d;',
+    '  return ring * directional * 0.5;',
     '}',
     '',
     'float innerShadow(vec2 coord) {',
@@ -4037,16 +4157,28 @@
     '',
     'void main() {',
     '  vec2 coord = vec2(gl_FragCoord.x, uCanvasSize.y * uDpr - gl_FragCoord.y) / uDpr;',
-    '  vec3 color = baseLayer(coord);',
+    '  vec2 innerBaseHalf = baseHalfSize();',
+    '  float innerBaseRadius = baseRadiusSize();',
+    '  vec3 normalBase = baseLayer(coord);',
+    '  vec3 innerBase = innerBaseLayer(coord);',
     '  float baseCoverage = coverage(sdRoundedRect(coord - uBaseCenter, uBaseHalf, uBaseRadius));',
-    '  float thumbCoverage = coverage(sdRoundedRect(coord - uThumbCenter, uThumbHalf, uThumbRadius));',
+    '  float innerBaseCoverage = coverage(sdRoundedRect(coord - uBaseCenter, innerBaseHalf, innerBaseRadius));',
+    '  float thumbSd = sdRoundedRect(coord - uThumbCenter, uThumbHalf, uThumbRadius);',
+    '  float thumbCoverage = coverage(thumbSd);',
     '  vec3 selected = selectedLayer(coord);',
     '  selected += vec3(highlight(coord, uThumbCenter, uThumbHalf, uThumbRadius));',
-    '  selected += vec3(interactiveHighlight(coord));',
-    '  selected -= vec3(innerShadow(coord));',
-    '  color += vec3(highlight(coord, uBaseCenter, uBaseHalf, uBaseRadius));',
-    '  color = mix(color, selected, thumbCoverage);',
-    '  float alpha = max(baseCoverage, thumbCoverage);',
+    '  float pressMix = smoothstep(0.0, 1.0, uPress);',
+    '  float localPress = thumbCoverage * pressMix;',
+    '  float thumbRingCoverage = (1.0 - smoothstep(0.0, 1.5, abs(thumbSd))) * pressMix;',
+    '  float thumbHighlight = clamp(highlight(coord, uThumbCenter, uThumbHalf, uThumbRadius) * 2.0, 0.0, 1.0);',
+    '  vec3 color = mix(normalBase, innerBase, localPress);',
+    '  float activeBaseCoverage = mix(baseCoverage, innerBaseCoverage, localPress);',
+    '  float baseHighlight = highlight(coord, uBaseCenter, uBaseHalf, uBaseRadius);',
+    '  float innerBaseHighlight = highlight(coord, uBaseCenter, innerBaseHalf, innerBaseRadius);',
+    '  color += vec3(mix(baseHighlight, innerBaseHighlight, localPress));',
+    '  color = mix(color, selected, thumbCoverage * (1.0 - pressMix));',
+    '  color = mix(color, vec3(1.0), thumbHighlight * thumbRingCoverage);',
+    '  float alpha = max(activeBaseCoverage, thumbRingCoverage * thumbHighlight);',
     '  outColor = vec4(clamp(color, 0.0, 1.0), alpha);',
     '}'
   ].join('\n');
@@ -4195,8 +4327,15 @@
   function resizeLiquidGlassRenderer() {
     if (!liquidGlass || !liquidGlassCanvas) return false;
     var rect = navEl.getBoundingClientRect();
+    var thumbEl = navEl.querySelector('.topnav-thumb');
     var navWidth = Math.max(1, rect.width);
     var navHeight = Math.max(1, rect.height);
+    var thumbHeight = thumbEl ? Math.max(1, thumbEl.offsetHeight) : 28;
+    var thumbTop = 4;
+    if (thumbEl) {
+      var computedThumbTop = parseFloat(getComputedStyle(thumbEl).top);
+      if (isFinite(computedThumbTop)) thumbTop = computedThumbTop;
+    }
     var pad = LIQUID_GLASS_PADDING;
     var width = navWidth + pad * 2;
     var height = navHeight + pad * 2;
@@ -4216,12 +4355,16 @@
     liquidGlass.height = height;
     liquidGlass.navWidth = navWidth;
     liquidGlass.navHeight = navHeight;
+    liquidGlass.thumbHeight = thumbHeight;
+    liquidGlass.thumbTop = thumbTop;
     liquidGlass.padding = pad;
     liquidGlass.dpr = dpr;
     liquidGlassCanvas.style.left = (rect.left - pad) + 'px';
     if (document.documentElement.classList.contains('outer-screen-layout')) {
       liquidGlassCanvas.style.top = '';
+      liquidGlassCanvas.style.bottom = (window.innerHeight - rect.bottom - pad) + 'px';
     } else {
+      liquidGlassCanvas.style.bottom = '';
       var topbarRect = navEl.parentElement.getBoundingClientRect();
       liquidGlassCanvas.style.top = (rect.top - topbarRect.top - pad) + 'px';
     }
@@ -4256,9 +4399,13 @@
     var baseScale = 1;
     var baseHalfWidth = liquidGlass.navWidth * baseScale * 0.5;
     var baseHalfHeight = liquidGlass.navHeight * baseScale * 0.5;
-    var thumbScale = 1 + ((78 / 56) - 1) * liquidGlass.press;
+    var thumbScale = 1 + ((74 / 56) - 1) * liquidGlass.press;
+    var thumbHeight = liquidGlass.thumbHeight || 28;
+    var thumbTop = typeof liquidGlass.thumbTop === 'number' ? liquidGlass.thumbTop : 4;
+    var thumbHalfHeight = thumbHeight * 0.5;
+    var thumbSizeScale = thumbHeight / 28;
     var thumbCenterX = liquidGlass.padding + thumbX + thumbW * 0.5;
-    var thumbCenterY = liquidGlass.padding + 4 + 14;
+    var thumbCenterY = liquidGlass.padding + thumbTop + thumbHalfHeight;
     var pointerX = liquidGlassPointer.active ? liquidGlass.padding + liquidGlassPointer.x : thumbCenterX;
     var pointerY = liquidGlassPointer.active ? liquidGlass.padding + liquidGlassPointer.y : thumbCenterY;
     gl.useProgram(liquidGlass.program);
@@ -4279,10 +4426,10 @@
     gl.uniform1f(uniforms.uBaseRefractionHeight, 12);
     gl.uniform1f(uniforms.uBaseRefractionAmount, -12);
     gl.uniform2f(uniforms.uThumbCenter, thumbCenterX, thumbCenterY);
-    gl.uniform2f(uniforms.uThumbHalf, Math.max(14, thumbW * thumbScale * 0.5), 14 * thumbScale);
-    gl.uniform1f(uniforms.uThumbRadius, Math.min(Math.max(14, thumbW * thumbScale * 0.5), 14 * thumbScale));
-    gl.uniform1f(uniforms.uThumbRefractionHeight, 5 * thumbScale);
-    gl.uniform1f(uniforms.uThumbRefractionAmount, -7 * thumbScale);
+    gl.uniform2f(uniforms.uThumbHalf, Math.max(14, thumbW * thumbScale * 0.5), thumbHalfHeight * thumbScale);
+    gl.uniform1f(uniforms.uThumbRadius, Math.min(Math.max(14, thumbW * thumbScale * 0.5), thumbHalfHeight * thumbScale));
+    gl.uniform1f(uniforms.uThumbRefractionHeight, 5 * thumbSizeScale * thumbScale);
+    gl.uniform1f(uniforms.uThumbRefractionAmount, -7 * thumbSizeScale * thumbScale);
     gl.uniform1f(uniforms.uThumbMagnification, thumbScale);
     gl.uniform1f(uniforms.uPress, liquidGlass.press);
     gl.uniform2f(uniforms.uPointer, pointerX, pointerY);
@@ -5150,9 +5297,11 @@
     document.body.classList.remove('startup-lock');
     syncImmersiveCursorState();
     startActivityMusic();
+    requestAnimationFrame(function () { syncLiquidGlassRenderer(true); });
     if (startupCloseTimer) clearTimeout(startupCloseTimer);
     startupCloseTimer = setTimeout(function () {
       startupOverlay.hidden = true;
+      syncLiquidGlassRenderer(true);
       startupCloseTimer = 0;
     }, 500);
   }
@@ -5168,6 +5317,13 @@
     startupVideo.addEventListener('error', closeStartupOverlay);
     startupVideo.addEventListener('play', scheduleStartupCrossfade);
     startupVideo.addEventListener('playing', scheduleStartupCrossfade);
+    startupVideo.addEventListener('dblclick', function (event) {
+      if (startupClosing || startupLandingShown || startupVideo.paused) return;
+      event.preventDefault();
+      event.stopPropagation();
+      startupVideo.pause();
+      closeStartupOverlay();
+    });
     showStartupLanding();
 
     startupOverlay.addEventListener('click', function (event) {
@@ -11419,6 +11575,7 @@
       pagesWrap.classList.remove('entering');
       topbar.classList.remove('entering');
       if (dockWrap) dockWrap.classList.remove('entering');
+      syncLiquidGlassRenderer(true);
       return;
     }
     if (interfaceAnimationTimer) clearTimeout(interfaceAnimationTimer);
@@ -11437,6 +11594,7 @@
       pagesWrap.classList.remove('entering');
       topbar.classList.remove('entering');
       if (dockWrap) dockWrap.classList.remove('entering');
+      syncLiquidGlassRenderer(true);
       interfaceAnimationTimer = 0;
     }, 800);
   }

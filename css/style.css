@@ -1358,6 +1358,8 @@ html.ui-hidden .bg-tint {
   text-shadow: 0 1px 8px rgba(44, 23, 12, 0.22);
   transition: color 0.24s ease, text-shadow 0.24s ease;
 }
+.topnav-item-content { display: contents; }
+.topnav-item-icon { display: none; }
 .topnav-item-effect {
   position: absolute;
   left: 50%;
@@ -1394,7 +1396,9 @@ html.ui-hidden .bg-tint {
     0 1px 5px rgba(42, 24, 13, 0.5),
     0 0 9px rgba(var(--accent-pink-rgb), 0.28);
 }
-.topnav-item.active .topnav-item-effect {
+.topnav-item.active .topnav-item-content { display: contents; }
+.topnav-item-icon { display: none; }
+.topnav-item-effect {
   opacity: 0.34;
   transform: translateX(-50%) scale(1);
   transition-delay: 0.06s;
@@ -4734,7 +4738,9 @@ html.inner-screen-layout .topnav.pressing .topnav-thumb {
 html.inner-screen-layout .topnav.dragging .topnav-thumb {
   --glass-thumb-scale: 1.04;
 }
-html.inner-screen-layout .topnav-item-effect {
+html.inner-screen-layout .topnav-item-content { display: contents; }
+.topnav-item-icon { display: none; }
+.topnav-item-effect {
   display: none;
 }
 html.inner-screen-layout .topnav-item {
@@ -4795,11 +4801,17 @@ html.inner-screen-layout .topnav.liquid-glass-ready .topnav-item.active .topnav-
   font-family: inherit;
   text-shadow: none;
 }
+html.inner-screen-layout .topnav.liquid-glass-ready .topnav-item.active .topnav-item-icon {
+  color: transparent;
+}
 html.inner-screen-layout .topnav.nav-thumb-animating.liquid-glass-ready .topnav-item.active .topnav-item-label {
   color: #fff;
   -webkit-text-fill-color: #fff;
   -webkit-text-stroke: 0;
   text-shadow: none;
+}
+html.inner-screen-layout .topnav.nav-thumb-animating.liquid-glass-ready .topnav-item.active .topnav-item-icon {
+  color: #fff;
 }
 
 /* 内屏兼容回退：WebGL 不可用时也必须保持透明、无模糊。 */
@@ -5055,7 +5067,8 @@ html.outer-screen-layout .outer-activity-button img {
 html.outer-screen-layout .outer-activity-button:active { transform: translate(-50%, -50%) scale(0.95); }
 
 html.outer-screen-layout .page {
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 88px);
+  /* 至少 28px 底部安全间距 + 54px 底栏高度 + 16px 内容留白。 */
+  bottom: calc(max(env(safe-area-inset-bottom, 0px), 28px) + 70px);
 }
 html.outer-screen-layout .page-section {
   left: 50%;
@@ -5091,15 +5104,43 @@ html.outer-screen-layout .card-scroll-track { display: none !important; }
 html.outer-screen-layout .topnav {
   position: fixed;
   top: auto;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+  bottom: max(env(safe-area-inset-bottom, 0px), 28px);
   left: 50%;
+  height: 54px;
   transform: translateX(-50%);
   z-index: 30;
+}
+html.outer-screen-layout .topnav-thumb {
+  top: 4px;
+  height: 46px;
+}
+html.outer-screen-layout .topbar > .topnav .topnav-item {
+  height: 42px;
+  padding: 0 26px;
+}
+html.outer-screen-layout .topbar > .topnav .topnav-item-content,
+html.outer-screen-layout .topbar > .topnav .topnav-color-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+html.outer-screen-layout .topbar > .topnav .topnav-item-icon,
+html.outer-screen-layout .topbar > .topnav .topnav-color-label .topnav-item-icon {
+  display: block;
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+html.outer-screen-layout .topbar > .topnav .topnav-item-label {
+  font-size: var(--text-small);
+  line-height: 1;
 }
 html.outer-screen-layout .topbar > .topnav-liquid-glass {
   position: fixed;
   inset: auto;
-  bottom: calc(env(safe-area-inset-bottom, 0px) - 2px);
+  bottom: calc(max(env(safe-area-inset-bottom, 0px), 28px) - 18px);
   z-index: 29;
 }
 
