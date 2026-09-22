@@ -389,6 +389,7 @@
       if (centerWidthFrame) cancelAnimationFrame(centerWidthFrame);
       centerWidthFrame = 0;
       setCenterCardWidth(target);
+      settleActiveSectionCards();
       return;
     }
     var root = document.documentElement;
@@ -397,10 +398,12 @@
     if (!centerWidthReady) {
       centerWidthReady = true;
       setCenterCardWidth(target);
+      settleActiveSectionCards();
       return;
     }
     if (Math.abs(current - target) < 0.25) {
       setCenterCardWidth(target);
+      settleActiveSectionCards();
       return;
     }
     if (centerWidthFrame) cancelAnimationFrame(centerWidthFrame);
@@ -415,6 +418,7 @@
         centerWidthFrame = requestAnimationFrame(step);
       } else {
         centerWidthFrame = 0;
+        settleActiveSectionCards();
       }
     }
     centerWidthFrame = requestAnimationFrame(step);
@@ -432,7 +436,40 @@
     if (target > 0) animateCenterCardWidth(target);
   }
 
+  var portraitLayoutActive = false;
+  var portraitLayoutReady = false;
+
+  // 正屏分界：右侧自适应列小于底栏一张未选中卡片宽度的 2 倍时，切换为两列布局。
+  function shouldUsePortraitLayout() {
+    if (!items.length) return false;
+    readSlotSize();
+    var cardW = parseFloat(getComputedStyle(items[0]).width);
+    if (!isFinite(cardW) || cardW <= 0) cardW = items[0].offsetWidth || slotSize;
+    var gap = slotSize - cardW;
+    if (!(gap > 0)) gap = 10;
+    var centerWidth = (5 + (CENTER_SCALE - 1)) * cardW + 4 * gap;
+    var viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+    var sectionContentWidth = Math.max(0, Math.min(viewportWidth, 2 * centerWidth + 2 * gap + 32) - 32);
+    var sideWidth = Math.max(0, (sectionContentWidth - centerWidth - 2 * gap) / 2);
+    return sideWidth < cardW * 2;
+  }
+
+  function updateResponsiveLayoutMode() {
+    var nextPortrait = shouldUsePortraitLayout();
+    if (portraitLayoutReady && nextPortrait === portraitLayoutActive) return;
+    portraitLayoutReady = true;
+    portraitLayoutActive = nextPortrait;
+    document.documentElement.classList.toggle('portrait-layout', nextPortrait);
+    if (nextPortrait) {
+      var cards = document.querySelectorAll('.section-card');
+      for (var i = 0; i < cards.length; i++) cards[i].style.removeProperty('width');
+    }
+    var section = pagesWrap ? pagesWrap.querySelector('.page.active .page-section.active') : null;
+    scheduleSectionCardSnap(section || document);
+  }
+
   function render() {
+    updateResponsiveLayoutMode();
     readSlotSize();
     var cardW = items[0].offsetWidth || slotSize;
     var gap = slotSize - cardW;
@@ -537,6 +574,60 @@
     };
     renderNav(logo);
     layoutTopbarIdentity();
+  }
+
+  var sectionCardSnapTimer = 0;
+
+  // 将卡片宽度吸附到设备像素网格，使左右边框处于相同的小数相位，避免同一张卡两侧明暗不一致。
+  function snapSectionCardWidths(root) {
+    var scope = root && root.querySelectorAll ? root : document;
+    var cards = Array.prototype.slice.call(scope.querySelectorAll('.section-card'));
+    if (scope.classList && scope.classList.contains('section-card')) cards.unshift(scope);
+    if (!cards.length) return;
+    if (document.documentElement.classList.contains('portrait-layout')) {
+      for (var p = 0; p < cards.length; p++) cards[p].style.removeProperty('width');
+      return;
+    }
+    var dpr = Math.max(1, window.devicePixelRatio || 1);
+    var previousWidths = new Array(cards.length);
+    var naturalWidths = new Array(cards.length);
+
+    for (var i = 0; i < cards.length; i++) {
+      previousWidths[i] = cards[i].style.width;
+      cards[i].style.width = '';
+    }
+    for (var j = 0; j < cards.length; j++) {
+      naturalWidths[j] = parseFloat(getComputedStyle(cards[j]).width);
+    }
+    for (var k = 0; k < cards.length; k++) {
+      var card = cards[k];
+      var naturalWidth = naturalWidths[k];
+      if (!isFinite(naturalWidth) || naturalWidth <= 0) {
+        if (previousWidths[k]) card.style.width = previousWidths[k];
+        continue;
+      }
+      var snappedWidth = Math.round(naturalWidth * dpr) / dpr;
+      if (Math.abs(snappedWidth - naturalWidth) > 0.01) {
+        card.style.width = snappedWidth.toFixed(4) + 'px';
+      } else if (previousWidths[k]) {
+        card.style.width = '';
+      }
+    }
+  }
+
+  function scheduleSectionCardSnap(root) {
+    if (sectionCardSnapTimer) clearTimeout(sectionCardSnapTimer);
+    sectionCardSnapTimer = setTimeout(function () {
+      sectionCardSnapTimer = 0;
+      requestAnimationFrame(function () {
+        snapSectionCardWidths(root && root.isConnected ? root : document);
+      });
+    }, 0);
+  }
+
+  function settleActiveSectionCards() {
+    var section = pagesWrap ? pagesWrap.querySelector('.page.active .page-section.active') : null;
+    scheduleSectionCardSnap(section || document);
   }
 
   // 卡片被重建或页面被清空时，主动释放观察器和动画帧，避免分离 DOM 被长期持有。
@@ -1558,6 +1649,84 @@
     scroller.scrollLeft = oldLeft;
   }
 
+  function updateHotspotPortraitTabs(section) {
+    if (!section || !section._hotspot || !section._hotspot.portraitTabs) return;
+    var activeView = section._hotspot.portraitView || 'content';
+    section._hotspot.portraitTabs.forEach(function (tabs) {
+      var buttons = tabs.querySelectorAll('.hotspot-portrait-tab');
+      for (var i = 0; i < buttons.length; i++) {
+        var isActive = buttons[i].dataset.view === activeView;
+        buttons[i].classList.toggle('is-active', isActive);
+        buttons[i].setAttribute('aria-selected', isActive ? 'true' : 'false');
+      }
+    });
+  }
+
+  function positionHotspotPortraitIndicator(tabs, view, animate) {
+    if (!tabs || tabs.offsetParent === null) return;
+    var button = tabs.querySelector('.hotspot-portrait-tab[data-view="' + view + '"]');
+    var indicator = tabs.querySelector('.hotspot-portrait-tab-indicator');
+    if (!button || !indicator || !button.offsetWidth) return;
+    if (!animate) tabs.classList.add('no-anim');
+    indicator.style.width = button.offsetWidth + 'px';
+    indicator.style.transform = 'translateX(' + button.offsetLeft + 'px)';
+    if (!animate) {
+      void indicator.offsetWidth;
+      tabs.classList.remove('no-anim');
+    }
+  }
+
+  function setHotspotPortraitView(section, view, animateSwitch) {
+    if (!section || !section._hotspot) return;
+    var previousView = section._hotspot.portraitView || 'content';
+    var nextView = view === 'comments' ? 'comments' : 'content';
+    section._hotspot.portraitView = nextView;
+    section.classList.toggle('portrait-show-comments', nextView === 'comments');
+    updateHotspotPortraitTabs(section);
+    requestAnimationFrame(function () {
+      if (animateSwitch) {
+        var nextBody = nextView === 'comments' ? section._hotspot.commentsBody : section._hotspot.contentBody;
+        if (nextBody) animateCardBody(nextBody, 0);
+      }
+      section._hotspot.portraitTabs.forEach(function (tabs) {
+        positionHotspotPortraitIndicator(tabs, previousView, false);
+        requestAnimationFrame(function () { positionHotspotPortraitIndicator(tabs, nextView, true); });
+      });
+    });
+  }
+
+  function makeHotspotPortraitTabs(section) {
+    var tabs = document.createElement('div');
+    tabs.className = 'hotspot-portrait-tabs';
+    tabs.setAttribute('role', 'tablist');
+    [['content', '内容'], ['comments', '评论']].forEach(function (entry) {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'hotspot-portrait-tab';
+      button.dataset.view = entry[0];
+      button.textContent = entry[1];
+      button.setAttribute('role', 'tab');
+      button.onclick = function () { setHotspotPortraitView(section, entry[0], true); };
+      tabs.appendChild(button);
+    });
+    var indicator = document.createElement('i');
+    indicator.className = 'hotspot-portrait-tab-indicator';
+    tabs.appendChild(indicator);
+    return tabs;
+  }
+
+  function decorateHotspotPortraitTitle(titleEl, labelText, section) {
+    titleEl.textContent = '';
+    var label = document.createElement('span');
+    label.className = 'hotspot-card-title-label';
+    label.textContent = labelText;
+    titleEl._portraitLabel = label;
+    titleEl.appendChild(label);
+    var tabs = makeHotspotPortraitTabs(section);
+    titleEl.appendChild(tabs);
+    return tabs;
+  }
+
   function buildHotspotSection(id, section) {
     if (!section || section._hotspotBuilt) return;
     section._hotspotBuilt = true;
@@ -1568,6 +1737,9 @@
     var contentCard = makeHotspotCard('内容', 'hotspot-content-card');
     var commentsCard = makeHotspotCard('评论', 'hotspot-comments-card');
     contentCard.title.classList.add('hotspot-content-card-title');
+    commentsCard.title.classList.add('hotspot-comments-card-title');
+    var contentTabs = decorateHotspotPortraitTitle(contentCard.title, '内容', section);
+    var commentsTabs = decorateHotspotPortraitTitle(commentsCard.title, '评论', section);
     var commentsBackBtn = document.createElement('button');
     commentsBackBtn.className = 'achv-detail-back achv-title-back';
     commentsBackBtn.type = 'button';
@@ -1630,6 +1802,7 @@
       contentCard: contentCard.card,
       commentsCard: commentsCard.card,
       contentTitle: contentCard.title,
+      contentTitleLabel: contentCard.title._portraitLabel,
       searchWrap: searchWrap,
       search: search,
       keywordScroll: keywordScroll,
@@ -1642,8 +1815,11 @@
       sortModeBtn: commentsSortModeBtn,
       commentsView: 'overview',
       activeComment: null,
-      commentsOverviewScrollTop: 0
+      commentsOverviewScrollTop: 0,
+      portraitView: 'content',
+      portraitTabs: [contentTabs, commentsTabs]
     };
+    setHotspotPortraitView(section, 'content');
 
     search.addEventListener('input', function () {
       var state = hotspotUiState(id);
@@ -1906,8 +2082,10 @@
       if (data.posts[i].id === state.selectedId) { post = data.posts[i]; break; }
     }
     var title = section._hotspot.contentTitle;
+    var titleLabel = section._hotspot.contentTitleLabel;
     var body = section._hotspot.contentBody;
-    title.textContent = post ? post.title : '内容';
+    if (titleLabel) titleLabel.textContent = post ? post.title : '内容';
+    else title.textContent = post ? post.title : '内容';
     title.title = post ? post.title : '';
     body.innerHTML = '';
     if (post) {
@@ -2739,6 +2917,42 @@
     return section._filesLoading;
   }
 
+  var FILES_PAGE_IMAGE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect fill="none" stroke="currentColor" stroke-width="2" x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="9" r="1.7" fill="currentColor"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m4 17 5-5 4 4 2-2 5 5"/></svg>';
+  var FILES_PAGE_CALENDAR_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect fill="none" stroke="currentColor" stroke-width="2" x="3" y="5" width="18" height="16" rx="2"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M3 10h18M8 3v4M16 3v4M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg>';
+
+  function setFilesPortraitPage(section, page, animateSwitch) {
+    if (!section || !section._files) return;
+    var nextPage = page === 'schedule' ? 'schedule' : 'browse';
+    section._files.portraitPage = nextPage;
+    var showingSchedule = nextPage === 'schedule';
+    section.classList.toggle('portrait-show-schedule', showingSchedule);
+    var buttons = section.querySelectorAll('.files-portrait-page-btn');
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].innerHTML = showingSchedule ? FILES_PAGE_CALENDAR_ICON : FILES_PAGE_IMAGE_ICON;
+      buttons[i].dataset.icon = showingSchedule ? 'calendar' : 'image';
+      buttons[i].setAttribute('aria-label', showingSchedule ? '当前为日程页，切换到浏览卡片' : '当前为浏览页，切换到日程卡片');
+    }
+    if (animateSwitch) {
+      var nextBody = showingSchedule ? section._files.scheduleBody : section._files.browseBody;
+      requestAnimationFrame(function () {
+        if (section.isConnected && nextBody) animateCardBody(nextBody, 0);
+      });
+    }
+  }
+
+  function makeFilesPortraitPageButton(section) {
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'achv-detail-back files-portrait-page-btn';
+    button.innerHTML = FILES_PAGE_IMAGE_ICON;
+    button.dataset.icon = 'image';
+    button.onclick = function () {
+      var current = section && section._files ? section._files.portraitPage : 'browse';
+      setFilesPortraitPage(section, current === 'schedule' ? 'browse' : 'schedule', true);
+    };
+    return button;
+  }
+
   function buildFilesSection(id, section) {
     if (!section || section._filesBuilt) return;
     section._filesBuilt = true;
@@ -2747,14 +2961,18 @@
     var browseCard = makeHotspotCard('浏览', 'files-browse-card');
     var viewerCard = makeHotspotCard('观赏', 'files-viewer-card');
     var scheduleCard = makeHotspotCard('日程', 'files-schedule-card', false);
+    browseCard.title.appendChild(makeFilesPortraitPageButton(section));
+    scheduleCard.title.appendChild(makeFilesPortraitPageButton(section));
     section.appendChild(browseCard.card);
     section.appendChild(viewerCard.card);
     section.appendChild(scheduleCard.card);
     section._files = {
       browseBody: browseCard.body,
       viewerBody: viewerCard.body,
-      scheduleBody: scheduleCard.body
+      scheduleBody: scheduleCard.body,
+      portraitPage: 'browse'
     };
+    setFilesPortraitPage(section, 'browse');
     renderFilesPage(id, section);
   }
 
@@ -4402,15 +4620,17 @@
     var section = document.querySelector('.page.active .page-section.active');
     if (!section) return;
     var cards = section.querySelectorAll('.section-card');
-    if (cards.length < 2) return;
     var sectionRect = section.getBoundingClientRect();
-    var firstCard = cards[0];
-    var lastCard = cards[cards.length - 1];
-    if (!firstCard.offsetWidth || !lastCard.offsetWidth) return;
-
-    // 使用布局尺寸，避免卡片入场缩放动画影响顶栏对齐
-    var leftEdge = sectionRect.left + firstCard.offsetLeft;
-    var rightEdge = sectionRect.left + lastCard.offsetLeft + lastCard.offsetWidth;
+    var leftEdge = Infinity;
+    var rightEdge = -Infinity;
+    for (var i = 0; i < cards.length; i++) {
+      if (!cards[i].offsetWidth) continue;
+      var cardLeft = sectionRect.left + cards[i].offsetLeft;
+      var cardRight = cardLeft + cards[i].offsetWidth;
+      leftEdge = Math.min(leftEdge, cardLeft);
+      rightEdge = Math.max(rightEdge, cardRight);
+    }
+    if (!isFinite(leftEdge) || !isFinite(rightEdge)) return;
 
     var rootStyle = document.documentElement.style;
     rootStyle.setProperty('--topbar-left-edge', leftEdge + 'px');
@@ -6117,10 +6337,10 @@
   function returnActivePageDetailsToRoot() {
     var page = pages[state.index];
     if (!page) return false;
-    var backs = page.querySelectorAll('.page-section .achv-detail-back');
+    var backs = page.querySelectorAll('.page-section .achv-title-back');
     var clicked = false;
     for (var i = 0; i < backs.length; i++) {
-      if (backs[i].hidden) continue;
+      if (backs[i].hidden || !backs[i].offsetWidth || !backs[i].offsetHeight) continue;
       backs[i].click();
       clicked = true;
     }
@@ -6774,18 +6994,18 @@
 
   // 每行「机构名：分数，测评文本」或「机构名，分数，测评文本」
   // 正文里写 \n 就是换行（TXT 一行一条，所以多行正文只能这样写）
-  function parseReviewTxt(text) {
+  // 每行一条测评：评测人：分数，评测文本；也支持英文冒号/逗号。
+  // 多分类时以独占一行的 --- 分隔，每段第一行是分类名。
+  function parseReviewRows(lines) {
     var rows = [];
-    String(text).split(/\r?\n/).forEach(function (line) {
-      line = line.trim();
+    (lines || []).forEach(function (line) {
+      line = String(line).trim();
       if (!line) return;
-      // 找第一个 ：或 ， 作为机构名分隔
-      var sep = line.search(/[：，,]/);
+      var sep = line.search(/[：:,，]/);
       if (sep < 0) return;
       var org = line.slice(0, sep).trim();
       var rest = line.slice(sep + 1).trim();
-      // 在 rest 中找第一个 ， 分出分数和文本
-      var sep2 = rest.search(/[，,]/);
+      var sep2 = rest.search(/[：:,，]/);
       var score, reviewText;
       if (sep2 >= 0) {
         score = rest.slice(0, sep2).trim();
@@ -6799,6 +7019,36 @@
     return rows;
   }
 
+  function parseReviewTxt(text) {
+    var content = String(text).replace(/^\uFEFF/, '');
+    var lines = content.split(/\r?\n/);
+    var hasCategories = lines.some(function (line) {
+      return /^\\?---\s*$/.test(line.trim());
+    });
+    if (!hasCategories) return parseReviewRows(lines);
+
+    var groups = [];
+    var blockLines = [];
+    function appendGroup() {
+      var currentLines = blockLines.slice();
+      blockLines = [];
+      while (currentLines.length && !String(currentLines[0]).trim()) currentLines.shift();
+      if (!currentLines.length) return;
+      var categoryName = String(currentLines.shift()).trim();
+      var rows = parseReviewRows(currentLines);
+      if (categoryName && rows.length) groups.push({ name: categoryName, reviews: rows });
+    }
+    lines.forEach(function (line) {
+      if (/^\\?---\s*$/.test(line.trim())) {
+        appendGroup();
+        return;
+      }
+      blockLines.push(line);
+    });
+    appendGroup();
+    return groups.length ? groups : parseReviewRows(lines);
+  }
+
   function saveReviews() { try { void 0 && localStorage.setItem(REVIEW_KEY, JSON.stringify(reviewStore)); } catch (e) {} }
   function loadReviews() {
     try { var raw = null; if (raw) { reviewStore = JSON.parse(raw); return true; } } catch (e) {}
@@ -6809,7 +7059,7 @@
     if (!meta) return;
     if (id) {
       // 指定活动：显示该活动的测评条数
-      var n = reviewsOf(id).length;
+      var n = reviewCountOf(id);
       meta.textContent = n ? ('已加载 ' + n + ' 条测评') : '未加载';
     } else {
       // 全部：显示有测评数据的活动数
@@ -6818,6 +7068,23 @@
     }
   }
   function reviewsOf(id) { return (reviewStore.reviews || {})[id] || []; }
+  function reviewGroupsOf(id) {
+    var rows = reviewsOf(id);
+    var hasGroups = rows.some(function (row) {
+      return !!(row && typeof row === 'object' && !Array.isArray(row) && Array.isArray(row.reviews));
+    });
+    if (!hasGroups) return [{ name: '', reviews: rows }];
+    return rows.map(function (row) {
+      if (!row || typeof row !== 'object' || !Array.isArray(row.reviews)) return null;
+      return { name: String(row.name || row.category || '').trim(), reviews: row.reviews };
+    }).filter(Boolean);
+  }
+
+  function reviewCountOf(id) {
+    return reviewGroupsOf(id).reduce(function (total, group) {
+      return total + ((group && group.reviews) || []).length;
+    }, 0);
+  }
 
   function reviewScoreValue(score) {
     var raw = String(score === undefined || score === null ? '' : score).trim();
@@ -6905,16 +7172,18 @@
   function personalReviewFor(id) {
     var media = String((typeof user !== 'undefined' && user && user.media) || '').trim().toLowerCase();
     if (!media) return null;
-    var reviews = reviewsOf(id);
-    for (var i = 0; i < reviews.length; i++) {
-      var review = reviews[i] || {};
-      if (String(review.org || '').trim().toLowerCase() !== media) continue;
-      if (reviewScoreValue(review.score) === null) return null;
-      return review;
+    var groups = reviewGroupsOf(id);
+    for (var g = 0; g < groups.length; g++) {
+      var reviews = (groups[g] && groups[g].reviews) || [];
+      for (var i = 0; i < reviews.length; i++) {
+        var review = reviews[i] || {};
+        if (String(review.org || '').trim().toLowerCase() !== media) continue;
+        if (reviewScoreValue(review.score) === null) return null;
+        return review;
+      }
     }
     return null;
   }
-
   function refreshReviewPersonalScore() {
     var card = document.querySelector('.page.active .page-section.active .home-review-card');
     if (!card) return;
@@ -6962,7 +7231,7 @@
           reviewStore.reviews[id] = rows;
         }
         saveReviews(); applyReviewData(id);
-        alert('导入成功：' + id + ' 共 ' + reviewsOf(id).length + ' 条测评');
+        alert('导入成功：' + id + ' 共 ' + reviewCountOf(id) + ' 条测评');
       } catch (err) {
         alert('导入失败：' + (err.message === 'checksum' ? '校验未通过' : err.message === 'empty' ? '未解析到有效数据' : '文件格式错误'));
       }
@@ -7009,37 +7278,6 @@
         .catch(function () { return fallbackCopyText(text); });
     }
     return Promise.resolve(fallbackCopyText(text));
-  }
-
-  function fitPurchaseCardName(element, fullText) {
-    requestAnimationFrame(function () {
-      if (!element || !element.isConnected) return;
-      element.textContent = fullText;
-      var match = String(fullText).match(/《([^》]*)》/);
-      if (!match || element.scrollWidth <= element.clientWidth) return;
-
-      var open = fullText.indexOf('《');
-      var close = fullText.indexOf('》', open);
-      if (open < 0 || close < 0) return;
-
-      var head = fullText.slice(0, open + 1);
-      var tail = fullText.slice(close);
-      var inner = fullText.slice(open + 1, close);
-      var low = 0;
-      var high = inner.length;
-      var best = 0;
-      while (low <= high) {
-        var middle = Math.floor((low + high) / 2);
-        element.textContent = head + inner.slice(0, middle) + '…' + tail;
-        if (element.scrollWidth <= element.clientWidth) {
-          best = middle;
-          low = middle + 1;
-        } else {
-          high = middle - 1;
-        }
-      }
-      element.textContent = head + inner.slice(0, best) + '…' + tail;
-    });
   }
 
   function shopContentList(value) {
@@ -8261,7 +8499,7 @@
     } else {
       // 各赛季：测评、成就与热点
       var id = dmActiveCat;
-      dmContentEl.appendChild(makeDataCard('测评数据', '机构 · 分数 · 评测文本', 'reviewMeta',
+      dmContentEl.appendChild(makeDataCard('测评数据', '机构 · 分数 · 评测文本；多分类用 --- 分开，每类第一行写分类名', 'reviewMeta',
         function () { reviewFileInput.click(); }, function () { exportDataFile('review', id); }));
       dmContentEl.appendChild(makeDataCard('成就数据', '《奖杯组》· [奖杯等级，黑=紫金] · 成就名 · 说明', 'achvMeta',
         function () { achvFileInput.click(); }, function () { exportDataFile('achievements', id); }));
@@ -9011,6 +9249,144 @@
     return 'r-bronze';
   }
 
+  var LINE_MARQUEE_SELECTOR = [
+    '.home-info-grid dd',
+    '.home-achv-name',
+    '.home-achv-desc',
+    '.achv-group-name',
+    '.achv-group-desc',
+    '.review-activity-name',
+    '.review-item-org',
+    '.review-detail-org',
+    '.shop-owned-text',
+    '.shop-version-name',
+    '.shop-dlc-heading'
+  ].join(',');
+
+  var lineMarqueeReducedMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+  var LINE_MARQUEE_INITIAL_PAUSE_MS = 1000;
+  var LINE_MARQUEE_PAUSE_MS = 3000;
+
+  function stopLineMarquee(el) {
+    if (!el) return;
+    el.classList.remove('is-scrolling');
+    var scroll = el.querySelector('.line-marquee__scroll');
+    if (!scroll || !scroll._lineMarqueeAnimation) return;
+    scroll._lineMarqueeAnimation.cancel();
+    scroll._lineMarqueeAnimation = null;
+  }
+
+  function makeLineMarqueeAnimation(el, pauseMs, iterations) {
+    var scroll = el && el.querySelector('.line-marquee__scroll');
+    var content = el && el.querySelector('.line-marquee__content');
+    if (!scroll || !content || !scroll.animate) return null;
+    var textWidth = content.getBoundingClientRect().width;
+    var moveDuration = Math.max(6, Math.min(28, textWidth / 42));
+    var totalDuration = pauseMs + moveDuration * 1000;
+    var pauseOffset = pauseMs / totalDuration;
+    return scroll.animate([
+      { transform: 'translate3d(0, 0, 0)', offset: 0 },
+      { transform: 'translate3d(0, 0, 0)', offset: pauseOffset },
+      { transform: 'translate3d(-50%, 0, 0)', offset: 1 }
+    ], {
+      duration: totalDuration,
+      iterations: iterations,
+      easing: 'linear'
+    });
+  }
+
+  function startLineMarquee(el) {
+    if (!el || !el.classList.contains('is-overflowing')) return;
+    if (lineMarqueeReducedMotion && lineMarqueeReducedMotion.matches) return;
+    if (el.classList.contains('is-scrolling')) return;
+    var scroll = el.querySelector('.line-marquee__scroll');
+    if (!scroll) return;
+    el.classList.add('is-scrolling');
+    var firstAnimation = makeLineMarqueeAnimation(el, LINE_MARQUEE_INITIAL_PAUSE_MS, 1);
+    if (!firstAnimation) {
+      el.classList.remove('is-scrolling');
+      return;
+    }
+    scroll._lineMarqueeAnimation = firstAnimation;
+    firstAnimation.onfinish = function () {
+      if (!el.classList.contains('is-scrolling') || !el.classList.contains('is-overflowing')) return;
+      firstAnimation.onfinish = null;
+      firstAnimation.cancel();
+      var loopAnimation = makeLineMarqueeAnimation(el, LINE_MARQUEE_PAUSE_MS, Infinity);
+      if (loopAnimation) scroll._lineMarqueeAnimation = loopAnimation;
+    };
+  }
+
+  var lineMarqueeResizeObserver = window.ResizeObserver ? new ResizeObserver(function (entries) {
+    entries.forEach(function (entry) { refreshLineMarquee(entry.target); });
+  }) : null;
+
+  function refreshLineMarquee(el) {
+    if (!el || !el.classList || !el.classList.contains('line-marquee')) return;
+    var content = el.querySelector('.line-marquee__content');
+    if (!content) return;
+    var availableWidth = el.clientWidth;
+    var textWidth = content.getBoundingClientRect().width;
+    var overflowing = availableWidth > 0 && textWidth > availableWidth + 1;
+    el.classList.toggle('is-overflowing', overflowing);
+    if (!overflowing) {
+      stopLineMarquee(el);
+    } else if (el.matches(':hover')) {
+      startLineMarquee(el);
+    }
+  }
+
+  function initLineMarquee(el) {
+    if (!el || el.nodeType !== 1) return;
+    if (el.dataset.lineMarqueeReady === '1') {
+      refreshLineMarquee(el);
+      return;
+    }
+    var text = el.textContent || '';
+    if (!text.trim()) return;
+    el.dataset.lineMarqueeReady = '1';
+    el.classList.add('line-marquee');
+
+    var staticText = document.createElement('span');
+    staticText.className = 'line-marquee__static';
+    staticText.textContent = text;
+
+    var scroll = document.createElement('span');
+    scroll.className = 'line-marquee__scroll';
+    for (var i = 0; i < 2; i++) {
+      var chunk = document.createElement('span');
+      chunk.className = 'line-marquee__chunk';
+      var content = document.createElement('span');
+      content.className = 'line-marquee__content';
+      content.textContent = text;
+      chunk.appendChild(content);
+      scroll.appendChild(chunk);
+    }
+
+    el.replaceChildren(staticText, scroll);
+    el.addEventListener('mouseenter', function () { startLineMarquee(el); });
+    el.addEventListener('mouseleave', function () { stopLineMarquee(el); });
+    if (lineMarqueeResizeObserver) lineMarqueeResizeObserver.observe(el);
+    requestAnimationFrame(function () { refreshLineMarquee(el); });
+  }
+
+  function initLineMarquees(root) {
+    var scope = root && root.nodeType === 1 ? root : document;
+    var nodes = [];
+    if (scope.matches && scope.matches(LINE_MARQUEE_SELECTOR)) nodes.push(scope);
+    if (scope.querySelectorAll) {
+      nodes = nodes.concat(Array.prototype.slice.call(scope.querySelectorAll(LINE_MARQUEE_SELECTOR)));
+    }
+    nodes.forEach(initLineMarquee);
+  }
+
+  window.addEventListener('resize', function () {
+    requestAnimationFrame(function () { initLineMarquees(document); });
+  });
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () { initLineMarquees(document); });
+  }
+
   var ACHV_TROPHY_PATH = 'M7 3h10v2h3v2c0 3.2-2.1 5.7-5 6.4V17h3v3H6v-3h3v-3.6C6.1 12.7 4 10.2 4 7V5h3V3zm2 2v2c0 2.7 1.4 4.8 3 4.8s3-2.1 3-4.8V5H9zM6 7H5c0 1.7.7 3.1 2 4V8.4C6.3 8.1 6 7.6 6 7zm12 0c0 .6-.3 1.1-1 1.4V11c1.3-.9 2-2.3 2-4h-1z';
   var ACHV_TROPHY_MARKUP =
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="' + ACHV_TROPHY_PATH + '"/></svg>';
@@ -9168,6 +9544,56 @@
     disposeSectionCardResources(container);
     container.innerHTML = '';
 
+    var rightColumn = null;
+    var rightColumnBody = null;
+    var mergedDetailOnly = false;
+    var mergedReviewOnly = false;
+    var mergedOverviewScrollTop = 0;
+    var mergedOverviewPositionCaptured = false;
+    var mergedRestoreTimer = 0;
+
+    function rememberMergedOverviewPosition() {
+      if (!rightColumnBody) return;
+      mergedOverviewScrollTop = rightColumnBody.scrollTop;
+      mergedOverviewPositionCaptured = true;
+    }
+
+    function syncMergedSecondaryView(detailOnly, reviewOnly) {
+      var secondary = !!(detailOnly || reviewOnly);
+      var wasSecondary = !!(mergedDetailOnly || mergedReviewOnly);
+      if (rightColumnBody && secondary && !wasSecondary && !mergedOverviewPositionCaptured) {
+        mergedOverviewScrollTop = rightColumnBody.scrollTop;
+      }
+      if (secondary) mergedOverviewPositionCaptured = true;
+      mergedDetailOnly = !!detailOnly;
+      mergedReviewOnly = !!reviewOnly;
+      if (rightColumn) {
+        rightColumn.classList.toggle('portrait-detail-secondary', mergedDetailOnly);
+        rightColumn.classList.toggle('portrait-review-secondary', mergedReviewOnly);
+      }
+      if (rightColumnBody) {
+        if (secondary) {
+          if (mergedRestoreTimer) clearTimeout(mergedRestoreTimer);
+          mergedRestoreTimer = 0;
+          rightColumnBody.scrollTop = 0;
+        } else if (wasSecondary) {
+          var restoreTop = mergedOverviewScrollTop;
+          mergedOverviewPositionCaptured = false;
+          function restoreOverviewPosition() {
+            if (!mergedDetailOnly && !mergedReviewOnly) rightColumnBody.scrollTop = restoreTop;
+          }
+          void rightColumnBody.scrollHeight;
+          restoreOverviewPosition();
+          requestAnimationFrame(restoreOverviewPosition);
+          if (mergedRestoreTimer) clearTimeout(mergedRestoreTimer);
+          mergedRestoreTimer = window.setTimeout(function () {
+            mergedRestoreTimer = 0;
+            restoreOverviewPosition();
+          }, 650);
+        }
+      }
+    }
+
     // 辅助：创建一个卡片（body 内部可滚动）
     function card(title, bodyEl) {
       var c = document.createElement('div');
@@ -9191,6 +9617,7 @@
     var achvBody = document.createElement('div');
     achvBody.className = 'home-achv-list';
     var achvCard = card('实绩', achvBody);
+    achvCard.classList.add('home-achv-card');
     var achvScroll = achvCard.querySelector('.section-card-body');
     var achvTitleEl = achvCard.querySelector('.section-card-title');
     var achvBackBtn = document.createElement('button');
@@ -9208,6 +9635,7 @@
       achvBackBtn.hidden = !showBack;
       if (achvScroll) achvScroll.scrollTop = 0;
       animateCardBody(achvBody, 0);
+      initLineMarquees(achvBody);
       invalidateCursorTargetCache();
     }
 
@@ -9230,7 +9658,8 @@
 
     // 第 2 列（50%）：测评总览与二级详情
     function createReviewCard(id) {
-      var reviews = reviewsOf(id);
+      var reviewGroups = reviewGroupsOf(id);
+      var reviews = (reviewGroups[0] && reviewGroups[0].reviews) || [];
       var activityName = id;
       var core = (dataStore && dataStore.core) || [];
       for (var ci = 0; ci < core.length; ci++) {
@@ -9250,10 +9679,21 @@
       reviewBackBtn.setAttribute('aria-label', '返回测评总览');
       reviewBackBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M20 12H4M12 4l-8 8 8 8"/></svg>';
       reviewBackBtn.hidden = true;
-      reviewBackBtn.onclick = showReviewOverview;
+      reviewBackBtn.onclick = showPreviousReviewView;
       reviewTitleEl.appendChild(reviewBackBtn);
 
+      var reviewNextBtn = document.createElement('button');
+      reviewNextBtn.className = 'achv-detail-back achv-title-next';
+      reviewNextBtn.type = 'button';
+      reviewNextBtn.setAttribute('aria-label', '下一类测评');
+      reviewNextBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M20 12H4M12 4l-8 8 8 8"/></svg>';
+      reviewNextBtn.hidden = true;
+      reviewNextBtn.onclick = showNextReviewCategory;
+      reviewTitleEl.appendChild(reviewNextBtn);
+
       var overviewScrollTop = 0;
+      var reviewPageIndex = 0;
+      var reviewShowingDetail = false;
 
       function makeScoreBadge(value) {
         var badge = document.createElement('div');
@@ -9296,7 +9736,10 @@
           item.tabIndex = 0;
           item.setAttribute('role', 'button');
           item.setAttribute('aria-label', '查看' + (review.org || '媒体') + '的完整测评');
-          item.onclick = function () { showReviewDetail(review); };
+          item.onclick = function () {
+            rememberMergedOverviewPosition();
+            showReviewDetail(review);
+          };
           item.onkeydown = function (event) {
             if (event.key !== 'Enter' && event.key !== ' ') return;
             event.preventDefault();
@@ -9327,7 +9770,7 @@
         overviewMain.className = 'review-overview-main';
         var name = document.createElement('div');
         name.className = 'review-activity-name';
-        name.textContent = activityName;
+        name.textContent = (reviewGroups[reviewPageIndex] && reviewGroups[reviewPageIndex].name) || activityName;
         var bar = document.createElement('div');
         bar.className = 'review-score-bar review-overview-bar' + (stats.count ? '' : ' is-empty');
         if (stats.count) {
@@ -9399,13 +9842,52 @@
         return view;
       }
 
+      function updateReviewNavigation() {
+        var hasPagination = reviewGroups.length > 1;
+        reviewCard.classList.toggle('has-review-pagination', hasPagination);
+        if (reviewShowingDetail) {
+          reviewBackBtn.hidden = false;
+          reviewNextBtn.hidden = true;
+          reviewBackBtn.setAttribute('aria-label', '返回测评总览');
+          return;
+        }
+        reviewBackBtn.hidden = !hasPagination || reviewPageIndex <= 0;
+        reviewNextBtn.hidden = !hasPagination || reviewPageIndex >= reviewGroups.length - 1;
+        reviewBackBtn.setAttribute('aria-label', '上一类测评');
+      }
+
       function setReviewView(node, showBack) {
+        reviewShowingDetail = !!showBack;
         reviewBody.innerHTML = '';
         reviewBody.appendChild(node);
-        reviewBackBtn.hidden = !showBack;
+        updateReviewNavigation();
         if (reviewScroll) reviewScroll.scrollTop = 0;
+        syncMergedSecondaryView(mergedDetailOnly, reviewShowingDetail);
         animateCardBody(reviewBody, 0);
+        initLineMarquees(reviewBody);
         invalidateCursorTargetCache();
+      }
+
+      function showReviewCategory(index) {
+        var group = reviewGroups[index];
+        if (!group) return;
+        reviewPageIndex = index;
+        reviews = group.reviews || [];
+        overviewScrollTop = 0;
+        showReviewOverview();
+      }
+
+      function showPreviousReviewView() {
+        if (reviewShowingDetail) {
+          showReviewOverview();
+          return;
+        }
+        if (reviewPageIndex > 0) showReviewCategory(reviewPageIndex - 1);
+      }
+
+      function showNextReviewCategory() {
+        if (reviewShowingDetail) return;
+        showReviewCategory(reviewPageIndex + 1);
       }
 
       function showReviewOverview() {
@@ -9421,7 +9903,7 @@
       showReviewOverview();
       return reviewCard;
     }
-    container.appendChild(createReviewCard(id));
+    var reviewCard = createReviewCard(id);
 
     // 第 3 列（25%）：详情与商店版本二级页
     var info = infoOf(id);
@@ -9501,6 +9983,7 @@
     detailCard.addEventListener('click', function (event) {
       var bar = event.target.closest ? event.target.closest('.shop-owned-bar') : null;
       if (!bar || !detailCard.contains(bar)) return;
+      rememberMergedOverviewPosition();
       showLibraryOwners();
     });
 
@@ -9538,7 +10021,6 @@
             : purchaseLabel + '《' + activityName + '》' + item.name;
           name.textContent = fullName;
           name.title = fullName;
-          fitPurchaseCardName(name, fullName);
           head.appendChild(name);
           row.appendChild(head);
           var isOwned = ownedCheck && libraryOwnsShopItem(id, item, shop);
@@ -9560,7 +10042,10 @@
           statusButton.type = 'button';
           statusButton.textContent = statusText;
           statusButton.setAttribute('aria-label', '查看' + item.name + '详情，当前' + statusText);
-          statusButton.onclick = function () { showShopVersion(item); };
+          statusButton.onclick = function () {
+            rememberMergedOverviewPosition();
+            showShopVersion(item);
+          };
           actions.appendChild(priceTag);
           actions.appendChild(statusButton);
           row.appendChild(actions);
@@ -9665,22 +10150,26 @@
       if (info) {
         var grid = document.createElement('dl');
         grid.className = 'home-info-grid';
-        if (info.name) { var dtName = document.createElement('dt'); dtName.textContent = '中文名'; var ddName = document.createElement('dd'); ddName.textContent = info.name; grid.appendChild(dtName); grid.appendChild(ddName); }
-        if (info.developer) { var dt = document.createElement('dt'); dt.textContent = '开发商'; var dd = document.createElement('dd'); dd.textContent = info.developer; grid.appendChild(dt); grid.appendChild(dd); }
-        if (info.publisher) { var dt2 = document.createElement('dt'); dt2.textContent = '发行商'; var dd2 = document.createElement('dd'); dd2.textContent = info.publisher; grid.appendChild(dt2); grid.appendChild(dd2); }
-        if (info.releaseDate) { var dt3 = document.createElement('dt'); dt3.textContent = '发行日'; var dd3 = document.createElement('dd'); dd3.textContent = info.releaseDate; grid.appendChild(dt3); grid.appendChild(dd3); }
+        if (info.name) { var dtName = document.createElement('dt'); dtName.dataset.field = 'name'; dtName.textContent = '中文名'; var ddName = document.createElement('dd'); ddName.dataset.field = 'name'; ddName.textContent = info.name; grid.appendChild(dtName); grid.appendChild(ddName); }
+        if (info.developer) { var dt = document.createElement('dt'); dt.dataset.field = 'developer'; dt.textContent = '开发商'; var dd = document.createElement('dd'); dd.dataset.field = 'developer'; dd.textContent = info.developer; grid.appendChild(dt); grid.appendChild(dd); }
+        if (info.publisher) { var dt2 = document.createElement('dt'); dt2.dataset.field = 'publisher'; dt2.textContent = '发行商'; var dd2 = document.createElement('dd'); dd2.dataset.field = 'publisher'; dd2.textContent = info.publisher; grid.appendChild(dt2); grid.appendChild(dd2); }
+        if (info.releaseDate) { var dt3 = document.createElement('dt'); dt3.dataset.field = 'release'; dt3.textContent = '发行日'; var dd3 = document.createElement('dd'); dd3.dataset.field = 'release'; dd3.textContent = info.releaseDate; grid.appendChild(dt3); grid.appendChild(dd3); }
         if (info.tags && info.tags.length) {
           var dtTags = document.createElement('dt');
+          dtTags.dataset.field = 'tags';
           dtTags.textContent = '标签类';
           var ddTags = document.createElement('dd');
+          ddTags.dataset.field = 'tags';
           ddTags.textContent = info.tags.join('；');
           grid.appendChild(dtTags);
           grid.appendChild(ddTags);
         }
         var versionCount = shop && shop.versions ? shop.versions.length : 0;
         var dtVersions = document.createElement('dt');
+        dtVersions.dataset.field = 'versions';
         dtVersions.textContent = '版本数';
         var ddVersions = document.createElement('dd');
+        ddVersions.dataset.field = 'versions';
         ddVersions.textContent = String(versionCount);
         grid.appendChild(dtVersions);
         grid.appendChild(ddVersions);
@@ -9701,7 +10190,9 @@
       detailBody.appendChild(node);
       detailBackBtn.hidden = !showBack;
       if (detailScroll) detailScroll.scrollTop = scrollTop || 0;
+      syncMergedSecondaryView(!!showBack, mergedReviewOnly);
       animateCardBody(detailBody, 0);
+      initLineMarquees(detailBody);
       invalidateCursorTargetCache();
     }
 
@@ -9715,7 +10206,17 @@
     }
 
     showDetailOverview();
-    container.appendChild(detailCard);
+    rightColumn = document.createElement('div');
+    rightColumn.className = 'section-card home-right-column';
+    rightColumnBody = document.createElement('div');
+    rightColumnBody.className = 'section-card-body home-right-column-body';
+    rightColumnBody.appendChild(detailCard);
+    rightColumnBody.appendChild(reviewCard);
+    rightColumn.appendChild(rightColumnBody);
+    attachManualScroll(rightColumnBody);
+    syncMergedSecondaryView(mergedDetailOnly, mergedReviewOnly);
+    container.appendChild(rightColumn);
+    scheduleSectionCardSnap(container);
     invalidateCursorTargetCache();
     var page = container.closest('.page');
     if (page && page.classList.contains('active') && container.classList.contains('active')) {
@@ -9919,6 +10420,8 @@
         moveThumb(navCache[curNavLogo].active, false);
       }
       layoutTopbarIdentity();
+      var activeSection = pagesWrap ? pagesWrap.querySelector('.page.active .page-section.active') : null;
+      scheduleSectionCardSnap(activeSection || document);
     });
   }
 
