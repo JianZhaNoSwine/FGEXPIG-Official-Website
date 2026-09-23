@@ -39,6 +39,7 @@
   --wallpaper-dim-top: 0.175;
   --wallpaper-dim-bottom: 0.42;
   --card-blur: 0px;
+  --avatar-circle-size: 36px;
   /* logo 圆角矩形卡片：1:2 长方形（宽 = 高 × 2） */
   --card-h: clamp(46px, 7.6vh, 66px);
   --card-w: calc(var(--card-h) * 2);
@@ -144,6 +145,7 @@ html.ui-hidden .login-overlay,
 html.ui-hidden .sponsor-overlay,
 html.ui-hidden .minigame-overlay,
 html.ui-hidden .startup-overlay,
+html.ui-hidden .top-actions,
 html.ui-hidden .cursor-glow,
 html.ui-hidden .bg-tint {
   opacity: 0 !important;
@@ -1113,10 +1115,12 @@ html.ui-hidden .bg-tint {
 }
 .tb-avatar {
   position: absolute;
-  inset: 6px;
+  top: 50%;
+  left: 50%;
   flex: none;
-  width: 36px;
-  height: 36px;
+  width: var(--avatar-circle-size);
+  height: var(--avatar-circle-size);
+  transform: translate(-50%, -50%);
   border-radius: 50%;
   background: center / cover no-repeat, linear-gradient(135deg, #cfd6df, #aab4c0);
   border: 1px solid rgba(255, 255, 255, 0.6);
@@ -2496,6 +2500,7 @@ html.has-card-blur .pause-menu .settings-page .font-item {
 /* 暂停菜单打开时，只保留壁纸背景与暂停层，隐藏首页控件 */
 html.pause-menu-open #pages,
 html.pause-menu-open #topnav,
+html.pause-menu-open .top-actions,
 html.pause-menu-open .tb-right,
 html.pause-menu-open .tb-left,
 html.pause-menu-open .dock-wrap,
@@ -3032,6 +3037,16 @@ body.startup-lock { overflow: hidden; }
   visibility: hidden;
   pointer-events: none;
 }
+
+.startup-overlay.is-outer-sliding {
+  transform: translateY(-100%);
+  opacity: 1;
+  visibility: visible;
+  transition: transform 0.62s cubic-bezier(0.32, 0.72, 0, 1);
+  pointer-events: none;
+  will-change: transform;
+}
+
 .startup-video {
   position: absolute;
   inset: 0;
@@ -4609,6 +4624,7 @@ html.portrait-layout .hotspot-comments-card-title > .hotspot-card-title-label {
 }
 
 .topbar > .topnav-liquid-glass { display: none; }
+.topnav-glass-backdrop { display: none; }
 .topnav-color-overlay { display: none; }
 html:not(.inner-screen-layout) .topnav-item-label {
   -webkit-mask-image: none !important;
@@ -5036,6 +5052,33 @@ html.inner-screen-layout .page {
 html.outer-screen-layout .topbar {
   z-index: 40;
 }
+html.outer-screen-layout .topbar::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(-1 * (env(safe-area-inset-top, 0px) + 12px));
+  height: calc(env(safe-area-inset-top, 0px) + 76px);
+  border-radius: 0 0 22px 22px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.18),
+      rgba(255, 255, 255, 0.05) 42%,
+      rgba(255, 255, 255, 0.13)
+    ),
+    rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.20);
+  box-shadow: 0 14px 34px rgba(18, 10, 24, 0.14);
+  -webkit-backdrop-filter: blur(3px) saturate(160%) brightness(1.05);
+  backdrop-filter: blur(3px) saturate(160%) brightness(1.05);
+  pointer-events: none;
+  z-index: 0;
+}
+html.outer-screen-layout .topbar > .tb-left,
+html.outer-screen-layout .topbar > .tb-right {
+  z-index: 1;
+}
 html.outer-screen-layout .tb-nick,
 html.outer-screen-layout .tb-ribbon,
 html.outer-screen-layout .tb-songname,
@@ -5067,8 +5110,9 @@ html.outer-screen-layout .outer-activity-button img {
 html.outer-screen-layout .outer-activity-button:active { transform: translate(-50%, -50%) scale(0.95); }
 
 html.outer-screen-layout .page {
-  /* 至少 28px 底部安全间距 + 54px 底栏高度 + 16px 内容留白。 */
-  bottom: calc(max(env(safe-area-inset-bottom, 0px), 28px) + 70px);
+  /* 内容区上下各距屏幕边缘 10px，顶栏和底栏悬浮覆盖在内容之上。 */
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  bottom: 10px;
 }
 html.outer-screen-layout .page-section {
   left: 50%;
@@ -5143,21 +5187,168 @@ html.outer-screen-layout .topbar > .topnav-liquid-glass {
   bottom: calc(max(env(safe-area-inset-bottom, 0px), 28px) - 18px);
   z-index: 29;
 }
+html.outer-screen-layout .topnav-glass-backdrop {
+  position: fixed;
+  inset: auto;
+  display: block;
+  overflow: hidden;
+  border-radius: 999px;
+  clip-path: inset(0 round 999px);
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(3px) saturate(160%) brightness(1.05);
+  backdrop-filter: blur(3px) saturate(160%) brightness(1.05);
+  z-index: 28;
+}
+/* 顶栏下方操作栏：左侧圆形返回、中央文字分页、右侧情境按钮 */
+html.outer-screen-layout .top-actions {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 76px);
+  left: var(--topbar-left-edge, 16px);
+  right: var(--topbar-right-edge, 16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 0;
+  transform: translateX(var(--topbar-left-shift, 0px));
+  z-index: 39;
+  pointer-events: none;
+}
+html.outer-screen-layout .top-actions[hidden] { display: none !important; }
+html.outer-screen-layout .top-action-button,
+html.outer-screen-layout .top-action-nav.no-anim .top-action-thumb { transition: none; }
+html.outer-screen-layout .top-action-nav.pressing .top-action-thumb { --top-action-thumb-scale: 1.321; }
+html.outer-screen-layout .top-action-nav {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05) 42%, rgba(255, 255, 255, 0.13)),
+    rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+    0 10px 28px rgba(25, 18, 22, 0.2);
+  -webkit-backdrop-filter: blur(18px) saturate(185%) brightness(1.06) !important;
+  backdrop-filter: blur(18px) saturate(185%) brightness(1.06) !important;
+  pointer-events: auto;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05) 42%, rgba(255, 255, 255, 0.13)),
+    rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+    0 10px 28px rgba(25, 18, 22, 0.18);
+  -webkit-backdrop-filter: blur(3px) saturate(160%) brightness(1.05);
+  backdrop-filter: blur(3px) saturate(160%) brightness(1.05);
+}
+html.outer-screen-layout .top-action-button.top-action-left {
+  position: absolute;
+  top: 50%;
+  left: 6px;
+  transform: translateY(-50%);
+}
+html.outer-screen-layout .top-action-button.top-action-right {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+}
+html.outer-screen-layout .top-action-button {
+  position: relative;
+  flex: 0 0 var(--avatar-circle-size);
+  width: var(--avatar-circle-size);
+  height: var(--avatar-circle-size);
+  padding: 0;
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+}
+html.outer-screen-layout .top-action-button {
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.08) 52%, rgba(255, 255, 255, 0.14)),
+    rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -6px 12px rgba(255, 255, 255, 0.04),
+    0 6px 16px rgba(22, 16, 20, 0.14);
+  -webkit-backdrop-filter: blur(3px) saturate(160%) brightness(1.05);
+  backdrop-filter: blur(3px) saturate(160%) brightness(1.05);
+}
+html.outer-screen-layout .top-action-button[hidden] { display: none !important; }
+html.outer-screen-layout .top-action-button svg {
+  display: block;
+  width: 23px;
+  height: 23px;
+  margin: auto;
+}
+html.outer-screen-layout .top-action-button:active { transform: translateY(-50%) scale(0.94); }
+html.outer-screen-layout .top-action-nav {
+  position: relative;
+  top: auto;
+  bottom: auto;
+  left: auto;
+  transform: none;
+  flex: 0 1 auto;
+  width: max-content;
+  max-width: calc(100% - 92px);
+  min-width: 0;
+  height: 36px;
+  padding: 4px;
+}
+html.outer-screen-layout .top-action-thumb {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  height: 28px;
+  width: 0;
+  pointer-events: none;
+  transform-origin: center;
+  transition: transform 0.38s cubic-bezier(0.33, 1.3, 0.35, 1), width 0.38s cubic-bezier(0.33, 1.3, 0.35, 1);
+  z-index: 0;
+}
+html.outer-screen-layout .top-action-item {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  height: 28px;
+  min-width: 0;
+  margin: 0;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: inherit;
+  font-size: var(--text-large);
+  font-weight: 650;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+html.outer-screen-layout .top-action-item.is-active { color: #fff; text-shadow: 0 0 8px rgba(var(--accent-pink-rgb), 0.42); }
 
 /* 商店：详情 → 实绩 → 测评 */
 html.outer-screen-layout .home-right-column,
 html.outer-screen-layout .home-right-column-body { display: contents; }
-html.outer-screen-layout .home-detail-card { order: 1; display: flex !important; }
-html.outer-screen-layout .home-achv-card { order: 2; display: flex !important; }
-html.outer-screen-layout .home-review-card { order: 3; display: flex !important; }
+html.outer-screen-layout .home-detail-card { order: 1; display: none !important; }
+html.outer-screen-layout .home-achv-card { order: 2; display: none !important; }
+html.outer-screen-layout .home-review-card { order: 3; display: none !important; }
+html.outer-screen-layout .page-section[data-section="home"].outer-home-view-detail .home-detail-card { display: flex !important; }
+html.outer-screen-layout .page-section[data-section="home"].outer-home-view-achv .home-achv-card { display: flex !important; }
+html.outer-screen-layout .page-section[data-section="home"].outer-home-view-review .home-review-card { display: flex !important; }
 
 /* 资源：目录 → 观赏二级页 */
 html.outer-screen-layout .files-portrait-page-btn { display: none !important; }
 html.outer-screen-layout .files-schedule-card { display: none !important; }
 html.outer-screen-layout .files-browse-card,
-html.outer-screen-layout .files-viewer-card { display: flex; }
-html.outer-screen-layout .files-section:not(.outer-show-viewer) .files-browse-card { display: flex !important; }
-html.outer-screen-layout .files-section:not(.outer-show-viewer) .files-viewer-card { display: none !important; }
+html.outer-screen-layout .files-viewer-card { display: none !important; }
+html.outer-screen-layout .files-section.outer-show-browse .files-browse-card { display: flex !important; }
+html.outer-screen-layout .files-section.outer-show-schedule .files-browse-card,
+html.outer-screen-layout .files-section.outer-show-schedule .files-viewer-card { display: none !important; }
+html.outer-screen-layout .files-section.outer-show-schedule .files-schedule-card { display: flex !important; }
 html.outer-screen-layout .files-section.outer-show-viewer .files-browse-card { display: none !important; }
 html.outer-screen-layout .files-section.outer-show-viewer .files-viewer-card {
   display: flex !important;
@@ -5181,4 +5372,7 @@ html.outer-screen-layout .hotspot-section.outer-show-secondary:not(.portrait-sho
 html.outer-screen-layout .hotspot-section.outer-show-secondary.portrait-show-comments .hotspot-comments-card { display: flex !important; }
 
 .outer-secondary-back { display: none !important; }
-html.outer-screen-layout .outer-secondary-back { display: grid !important; }
+html.outer-screen-layout .outer-secondary-back { display: none !important; }
+html.outer-screen-layout .hotspot-portrait-tabs { display: none !important; }
+html.outer-screen-layout .hotspot-content-card-title > .hotspot-card-title-label,
+html.outer-screen-layout .hotspot-comments-card-title > .hotspot-card-title-label { display: inline; }

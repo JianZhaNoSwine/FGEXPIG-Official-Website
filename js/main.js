@@ -737,6 +737,7 @@
     }
     var section = pagesWrap ? pagesWrap.querySelector('.page.active .page-section.active') : null;
     scheduleSectionCardSnap(section || document);
+    configureTopActions();
     syncLiquidGlassRenderer(true);
     requestAnimationFrame(function () { syncLiquidGlassRenderer(true); });
   }
@@ -843,6 +844,10 @@
     settings: 'M256.146286 256A256 256 0 0 1 512.292571 0a256 256 0 1 1-256.146285 256z m716.653714 512l33.792-38.473143A51.2 51.2 0 0 1 1024 768v204.8a51.2 51.2 0 0 1-51.2 51.2H51.2a51.2 51.2 0 0 1-51.2-51.2v-204.8a51.2 51.2 0 0 1 17.408-38.473143L51.2 768c-11.264-12.8-22.528-25.6-33.718857-38.546286l0.950857-0.731428 1.974857-1.755429a561.737143 561.737143 0 0 1 32.768-24.868571c30.354286-21.211429 62.171429-40.082286 95.158857-56.612572C229.668571 604.525714 372.077714 563.2 512.292571 563.2c140.214857 0 282.038857 41.398857 363.373715 82.285714 40.740571 20.48 72.923429 40.96 95.085714 56.612572 11.264 7.899429 22.235429 16.237714 32.841143 24.868571l1.974857 1.682286 0.658286 0.512-33.426286 38.838857z'
   };
   var navEl = document.getElementById('topnav');
+  var topActionsEl = document.getElementById('topActions');
+  var topActionLeft = document.getElementById('topActionLeft');
+  var topActionNav = document.getElementById('topActionNav');
+  var topActionRight = document.getElementById('topActionRight');
   var navCache = {};
   var activeNavKey = SECTIONS[0][0]; // 跨活动保持当前导航栏目
 
@@ -1980,6 +1985,7 @@
     var previousView = section._hotspot.portraitView || 'content';
     var nextView = view === 'comments' ? 'comments' : 'content';
     section._hotspot.portraitView = nextView;
+    if (document.documentElement.classList.contains('outer-screen-layout')) section._outerNewsView = nextView;
     section.classList.toggle('portrait-show-comments', nextView === 'comments');
     updateHotspotPortraitTabs(section);
     requestAnimationFrame(function () {
@@ -2071,10 +2077,10 @@
     };
     commentsCard.title.appendChild(commentsSortBtn);
     contentCard.title.appendChild(makeOuterBackButton(function () {
-      section.classList.remove('outer-show-secondary');
+      setHotspotOuterView(section, 'title', false);
     }, '返回标题列表'));
     commentsCard.title.appendChild(makeOuterBackButton(function () {
-      section.classList.remove('outer-show-secondary');
+      setHotspotOuterView(section, 'title', false);
     }, '返回标题列表'));
 
     var searchWrap = document.createElement('div');
@@ -2124,7 +2130,9 @@
       portraitView: 'content',
       portraitTabs: [contentTabs, commentsTabs]
     };
+    section._outerNewsView = 'title';
     setHotspotPortraitView(section, 'content');
+    configureTopActions();
 
     search.addEventListener('input', function () {
       var state = hotspotUiState(id);
@@ -2452,10 +2460,7 @@
             }
             renderHotspotSection(id, section);
             if (document.documentElement.classList.contains('outer-screen-layout')) {
-              section._hotspot.portraitView = 'content';
-              section.classList.remove('portrait-show-comments');
-              updateHotspotPortraitTabs(section);
-              section.classList.add('outer-show-secondary');
+              setHotspotOuterView(section, 'content', false);
             }
           };
           section._hotspot.postList.appendChild(item);
@@ -3267,7 +3272,9 @@
     var outerViewer = document.documentElement.classList.contains('outer-screen-layout');
     renderResourceViewer(id, section, selected, !outerViewer);
     if (outerViewer) {
+      section._outerFilesView = 'viewer';
       section.classList.add('outer-show-viewer');
+      configureTopActions();
       if (section._files && section._files.viewerBody) {
         section._files.viewerBody.scrollTop = 0;
         requestAnimationFrame(function () { animateCardBody(section._files.viewerBody, 0); });
@@ -3344,6 +3351,7 @@
     if (!section || !section._files) return;
     var nextPage = page === 'schedule' ? 'schedule' : 'browse';
     section._files.portraitPage = nextPage;
+    if (document.documentElement.classList.contains('outer-screen-layout')) section._outerFilesView = showingSchedule ? 'schedule' : 'browse';
     var showingSchedule = nextPage === 'schedule';
     section.classList.toggle('portrait-show-schedule', showingSchedule);
     var buttons = section.querySelectorAll('.files-portrait-page-btn');
@@ -3382,8 +3390,7 @@
     var viewerCard = makeHotspotCard('观赏', 'files-viewer-card');
     var scheduleCard = makeHotspotCard('日程', 'files-schedule-card', false);
     viewerCard.title.appendChild(makeOuterBackButton(function () {
-      section.classList.remove('outer-show-viewer');
-      requestAnimationFrame(function () { animateCardBody(browseCard.body, 0); });
+      setFilesOuterView(section, 'browse', true);
     }, '返回浏览卡片'));
     browseCard.title.appendChild(makeFilesPortraitPageButton(section));
     scheduleCard.title.appendChild(makeFilesPortraitPageButton(section));
@@ -3396,8 +3403,11 @@
       scheduleBody: scheduleCard.body,
       portraitPage: 'browse'
     };
+    section._outerFilesView = 'browse';
+    section.classList.add('outer-show-browse');
     setFilesPortraitPage(section, 'browse');
     renderFilesPage(id, section);
+    configureTopActions();
   }
 
   // 为 logo 页面创建板块子页容器（每个导航项对应一个独立子页）
@@ -3475,6 +3485,326 @@
     if (!found && kids.length) {
       kids[0].classList.add('active');
     }
+    configureTopActions();
+  }
+
+  var TOP_ACTION_BACK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" d="M20 12H4M12 4l-8 8 8 8"/></svg>';
+  var TOP_ACTION_SORT_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" d="M8 4v16M4 16l4 4 4-4M16 20V4M12 8l4-4 4 4"/></svg>';
+  var topActionFrame = 0;
+  var topActionConfig = null;
+  var topActionSelectTimer = 0;
+  var topActionThumbX = 0;
+  var topActionThumbW = 0;
+  var topActionDrag = null;
+  var topActionSuppressClick = false;
+
+  function currentActionSection() {
+    return pagesWrap ? pagesWrap.querySelector('.page.active .page-section.active') : null;
+  }
+
+  function hideTopActions() {
+    if (!topActionsEl) return;
+    if (topActionSelectTimer) clearTimeout(topActionSelectTimer);
+    topActionSelectTimer = 0;
+    topActionDrag = null;
+    topActionsEl.hidden = true;
+    topActionsEl.dataset.mode = '';
+    topActionNav.classList.remove('pressing', 'dragging', 'no-anim', 'nav-thumb-animating');
+    topActionNav.innerHTML = '';
+    topActionRight.hidden = true;
+  }
+
+  function positionTopActionThumb() {
+    if (!topActionNav) return;
+    var active = topActionNav.querySelector('.top-action-item.is-active');
+    var thumb = topActionNav.querySelector('.top-action-thumb');
+    if (!active || !thumb) return;
+    topActionThumbX = active.offsetLeft;
+    topActionThumbW = active.offsetWidth;
+    thumb.style.width = topActionThumbW + 'px';
+    thumb.style.transform = 'translateX(' + topActionThumbX + 'px) scale(var(--top-action-thumb-scale, 1))';
+  }
+
+  function scheduleTopActionSync() {
+    if (topActionFrame) cancelAnimationFrame(topActionFrame);
+    topActionFrame = requestAnimationFrame(function () {
+      topActionFrame = 0;
+      positionTopActionThumb();
+    });
+  }
+
+  function topActionKeyAt(centerX) {
+    if (!topActionNav) return null;
+    var buttons = topActionNav.querySelectorAll('.top-action-item');
+    var best = null;
+    var bestDistance = Infinity;
+    for (var i = 0; i < buttons.length; i++) {
+      var center = buttons[i].offsetLeft + buttons[i].offsetWidth * 0.5;
+      var distance = Math.abs(center - centerX);
+      if (distance < bestDistance) { bestDistance = distance; best = buttons[i].dataset.view; }
+    }
+    return best;
+  }
+
+  function setTopActionThumbX(x) {
+    var thumb = topActionNav.querySelector('.top-action-thumb');
+    if (!thumb) return;
+    topActionThumbX = x;
+    thumb.style.width = topActionThumbW + 'px';
+    thumb.style.transform = 'translateX(' + x + 'px) scale(var(--top-action-thumb-scale, 1))';
+  }
+
+  function endTopActionPress(event) {
+    if (!topActionDrag || topActionDrag.pointerId !== event.pointerId) return;
+    var drag = topActionDrag;
+    topActionDrag = null;
+    topActionNav.classList.remove('pressing', 'dragging');
+    if (topActionNav.releasePointerCapture) { try { topActionNav.releasePointerCapture(event.pointerId); } catch (err) {} }
+    if (event.type !== 'pointerup') return;
+    var key = drag.moved ? drag.hitKey : drag.key;
+    if (key) selectTopAction(key);
+  }
+
+  function bindTopActionEvents() {
+    if (!topActionNav || topActionNav._topActionEventsBound) return;
+    topActionNav._topActionEventsBound = true;
+    topActionNav.addEventListener('pointerdown', function (event) {
+      var button = event.target.closest ? event.target.closest('.top-action-item') : null;
+      if (!button) return;
+      var thumb = topActionNav.querySelector('.top-action-thumb');
+      if (thumb) topActionThumbW = thumb.offsetWidth || button.offsetWidth;
+      topActionDrag = { pointerId: event.pointerId, startX: event.clientX, startThumbX: topActionThumbX, key: button.dataset.view, hitKey: button.dataset.view, moved: false };
+      topActionNav.classList.add('pressing');
+    });
+    topActionNav.addEventListener('pointermove', function (event) {
+      if (!topActionDrag || topActionDrag.pointerId !== event.pointerId) return;
+      var dx = event.clientX - topActionDrag.startX;
+      if (!topActionDrag.moved) {
+        if (Math.abs(dx) <= 4) return;
+        topActionDrag.moved = true;
+        topActionNav.classList.add('dragging');
+        try { topActionNav.setPointerCapture(event.pointerId); } catch (err) {}
+      }
+      var buttons = topActionNav.querySelectorAll('.top-action-item');
+      if (!buttons.length) return;
+      var min = buttons[0].offsetLeft;
+      var max = buttons[buttons.length - 1].offsetLeft;
+      var nextX = Math.max(min, Math.min(max, topActionDrag.startThumbX + dx));
+      setTopActionThumbX(nextX);
+      var hitKey = topActionKeyAt(nextX + topActionThumbW * 0.5);
+      if (hitKey && hitKey !== topActionDrag.hitKey) {
+        topActionDrag.hitKey = hitKey;
+        for (var i = 0; i < buttons.length; i++) buttons[i].classList.toggle('is-active', buttons[i].dataset.view === hitKey);
+      }
+    });
+    topActionNav.addEventListener('pointerup', endTopActionPress);
+    topActionNav.addEventListener('pointercancel', endTopActionPress);
+    topActionNav.addEventListener('pointerleave', endTopActionPress);
+  }
+
+  function selectTopAction(key) {
+    var config = topActionConfig;
+    var active = topActionNav.querySelector('.top-action-item.is-active');
+    var target = topActionNav.querySelector('.top-action-item[data-view="' + key + '"]');
+    if (!target) return;
+    if (target === active) {
+      if (config && typeof config.onSelect === 'function') config.onSelect(key);
+      return;
+    }
+    active.classList.remove('is-active');
+    target.classList.add('is-active');
+    topActionNav.classList.add('nav-thumb-animating');
+    positionTopActionThumb();
+    if (config && typeof config.onSelect === 'function') config.onSelect(key);
+  }
+
+  function showTopActions(config) {
+    if (!topActionsEl || !topActionNav || !topActionLeft || !topActionRight || !config || !config.items || !config.items.length) {
+      hideTopActions();
+      return;
+    }
+    var previousConfig = topActionConfig;
+    var sameItems = previousConfig && previousConfig.mode === config.mode && previousConfig.items.length === config.items.length;
+    if (sameItems) {
+      for (var si = 0; si < config.items.length; si++) {
+        if (previousConfig.items[si][0] !== config.items[si][0] || previousConfig.items[si][1] !== config.items[si][1]) {
+          sameItems = false;
+          break;
+        }
+      }
+    }
+    if (sameItems && topActionNav.querySelector('.top-action-item')) {
+      topActionConfig = config;
+      var sameButtons = topActionNav.querySelectorAll('.top-action-item');
+      for (var sbi = 0; sbi < sameButtons.length; sbi++) {
+        sameButtons[sbi].classList.toggle('is-active', sameButtons[sbi].dataset.view === config.active);
+      }
+      topActionLeft.innerHTML = config.leftIcon || TOP_ACTION_BACK_ICON;
+      topActionLeft.setAttribute('aria-label', config.leftLabel || '返回');
+      topActionLeft.onclick = config.onLeft || function () {};
+      topActionRight.hidden = !config.rightAction;
+      topActionRight.innerHTML = config.rightIcon || '';
+      topActionRight.setAttribute('aria-label', config.rightLabel || '页面操作');
+      topActionRight.onclick = config.rightAction || function () {};
+      positionTopActionThumb();
+      return;
+    }
+    topActionConfig = config;
+    topActionsEl.hidden = false;
+    topActionsEl.dataset.mode = config.mode || '';
+    topActionLeft.hidden = false;
+    topActionLeft.innerHTML = config.leftIcon || TOP_ACTION_BACK_ICON;
+    topActionLeft.setAttribute('aria-label', config.leftLabel || '返回');
+    topActionLeft.onclick = config.onLeft || function () {};
+    topActionRight.hidden = !config.rightAction;
+    topActionRight.innerHTML = config.rightIcon || '';
+    topActionRight.setAttribute('aria-label', config.rightLabel || '页面操作');
+    topActionRight.onclick = config.rightAction || function () {};
+    topActionNav.classList.add('no-anim');
+    topActionNav.classList.remove('pressing', 'nav-thumb-animating');
+    topActionNav.innerHTML = '';
+    var thumb = document.createElement('div');
+    thumb.className = 'topnav-thumb top-action-thumb';
+    topActionNav.appendChild(thumb);
+    config.items.forEach(function (entry) {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'topnav-item top-action-item' + (entry[0] === config.active ? ' is-active' : '');
+      button.dataset.view = entry[0];
+      button.textContent = entry[1];
+      button.onclick = function () {
+        if (topActionSuppressClick) { topActionSuppressClick = false; return; }
+        selectTopAction(entry[0]);
+      };
+      button.addEventListener('pointerup', function (event) {
+        event.preventDefault();
+        selectTopAction(entry[0]);
+      });
+      button.addEventListener('mousedown', function (event) {
+        event.preventDefault();
+        selectTopAction(entry[0]);
+      });
+      topActionNav.appendChild(button);
+    });
+    bindTopActionEvents();
+    positionTopActionThumb();
+    requestAnimationFrame(function () {
+      topActionNav.classList.remove('no-anim');
+      positionTopActionThumb();
+    });
+  }
+
+  function setHomeOuterView(section, view, animate) {
+    if (!section) return;
+    var next = view === 'achv' ? 'achv' : view === 'review' ? 'review' : 'detail';
+    section._outerHomeView = next;
+    section.classList.remove('outer-home-view-detail', 'outer-home-view-achv', 'outer-home-view-review');
+    section.classList.add('outer-home-view-' + next);
+    var card = section.querySelector(next === 'detail' ? '.home-detail-card' : next === 'achv' ? '.home-achv-card' : '.home-review-card');
+    var body = card ? card.querySelector('.section-card-body') : null;
+    if (body) {
+      body.scrollTop = 0;
+      if (animate) requestAnimationFrame(function () { animateCardBody(body, 0); });
+    }
+    scheduleSectionCardSnap(section);
+    configureTopActions();
+  }
+
+  function setFilesOuterView(section, view, animate) {
+    if (!section) return;
+    var next = view === 'viewer' ? 'viewer' : view === 'schedule' ? 'schedule' : 'browse';
+    section._outerFilesView = next;
+    section.classList.toggle('outer-show-browse', next === 'browse');
+    section.classList.toggle('outer-show-viewer', next === 'viewer');
+    section.classList.toggle('outer-show-schedule', next === 'schedule');
+    if (section._files) {
+      setFilesPortraitPage(section, next === 'schedule' ? 'schedule' : 'browse', false);
+      var body = next === 'viewer' ? section._files.viewerBody : next === 'schedule' ? section._files.scheduleBody : section._files.browseBody;
+      if (body) {
+        body.scrollTop = 0;
+        if (animate) requestAnimationFrame(function () { animateCardBody(body, 0); });
+      }
+    }
+    scheduleSectionCardSnap(section);
+    configureTopActions();
+  }
+
+  function setHotspotOuterView(section, view, animate) {
+    if (!section || !section._hotspot) return;
+    var next = view === 'content' ? 'content' : view === 'comments' ? 'comments' : 'title';
+    section._outerNewsView = next;
+    if (next === 'title') {
+      section.classList.remove('outer-show-secondary');
+      section._hotspot.portraitView = 'content';
+      section.classList.remove('portrait-show-comments');
+      updateHotspotPortraitTabs(section);
+    } else {
+      section.classList.add('outer-show-secondary');
+      setHotspotPortraitView(section, next, animate);
+    }
+    scheduleSectionCardSnap(section);
+    configureTopActions();
+  }
+
+  function configureTopActions() {
+    if (!topActionsEl || !document.documentElement.classList.contains('outer-screen-layout')) {
+      hideTopActions();
+      return;
+    }
+    var section = currentActionSection();
+    if (!section) {
+      hideTopActions();
+      return;
+    }
+    var sectionKey = section.dataset.section;
+    if (sectionKey === 'home') {
+      showTopActions({
+        mode: 'home',
+        items: [['detail', '详情'], ['achv', '实绩'], ['review', '测评']],
+        active: section._outerHomeView || 'detail',
+        leftLabel: '回到详情',
+        onLeft: function () { setHomeOuterView(section, 'detail', true); },
+        onSelect: function (view) { setHomeOuterView(section, view, true); }
+      });
+      return;
+    }
+    if (sectionKey === 'files') {
+      var filesView = section._outerFilesView || (section.classList.contains('outer-show-viewer') ? 'viewer' : section.classList.contains('outer-show-schedule') ? 'schedule' : 'browse');
+      showTopActions({
+        mode: 'files',
+        items: [['browse', '浏览'], ['viewer', '观赏'], ['schedule', '日程']],
+        active: filesView,
+        leftLabel: '回到浏览',
+        onLeft: function () { setFilesOuterView(section, 'browse', true); },
+        onSelect: function (view) { setFilesOuterView(section, view, true); }
+      });
+      return;
+    }
+    if (sectionKey === 'news') {
+      var newsView = section._outerNewsView || (section.classList.contains('outer-show-secondary') ? (section.classList.contains('portrait-show-comments') ? 'comments' : 'content') : 'title');
+      var newsRightAction = null;
+      if (newsView === 'comments' && section._hotspot && curNavLogo) {
+        newsRightAction = function () {
+          hotspotCommentSortDesc = !hotspotCommentSortDesc;
+          updateHotspotCommentSortButton(section);
+          renderHotspotComments(curNavLogo, section);
+          configureTopActions();
+        };
+      }
+      showTopActions({
+        mode: 'news',
+        items: [['title', '标题'], ['content', '内容'], ['comments', '评论']],
+        active: newsView,
+        leftLabel: '回到标题',
+        rightAction: newsRightAction,
+        rightIcon: TOP_ACTION_SORT_ICON,
+        rightLabel: '切换评论排序方向',
+        onLeft: function () { setHotspotOuterView(section, 'title', true); },
+        onSelect: function (view) { setHotspotOuterView(section, view, true); }
+      });
+      return;
+    }
+    hideTopActions();
   }
 
   var curNavLogo = null; // 当前导航对应的 logo
@@ -3547,6 +3877,12 @@
     navColorOverlay.style.height = height.toFixed(2) + "px";
     for (var i = 0; i < navColorItems.length; i++) {
       var item = navColorItems[i];
+      var labelStyle = getComputedStyle(item.label);
+      item.copy.style.fontFamily = labelStyle.fontFamily;
+      item.copy.style.fontSize = labelStyle.fontSize;
+      item.copy.style.fontWeight = labelStyle.fontWeight;
+      item.copy.style.lineHeight = labelStyle.lineHeight;
+      item.copy.style.letterSpacing = labelStyle.letterSpacing;
       var rect = item.button.getBoundingClientRect();
       item.copy.style.left = (rect.left - navRect.left - left).toFixed(2) + "px";
       item.copy.style.top = "50%";
@@ -3775,7 +4111,9 @@
       navEl.classList.add('empty');
       navEl.innerHTML = '';
       if (liquidGlassCanvas) liquidGlassCanvas.remove();
+      if (liquidGlassBackdrop) liquidGlassBackdrop.remove();
       liquidGlassCanvas = null;
+      liquidGlassBackdrop = null;
       liquidGlass = null;
       navColorOverlay = null;
       liquidGlassFailed = false;
@@ -3947,6 +4285,7 @@
      将圆角 SDF 折射、色散、高光和按压缩放实现为 WebGL2。
      浏览器不支持 WebGL2 时保留前面的 CSS 近似作为兼容回退。 */
   var LIQUID_GLASS_PADDING = 18;
+  var liquidGlassBackdrop = null;
   var liquidGlassCanvas = null;
   var liquidGlass = null;
   var liquidGlassWallpaperImage = null;
@@ -3988,6 +4327,7 @@
     'uniform float uThumbRefractionAmount;',
     'uniform float uThumbMagnification;',
     'uniform float uPress;',
+    'uniform float uContentSample;',
     'uniform vec2 uPointer;',
     '',
     'const vec3 DARK = vec3(0.031372549, 0.035294118, 0.054901961);',
@@ -4160,7 +4500,7 @@
     '  vec2 innerBaseHalf = baseHalfSize();',
     '  float innerBaseRadius = baseRadiusSize();',
     '  vec3 normalBase = baseLayer(coord);',
-    '  vec3 innerBase = innerBaseLayer(coord);',
+    '  vec3 innerBase = normalBase;',
     '  float baseCoverage = coverage(sdRoundedRect(coord - uBaseCenter, uBaseHalf, uBaseRadius));',
     '  float innerBaseCoverage = coverage(sdRoundedRect(coord - uBaseCenter, innerBaseHalf, innerBaseRadius));',
     '  float thumbSd = sdRoundedRect(coord - uThumbCenter, uThumbHalf, uThumbRadius);',
@@ -4179,11 +4519,19 @@
     '  color = mix(color, selected, thumbCoverage * (1.0 - pressMix));',
     '  color = mix(color, vec3(1.0), thumbHighlight * thumbRingCoverage);',
     '  float alpha = max(activeBaseCoverage, thumbRingCoverage * thumbHighlight);',
+    '  alpha *= mix(1.0, 0.42, uContentSample);',
+    '  alpha = mix(alpha, max(alpha, thumbCoverage), uContentSample);',
     '  outColor = vec4(clamp(color, 0.0, 1.0), alpha);',
     '}'
   ].join('\n');
 
   function ensureLiquidGlassCanvas() {
+    if (!liquidGlassBackdrop) {
+      liquidGlassBackdrop = document.createElement('div');
+      liquidGlassBackdrop.className = 'topnav-glass-backdrop';
+      liquidGlassBackdrop.setAttribute('aria-hidden', 'true');
+      if (navEl && navEl.parentElement) navEl.parentElement.insertBefore(liquidGlassBackdrop, navEl);
+    }
     if (!liquidGlassCanvas) {
       liquidGlassCanvas = document.createElement('canvas');
       liquidGlassCanvas.className = 'topnav-liquid-glass';
@@ -4242,7 +4590,7 @@
         'uDimTop', 'uDimBottom', 'uBaseCenter', 'uBaseHalf', 'uBaseRadius',
         'uBaseRefractionHeight', 'uBaseRefractionAmount', 'uThumbCenter',
         'uThumbHalf', 'uThumbRadius', 'uThumbRefractionHeight',
-        'uThumbRefractionAmount', 'uThumbMagnification', 'uPress', 'uPointer'
+        'uThumbRefractionAmount', 'uThumbMagnification', 'uPress', 'uContentSample', 'uPointer'
       ];
       var uniforms = {};
       uniformNames.forEach(function (name) { uniforms[name] = gl.getUniformLocation(program, name); });
@@ -4363,8 +4711,21 @@
     if (document.documentElement.classList.contains('outer-screen-layout')) {
       liquidGlassCanvas.style.top = '';
       liquidGlassCanvas.style.bottom = (window.innerHeight - rect.bottom - pad) + 'px';
+      if (liquidGlassBackdrop) {
+        liquidGlassBackdrop.style.left = rect.left + 'px';
+        liquidGlassBackdrop.style.top = '';
+        liquidGlassBackdrop.style.bottom = (window.innerHeight - rect.bottom) + 'px';
+        liquidGlassBackdrop.style.width = navWidth + 'px';
+        liquidGlassBackdrop.style.height = navHeight + 'px';
+      }
     } else {
       liquidGlassCanvas.style.bottom = '';
+      if (liquidGlassBackdrop) {
+        liquidGlassBackdrop.style.left = '';
+        liquidGlassBackdrop.style.bottom = '';
+        liquidGlassBackdrop.style.width = '';
+        liquidGlassBackdrop.style.height = '';
+      }
       var topbarRect = navEl.parentElement.getBoundingClientRect();
       liquidGlassCanvas.style.top = (rect.top - topbarRect.top - pad) + 'px';
     }
@@ -4432,6 +4793,7 @@
     gl.uniform1f(uniforms.uThumbRefractionAmount, -7 * thumbSizeScale * thumbScale);
     gl.uniform1f(uniforms.uThumbMagnification, thumbScale);
     gl.uniform1f(uniforms.uPress, liquidGlass.press);
+    gl.uniform1f(uniforms.uContentSample, document.documentElement.classList.contains('outer-screen-layout') ? 1 : 0);
     gl.uniform2f(uniforms.uPointer, pointerX, pointerY);
     navEl.style.setProperty('--glass-shadow-alpha', (liquidGlass.press * 0.1).toFixed(3));
     syncNavColorOverlay();
@@ -5293,7 +5655,8 @@
     if (startupCrossfading) startupOverlay.style.opacity = '0';
     startupAudioPending = false;
     if (startupAudioStart) startupAudioStart.hidden = true;
-    startupOverlay.classList.add('is-closing');
+    var outerSlideOut = !!(window.matchMedia && window.matchMedia('(max-width: 720px)').matches);
+    startupOverlay.classList.add(outerSlideOut ? 'is-outer-sliding' : 'is-closing');
     document.body.classList.remove('startup-lock');
     syncImmersiveCursorState();
     startActivityMusic();
@@ -5303,7 +5666,7 @@
       startupOverlay.hidden = true;
       syncLiquidGlassRenderer(true);
       startupCloseTimer = 0;
-    }, 500);
+    }, outerSlideOut ? 650 : 500);
   }
 
   function initStartupOverlay() {
@@ -5313,6 +5676,21 @@
     }
     document.body.classList.add('startup-lock');
     syncImmersiveCursorState();
+    if (window.matchMedia && window.matchMedia('(max-width: 720px)').matches) {
+      startupVideo.pause();
+      showStartupLanding();
+      startupOverlay.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        closeStartupOverlay();
+      });
+      document.addEventListener('keydown', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        closeStartupOverlay();
+      }, true);
+      return;
+    }
     startupVideo.addEventListener('ended', closeStartupOverlay);
     startupVideo.addEventListener('error', closeStartupOverlay);
     startupVideo.addEventListener('play', scheduleStartupCrossfade);
@@ -6864,10 +7242,19 @@
     currentFontId = opt.id;
     document.documentElement.style.setProperty('--app-font', opt.family);
     document.documentElement.setAttribute('data-font', opt.id);
+    if (navEl && navColorOverlay) {
+      if (curNavLogo && navCache[curNavLogo]) moveThumb(navCache[curNavLogo].active, false);
+      syncNavColorOverlay();
+      requestAnimationFrame(syncNavColorOverlay);
+    }
     layoutTopbarIdentity();
     if (document.fonts && document.fonts.load) {
       document.fonts.load('15px ' + opt.family).then(function () {
         layoutTopbarIdentity();
+        if (navEl && navColorOverlay) {
+          if (curNavLogo && navCache[curNavLogo]) moveThumb(navCache[curNavLogo].active, false);
+          syncNavColorOverlay();
+        }
       }).catch(function () {});
     }
     if (persist) {
@@ -10771,6 +11158,9 @@
   function renderHomeInto(container, id) {
     disposeSectionCardResources(container);
     container.innerHTML = '';
+    container._outerHomeView = 'detail';
+    container.classList.remove('outer-home-view-achv', 'outer-home-view-review');
+    container.classList.add('outer-home-view-detail');
 
     var rightColumn = null;
     var rightColumnBody = null;
@@ -11445,6 +11835,7 @@
     syncMergedSecondaryView(mergedDetailOnly, mergedReviewOnly);
     container.appendChild(rightColumn);
     scheduleSectionCardSnap(container);
+    configureTopActions();
     invalidateCursorTargetCache();
     var page = container.closest('.page');
     if (page && page.classList.contains('active') && container.classList.contains('active')) {
