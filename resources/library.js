@@ -496,11 +496,11 @@
         },
         {
           "id": "JFES160",
-          "version": "黄金版"
+          "version": "支持者版"
         },
         {
           "id": "JFES170",
-          "version": "标准版"
+          "version": "支持者版"
         },
         {
           "id": "JFES175",
@@ -508,7 +508,7 @@
         },
         {
           "id": "JFES180",
-          "version": "黄金版"
+          "version": "尊享版"
         }
       ]
     },

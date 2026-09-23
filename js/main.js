@@ -19,8 +19,8 @@
   var SIDE_SLOTS = 3;
 
   // 站点名：网页标题默认值，并作为各活动页标题的后缀（便于搜索引擎分别收录各活动）
-  var SITE_NAME = '糖豆人探索の主宰';
-  var SITE_DESCRIPTION = '糖豆人探索の主宰官方网站：收录 2026 糖豆人拜年纪、奥林PIG运动会、煎炸镇步行街等活动的预告、说明、成就、日程、测评与实绩资料。';
+  var SITE_NAME = '探索的猪仔官方网站';
+  var SITE_DESCRIPTION = '探索的猪仔官方网站：收录 2026 糖豆人拜年纪、奥林PIG运动会、煎炸镇步行街等活动的预告、说明、成就、日程、测评与实绩资料。';
 
   var IMAGE_QUALITY_MIN = 1;
   var IMAGE_QUALITY_MAX = 5;
@@ -739,6 +739,7 @@
     scheduleSectionCardSnap(section || document);
     configureTopActions();
     syncLiquidGlassRenderer(true);
+    scheduleTopActionLiquidGlassSync(true);
     requestAnimationFrame(function () { syncLiquidGlassRenderer(true); });
   }
 
@@ -2130,8 +2131,8 @@
       portraitView: 'content',
       portraitTabs: [contentTabs, commentsTabs]
     };
-    section._outerNewsView = 'title';
     setHotspotPortraitView(section, 'content');
+    section._outerNewsView = 'title';
     configureTopActions();
 
     search.addEventListener('input', function () {
@@ -2862,6 +2863,7 @@
     var drag = null;
     var pointers = Object.create(null);
     var pinch = null;
+    var interactionMoved = false;
 
     function applyTransform() {
       image.style.transform = 'translate3d(' + tx.toFixed(2) + 'px,' + ty.toFixed(2) + 'px,0) scale(' + scale.toFixed(4) + ')';
@@ -2875,9 +2877,15 @@
       var scaledWidth = imageWidth * nextScale;
       var scaledHeight = imageHeight * nextScale;
       var maxX = Math.max(0, (scaledWidth - viewportWidth) / 2);
-      var maxY = Math.max(0, (scaledHeight - viewportHeight) / 2);
       tx = Math.max(-maxX, Math.min(maxX, tx));
-      ty = Math.max(-maxY, Math.min(maxY, ty));
+      var verticalOverflow = scaledHeight - viewportHeight;
+      if (viewer.classList.contains('is-tall')) {
+        var maxTallY = Math.max(0, verticalOverflow);
+        ty = Math.max(-maxTallY, Math.min(0, ty));
+      } else {
+        var maxY = Math.max(0, verticalOverflow / 2);
+        ty = Math.max(-maxY, Math.min(maxY, ty));
+      }
     }
 
     function pointerList() {
@@ -2893,6 +2901,7 @@
     }
 
     function beginPinch() {
+      interactionMoved = true;
       var points = pointerList();
       if (points.length < 2) return;
       var a = points[0];
@@ -2962,6 +2971,7 @@
 
     viewer.addEventListener('pointerdown', function (event) {
       if (event.pointerType === 'mouse' && event.button !== 0) return;
+      if (pointerCount() === 0) interactionMoved = false;
       pointers[event.pointerId] = {
         id: event.pointerId,
         x: event.clientX,
@@ -3003,6 +3013,7 @@
       var dy = event.clientY - drag.startY;
       if (!drag.moved && Math.sqrt(dx * dx + dy * dy) > 4) {
         drag.moved = true;
+        interactionMoved = true;
         viewer.classList.add('is-dragging');
       }
       if (!drag.moved) return;
@@ -3049,6 +3060,7 @@
     viewer.addEventListener('dblclick', function (event) {
       event.preventDefault();
       event.stopPropagation();
+      interactionMoved = false;
       var imageWidth = image.offsetWidth || image.naturalWidth || 0;
       var imageHeight = image.offsetHeight || image.naturalHeight || 0;
       if (!imageWidth || !viewer.clientWidth) return;
@@ -3069,7 +3081,24 @@
     });
     image.style.transformOrigin = 'center center';
     applyTransform();
+    function resetTransform() {
+      scale = 1;
+      tx = 0;
+      ty = 0;
+      clampTranslation(scale);
+      applyTransform();
+    }
     viewer._resourceZoom = {
+      reset: function () {
+        interactionMoved = false;
+        resetTransform();
+      },
+      wasMoved: function () {
+        return interactionMoved;
+      },
+      clearMoved: function () {
+        interactionMoved = false;
+      },
       zoomBy: function (direction, amount) {
         if (!direction || !amount) return;
         var nextScale = direction > 0
@@ -3219,7 +3248,7 @@
       relative.className = 'hotspot-post-count';
       var relativeText = resourceRelativeDayText(row.date);
       relative.textContent = relativeText;
-      if (/^[1-7]天后$/.test(relativeText)) item.classList.add('is-upcoming');
+      if (/^(今天|[1-7]天后)$/.test(relativeText)) item.classList.add('is-upcoming');
       meta.appendChild(date);
       meta.appendChild(relative);
       item.appendChild(title);
@@ -3259,6 +3288,72 @@
     }, 260);
   }
 
+  function openResourceImageOverlay(id, selected) {
+    if (!selected) return;
+    var oldOverlay = document.querySelector('.resource-image-overlay');
+    if (oldOverlay && oldOverlay.parentNode) oldOverlay.parentNode.removeChild(oldOverlay);
+    var overlay = document.createElement('div');
+    overlay.className = 'resource-image-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-label', selected.title || '浏览图片');
+    var image = document.createElement('img');
+    image.className = 'resource-image-overlay-img';
+    image.alt = selected.title || selected.file;
+    image.decoding = 'async';
+    image.loading = 'eager';
+    image.draggable = false;
+    bindResponsiveAsset(image, resourcePictureUrl(id, selected.file));
+    overlay.appendChild(image);
+    document.body.appendChild(overlay);
+    enableResourceViewerZoom(overlay, image);
+    var closeTimer = 0;
+
+    function closeOverlay() {
+      if (closeTimer) clearTimeout(closeTimer);
+      closeTimer = 0;
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    }
+
+    function layoutDefault() {
+      var naturalWidth = image.naturalWidth || image.width || 0;
+      var naturalHeight = image.naturalHeight || image.height || 0;
+      if (!naturalWidth || !naturalHeight) return;
+      var displayWidth = Math.min(naturalWidth, window.innerWidth);
+      var displayHeight = naturalHeight * displayWidth / naturalWidth;
+      overlay.style.padding = '0';
+      image.style.margin = '0';
+      image.style.maxHeight = 'none';
+      image.style.width = displayWidth + 'px';
+      image.style.height = 'auto';
+      overlay.classList.toggle('is-tall', displayHeight > window.innerHeight);
+      requestAnimationFrame(function () {
+        if (!overlay.isConnected) return;
+        overlay.classList.toggle('is-tall', (image.offsetHeight || displayHeight) > window.innerHeight);
+        if (overlay._resourceZoom) overlay._resourceZoom.reset();
+      });
+    }
+
+    if (image.complete) layoutDefault();
+    else image.addEventListener('load', layoutDefault, { once: true });
+
+    overlay.addEventListener('click', function (event) {
+      if (event.target !== overlay && event.target !== image) return;
+      if (overlay._resourceZoom && overlay._resourceZoom.wasMoved()) return;
+      if (closeTimer) {
+        clearTimeout(closeTimer);
+        closeTimer = 0;
+        return;
+      }
+      closeTimer = setTimeout(closeOverlay, 220);
+    });
+    overlay.addEventListener('dblclick', function () {
+      if (closeTimer) {
+        clearTimeout(closeTimer);
+        closeTimer = 0;
+      }
+    });
+  }
+
   function selectResourcePicture(id, section, file) {
     var state = filesPageState(id);
     state.selectedPicture = file;
@@ -3270,16 +3365,11 @@
       return item.file === file;
     })[0] || null;
     var outerViewer = document.documentElement.classList.contains('outer-screen-layout');
-    renderResourceViewer(id, section, selected, !outerViewer);
     if (outerViewer) {
-      section._outerFilesView = 'viewer';
-      section.classList.add('outer-show-viewer');
-      configureTopActions();
-      if (section._files && section._files.viewerBody) {
-        section._files.viewerBody.scrollTop = 0;
-        requestAnimationFrame(function () { animateCardBody(section._files.viewerBody, 0); });
-      }
+      openResourceImageOverlay(id, selected);
+      return;
     }
+    renderResourceViewer(id, section, selected, true);
   }
 
   function renderFilesPage(id, section) {
@@ -3350,9 +3440,9 @@
   function setFilesPortraitPage(section, page, animateSwitch) {
     if (!section || !section._files) return;
     var nextPage = page === 'schedule' ? 'schedule' : 'browse';
+    var showingSchedule = nextPage === 'schedule';
     section._files.portraitPage = nextPage;
     if (document.documentElement.classList.contains('outer-screen-layout')) section._outerFilesView = showingSchedule ? 'schedule' : 'browse';
-    var showingSchedule = nextPage === 'schedule';
     section.classList.toggle('portrait-show-schedule', showingSchedule);
     var buttons = section.querySelectorAll('.files-portrait-page-btn');
     for (var i = 0; i < buttons.length; i++) {
@@ -3457,11 +3547,15 @@
   function showSection(logo, key) {
     var page = pages[LOGOS.indexOf(logo)];
     if (!page) return;
-    if (key === 'settings' && !page.querySelector('.page-section[data-section="settings"]')) {
-      var settingsSection = document.createElement('div');
-      settingsSection.className = 'page-section';
-      settingsSection.dataset.section = 'settings';
-      page.appendChild(settingsSection);
+    if (key === 'settings') {
+      var settingsSection = page.querySelector('.page-section[data-section="settings"]');
+      if (!settingsSection) {
+        settingsSection = document.createElement('div');
+        settingsSection.className = 'page-section';
+        settingsSection.dataset.section = 'settings';
+        page.appendChild(settingsSection);
+      }
+      buildSettingsSection(settingsSection);
     }
     // 兜底：若板块子页尚未创建，先创建再切换
     if (!page.querySelector('.page-section')) {
@@ -3485,18 +3579,29 @@
     if (!found && kids.length) {
       kids[0].classList.add('active');
     }
+    if (key === 'settings') {
+      var activeSettingsSection = page.querySelector('.page-section[data-section="settings"].active');
+      if (activeSettingsSection) setSettingsOuterView(activeSettingsSection, activeSettingsSection._outerSettingsView || 'rank', false);
+    }
     configureTopActions();
   }
 
   var TOP_ACTION_BACK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" d="M20 12H4M12 4l-8 8 8 8"/></svg>';
   var TOP_ACTION_SORT_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" d="M8 4v16M4 16l4 4 4-4M16 20V4M12 8l4-4 4 4"/></svg>';
+  var TOP_ACTION_SEARCH_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10.5 3a7.5 7.5 0 1 0 4.55 13.45l4.25 4.25 1.41-1.41-4.25-4.25A7.5 7.5 0 0 0 10.5 3Zm0 2a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11Z"/></svg>';
   var topActionFrame = 0;
   var topActionConfig = null;
   var topActionSelectTimer = 0;
   var topActionThumbX = 0;
   var topActionThumbW = 0;
+  var topActionThumbAnimFrame = 0;
+  var topActionDragFollowFrame = 0;
+  var topActionDragFollowTime = 0;
   var topActionDrag = null;
   var topActionSuppressClick = false;
+  var topActionColorOverlay = null;
+  var topActionColorItems = [];
+  var settingsPersonalViews = [];
 
   function currentActionSection() {
     return pagesWrap ? pagesWrap.querySelector('.page.active .page-section.active') : null;
@@ -3511,18 +3616,52 @@
     topActionsEl.dataset.mode = '';
     topActionNav.classList.remove('pressing', 'dragging', 'no-anim', 'nav-thumb-animating');
     topActionNav.innerHTML = '';
+    topActionColorOverlay = null;
+    topActionColorItems = [];
+    hideTopActionLiquidGlassSurface();
     topActionRight.hidden = true;
+  }
+
+  function applyTopActionThumbPosition() {
+    var thumb = topActionNav ? topActionNav.querySelector('.top-action-thumb') : null;
+    if (!thumb) return;
+    thumb.style.width = topActionThumbW + 'px';
+    thumb.style.transform = 'translateX(' + topActionThumbX + 'px) scale(var(--top-action-thumb-scale, 1))';
+    scheduleTopActionLiquidGlassRender();
+    syncTopActionColorOverlay();
   }
 
   function positionTopActionThumb() {
     if (!topActionNav) return;
     var active = topActionNav.querySelector('.top-action-item.is-active');
-    var thumb = topActionNav.querySelector('.top-action-thumb');
-    if (!active || !thumb) return;
+    if (!active) return;
     topActionThumbX = active.offsetLeft;
     topActionThumbW = active.offsetWidth;
-    thumb.style.width = topActionThumbW + 'px';
-    thumb.style.transform = 'translateX(' + topActionThumbX + 'px) scale(var(--top-action-thumb-scale, 1))';
+    applyTopActionThumbPosition();
+  }
+
+  function animateTopActionThumbTo(targetX, targetW, duration) {
+    if (topActionThumbAnimFrame) cancelAnimationFrame(topActionThumbAnimFrame);
+    topActionNav.classList.add('nav-thumb-animating');
+    var animationDuration = Math.max(1, Number(duration) || 380);
+    var startX = topActionThumbX;
+    var started = 0;
+    topActionThumbW = targetW;
+    topActionThumbAnimFrame = requestAnimationFrame(function frame(now) {
+      if (!started) started = now;
+      var progress = Math.min(1, (now - started) / animationDuration);
+      var eased = 1 - Math.pow(1 - progress, 3);
+      topActionThumbX = startX + (targetX - startX) * eased;
+      applyTopActionThumbPosition();
+      if (progress < 1) {
+        topActionThumbAnimFrame = requestAnimationFrame(frame);
+      } else {
+        topActionThumbAnimFrame = 0;
+        topActionThumbX = targetX;
+        topActionNav.classList.remove('nav-thumb-animating');
+        applyTopActionThumbPosition();
+      }
+    });
   }
 
   function scheduleTopActionSync() {
@@ -3547,22 +3686,178 @@
   }
 
   function setTopActionThumbX(x) {
-    var thumb = topActionNav.querySelector('.top-action-thumb');
-    if (!thumb) return;
+    if (!topActionNav || !topActionNav.querySelector('.top-action-thumb')) return;
     topActionThumbX = x;
-    thumb.style.width = topActionThumbW + 'px';
-    thumb.style.transform = 'translateX(' + x + 'px) scale(var(--top-action-thumb-scale, 1))';
+    applyTopActionThumbPosition();
+  }
+
+  function clearTopActionLabelMask(label) {
+    if (!label) return;
+    label.style.webkitMaskImage = 'none';
+    label.style.maskImage = 'none';
+    label.style.webkitMaskRepeat = '';
+    label.style.maskRepeat = '';
+    label.style.webkitMaskSize = '';
+    label.style.maskSize = '';
+  }
+
+  function syncTopActionColorOverlay() {
+    if (!topActionColorOverlay || !topActionNav) return;
+    var navRect = topActionNav.getBoundingClientRect();
+    var thumbEl = topActionNav.querySelector('.top-action-thumb');
+    var thumbHeight = 28;
+    var thumbTop = 4;
+    if (thumbEl) {
+      var thumbStyle = getComputedStyle(thumbEl);
+      var computedHeight = parseFloat(thumbStyle.height);
+      var computedTop = parseFloat(thumbStyle.top);
+      if (isFinite(computedHeight)) thumbHeight = computedHeight;
+      if (isFinite(computedTop)) thumbTop = computedTop;
+    }
+    var press = topActionLiquidGlass ? topActionLiquidGlass.press : 0;
+    var scale = 1 + ((74 / 56) - 1) * press;
+    var left = topActionThumbX - (topActionThumbW * (scale - 1) * 0.5);
+    var top = thumbTop - (thumbHeight * (scale - 1) * 0.5);
+    var width = topActionThumbW * scale;
+    var height = thumbHeight * scale;
+    topActionColorOverlay.style.left = left.toFixed(2) + 'px';
+    topActionColorOverlay.style.top = top.toFixed(2) + 'px';
+    topActionColorOverlay.style.width = width.toFixed(2) + 'px';
+    topActionColorOverlay.style.height = height.toFixed(2) + 'px';
+    for (var i = 0; i < topActionColorItems.length; i++) {
+      var item = topActionColorItems[i];
+      var labelStyle = getComputedStyle(item.label);
+      item.copy.style.fontFamily = labelStyle.fontFamily;
+      item.copy.style.fontSize = labelStyle.fontSize;
+      item.copy.style.fontWeight = labelStyle.fontWeight;
+      item.copy.style.lineHeight = labelStyle.lineHeight;
+      item.copy.style.letterSpacing = labelStyle.letterSpacing;
+      var rect = item.button.getBoundingClientRect();
+      item.copy.style.left = (rect.left - navRect.left - left).toFixed(2) + 'px';
+      item.copy.style.top = '50%';
+      item.copy.style.transform = 'translateY(-50%)';
+      var labelRect = item.label.getBoundingClientRect();
+      var capsuleLeft = navRect.left + left;
+      var capsuleRight = capsuleLeft + width;
+      if (labelRect.right <= capsuleLeft - 2 || labelRect.left >= capsuleRight + 2) {
+        clearTopActionLabelMask(item.label);
+        continue;
+      }
+      var maskX = (navRect.left + left + width * 0.5) - labelRect.left;
+      var maskY = (navRect.top + top + height * 0.5) - labelRect.top;
+      var maskRx = width * 0.5 + 4;
+      var maskRy = height * 0.5 + 4;
+      var maskImage = 'radial-gradient(ellipse ' + maskRx.toFixed(2) + 'px ' + maskRy.toFixed(2) + 'px at ' + maskX.toFixed(2) + 'px ' + maskY.toFixed(2) + 'px, transparent 0 98%, #000 100%)';
+      item.label.style.webkitMaskImage = maskImage;
+      item.label.style.maskImage = maskImage;
+      item.label.style.webkitMaskRepeat = 'no-repeat';
+      item.label.style.maskRepeat = 'no-repeat';
+      item.label.style.webkitMaskSize = '100% 100%';
+      item.label.style.maskSize = '100% 100%';
+    }
+  }
+
+  function buildTopActionColorOverlay(buttons) {
+    if (!topActionNav) return;
+    if (topActionColorOverlay && topActionColorOverlay.parentNode) {
+      topActionColorOverlay.parentNode.removeChild(topActionColorOverlay);
+    }
+    topActionColorOverlay = document.createElement('div');
+    topActionColorOverlay.className = 'topnav-color-overlay top-action-color-overlay';
+    topActionColorOverlay.setAttribute('aria-hidden', 'true');
+    topActionColorItems = [];
+    var navRect = topActionNav.getBoundingClientRect();
+    for (var i = 0; i < buttons.length; i++) {
+      var btn = buttons[i];
+      var label = btn.querySelector('.topnav-item-label');
+      var content = btn.querySelector('.topnav-item-content');
+      if (!label || !content) continue;
+      var rect = btn.getBoundingClientRect();
+      var style = getComputedStyle(label);
+      var copy = content.cloneNode(true);
+      copy.className = 'topnav-color-label';
+      copy.style.left = (rect.left - navRect.left) + 'px';
+      copy.style.top = (rect.top - navRect.top) + 'px';
+      copy.style.width = rect.width + 'px';
+      copy.style.height = rect.height + 'px';
+      copy.style.fontFamily = style.fontFamily;
+      copy.style.fontSize = style.fontSize;
+      copy.style.fontWeight = style.fontWeight;
+      copy.style.lineHeight = style.lineHeight;
+      topActionColorOverlay.appendChild(copy);
+      topActionColorItems.push({ button: btn, label: content, copy: copy });
+    }
+    topActionNav.appendChild(topActionColorOverlay);
+    syncTopActionColorOverlay();
+    requestAnimationFrame(syncTopActionColorOverlay);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(syncTopActionColorOverlay);
+  }
+
+  function updateTopActionGlassPointer(event) {
+    if (!topActionNav || !topActionLiquidGlass || !topActionGlassActive()) return;
+    var rect = topActionNav.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    var x = Math.max(0, Math.min(rect.width, event.clientX - rect.left));
+    var y = Math.max(0, Math.min(rect.height, event.clientY - rect.top));
+    topActionNav.style.setProperty('--glass-pointer-x', (x / rect.width * 100).toFixed(2) + '%');
+    topActionNav.style.setProperty('--glass-pointer-y', (y / rect.height * 100).toFixed(2) + '%');
+    topActionLiquidGlassPointer.x = x;
+    topActionLiquidGlassPointer.y = y;
+    topActionLiquidGlassPointer.active = true;
+    scheduleTopActionLiquidGlassRender();
+  }
+
+  function clearTopActionGlassPointer() {
+    if (topActionNav) {
+      topActionNav.style.setProperty('--glass-pointer-x', '50%');
+      topActionNav.style.setProperty('--glass-pointer-y', '50%');
+    }
+    topActionLiquidGlassPointer.active = false;
+    scheduleTopActionLiquidGlassRender();
+  }
+
+  function stopTopActionDragFollow() {
+    if (topActionDragFollowFrame) cancelAnimationFrame(topActionDragFollowFrame);
+    topActionDragFollowFrame = 0;
+    topActionDragFollowTime = 0;
+  }
+
+  function stepTopActionDragFollow(now) {
+    topActionDragFollowFrame = 0;
+    if (!topActionDrag || !topActionDrag.moved || typeof topActionDrag.targetX !== 'number') return;
+    var dt = topActionDragFollowTime ? Math.min(32, Math.max(8, now - topActionDragFollowTime)) : 16;
+    topActionDragFollowTime = now;
+    var diff = topActionDrag.targetX - topActionThumbX;
+    if (Math.abs(diff) < 0.08) {
+      topActionThumbX = topActionDrag.targetX;
+      applyTopActionThumbPosition();
+      return;
+    }
+    var response = 1 - Math.exp(-dt / 18);
+    topActionThumbX += diff * response;
+    applyTopActionThumbPosition();
+    topActionDragFollowFrame = requestAnimationFrame(stepTopActionDragFollow);
+  }
+
+  function startTopActionDragFollow() {
+    if (!topActionDrag || !topActionDrag.moved || topActionDragFollowFrame) return;
+    topActionDragFollowTime = performance.now();
+    topActionDragFollowFrame = requestAnimationFrame(stepTopActionDragFollow);
   }
 
   function endTopActionPress(event) {
     if (!topActionDrag || topActionDrag.pointerId !== event.pointerId) return;
     var drag = topActionDrag;
+    stopTopActionDragFollow();
     topActionDrag = null;
     topActionNav.classList.remove('pressing', 'dragging');
+    scheduleTopActionLiquidGlassRender();
+    syncTopActionColorOverlay();
     if (topActionNav.releasePointerCapture) { try { topActionNav.releasePointerCapture(event.pointerId); } catch (err) {} }
-    if (event.type !== 'pointerup') return;
-    var key = drag.moved ? drag.hitKey : drag.key;
-    if (key) selectTopAction(key);
+    if (event.type !== 'pointerup' || !drag.moved) return;
+    var finalX = typeof drag.targetX === 'number' ? drag.targetX : topActionThumbX;
+    var key = topActionKeyAt(finalX + topActionThumbW * 0.5) || drag.hitKey;
+    if (key) selectTopAction(key, true);
   }
 
   function bindTopActionEvents() {
@@ -3571,27 +3866,42 @@
     topActionNav.addEventListener('pointerdown', function (event) {
       var button = event.target.closest ? event.target.closest('.top-action-item') : null;
       if (!button) return;
+      var buttons = topActionNav.querySelectorAll('.top-action-item');
+      if (!buttons.length) return;
       var thumb = topActionNav.querySelector('.top-action-thumb');
       if (thumb) topActionThumbW = thumb.offsetWidth || button.offsetWidth;
-      topActionDrag = { pointerId: event.pointerId, startX: event.clientX, startThumbX: topActionThumbX, key: button.dataset.view, hitKey: button.dataset.view, moved: false };
+      var navRect = topActionNav.getBoundingClientRect();
+      var pointerX = event.clientX - navRect.left;
+      var firstC = buttons[0].offsetLeft + buttons[0].offsetWidth * 0.5;
+      var lastC = buttons[buttons.length - 1].offsetLeft + buttons[buttons.length - 1].offsetWidth * 0.5;
+      var pressTargetX = Math.max(firstC - topActionThumbW * 0.5, Math.min(lastC - topActionThumbW * 0.5, pointerX - topActionThumbW * 0.5));
+      if (topActionThumbAnimFrame) { cancelAnimationFrame(topActionThumbAnimFrame); topActionThumbAnimFrame = 0; }
+      topActionNav.classList.remove('nav-thumb-animating');
+      animateTopActionThumbTo(pressTargetX, topActionThumbW, 180);
+      topActionDrag = { pointerId: event.pointerId, startX: event.clientX, startThumbX: pressTargetX, key: button.dataset.view, hitKey: button.dataset.view, moved: false };
       topActionNav.classList.add('pressing');
+      scheduleTopActionLiquidGlassRender();
     });
+    topActionNav.addEventListener('pointermove', updateTopActionGlassPointer);
     topActionNav.addEventListener('pointermove', function (event) {
       if (!topActionDrag || topActionDrag.pointerId !== event.pointerId) return;
       var dx = event.clientX - topActionDrag.startX;
       if (!topActionDrag.moved) {
         if (Math.abs(dx) <= 4) return;
+        if (topActionThumbAnimFrame) { cancelAnimationFrame(topActionThumbAnimFrame); topActionThumbAnimFrame = 0; }
+        topActionNav.classList.remove('nav-thumb-animating');
         topActionDrag.moved = true;
         topActionNav.classList.add('dragging');
         try { topActionNav.setPointerCapture(event.pointerId); } catch (err) {}
       }
       var buttons = topActionNav.querySelectorAll('.top-action-item');
       if (!buttons.length) return;
-      var min = buttons[0].offsetLeft;
-      var max = buttons[buttons.length - 1].offsetLeft;
-      var nextX = Math.max(min, Math.min(max, topActionDrag.startThumbX + dx));
-      setTopActionThumbX(nextX);
-      var hitKey = topActionKeyAt(nextX + topActionThumbW * 0.5);
+      var firstC = buttons[0].offsetLeft + buttons[0].offsetWidth * 0.5;
+      var lastC = buttons[buttons.length - 1].offsetLeft + buttons[buttons.length - 1].offsetWidth * 0.5;
+      var targetX = Math.max(firstC - topActionThumbW * 0.5, Math.min(lastC - topActionThumbW * 0.5, topActionDrag.startThumbX + dx));
+      topActionDrag.targetX = targetX;
+      startTopActionDragFollow();
+      var hitKey = topActionKeyAt(targetX + topActionThumbW * 0.5);
       if (hitKey && hitKey !== topActionDrag.hitKey) {
         topActionDrag.hitKey = hitKey;
         for (var i = 0; i < buttons.length; i++) buttons[i].classList.toggle('is-active', buttons[i].dataset.view === hitKey);
@@ -3599,10 +3909,13 @@
     });
     topActionNav.addEventListener('pointerup', endTopActionPress);
     topActionNav.addEventListener('pointercancel', endTopActionPress);
-    topActionNav.addEventListener('pointerleave', endTopActionPress);
+    topActionNav.addEventListener('pointerleave', function (event) {
+      clearTopActionGlassPointer();
+      endTopActionPress(event);
+    });
   }
 
-  function selectTopAction(key) {
+  function selectTopAction(key, animate) {
     var config = topActionConfig;
     var active = topActionNav.querySelector('.top-action-item.is-active');
     var target = topActionNav.querySelector('.top-action-item[data-view="' + key + '"]');
@@ -3613,9 +3926,74 @@
     }
     active.classList.remove('is-active');
     target.classList.add('is-active');
-    topActionNav.classList.add('nav-thumb-animating');
-    positionTopActionThumb();
+    var targetW = Math.max(54, Math.round(target.offsetWidth));
+    var targetX = Math.round(target.offsetLeft + target.offsetWidth / 2 - targetW / 2);
+    if (animate !== false && innerScreenLayoutActive && topActionLiquidGlass) {
+      animateTopActionThumbTo(targetX, targetW);
+    } else {
+      if (topActionThumbAnimFrame) { cancelAnimationFrame(topActionThumbAnimFrame); topActionThumbAnimFrame = 0; }
+      topActionNav.classList.remove('nav-thumb-animating');
+      topActionThumbX = targetX;
+      topActionThumbW = targetW;
+      applyTopActionThumbPosition();
+    }
     if (config && typeof config.onSelect === 'function') config.onSelect(key);
+  }
+
+  function showTopActionSearch(section) {
+    if (!topActionsEl || !topActionNav || !section || !section._hotspot) return;
+    var searchValue = section._hotspot.search ? section._hotspot.search.value : '';
+    var existingInput = topActionNav.querySelector('.top-action-search');
+    if (topActionNav.classList.contains('top-action-search-nav') && existingInput) {
+      topActionConfig = null;
+      topActionsEl.hidden = false;
+      topActionsEl.dataset.mode = 'news-search';
+      topActionLeft.hidden = true;
+      topActionRight.hidden = true;
+      if (existingInput.value !== searchValue) existingInput.value = searchValue;
+      scheduleTopActionLiquidGlassSync(true);
+      return;
+    }
+    topActionConfig = null;
+    topActionsEl.hidden = false;
+    topActionsEl.dataset.mode = 'news-search';
+    topActionLeft.hidden = true;
+    topActionRight.hidden = true;
+    topActionNav.classList.remove('pressing', 'dragging', 'no-anim', 'nav-thumb-animating', 'liquid-glass-ready');
+    topActionNav.classList.add('top-action-search-nav');
+    hideTopActionLiquidGlassSurface();
+    topActionNav.innerHTML = '';
+    topActionColorOverlay = null;
+    topActionColorItems = [];
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'top-action-search';
+    input.inputMode = 'search';
+    input.enterKeyHint = 'search';
+    input.setAttribute('aria-label', '搜索热点帖子');
+    input.autocomplete = 'off';
+    input.autocapitalize = 'off';
+    input.spellcheck = false;
+    input.value = searchValue;
+    input.addEventListener('keydown', function (event) {
+      if (event.key === 'Backspace' || event.key === 'Delete' || event.keyCode === 8 || event.keyCode === 46) {
+        event.stopPropagation();
+      }
+    });
+    input.addEventListener('input', function () {
+      if (section._hotspot.search) section._hotspot.search.value = input.value;
+      var id = curNavLogo;
+      if (!id) return;
+      hotspotUiState(id).query = input.value;
+      renderHotspotSection(id, section);
+    });
+    var icon = document.createElement('span');
+    icon.className = 'top-action-search-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.innerHTML = TOP_ACTION_SEARCH_ICON;
+    topActionNav.appendChild(input);
+    topActionNav.appendChild(icon);
+    scheduleTopActionLiquidGlassSync(true);
   }
 
   function showTopActions(config) {
@@ -3646,13 +4024,15 @@
       topActionRight.innerHTML = config.rightIcon || '';
       topActionRight.setAttribute('aria-label', config.rightLabel || '页面操作');
       topActionRight.onclick = config.rightAction || function () {};
-      positionTopActionThumb();
+      topActionLeft.hidden = config.showLeft === false;
+      if (!topActionThumbAnimFrame) positionTopActionThumb();
+      scheduleTopActionLiquidGlassSync(true);
       return;
     }
     topActionConfig = config;
     topActionsEl.hidden = false;
     topActionsEl.dataset.mode = config.mode || '';
-    topActionLeft.hidden = false;
+    topActionLeft.hidden = config.showLeft === false;
     topActionLeft.innerHTML = config.leftIcon || TOP_ACTION_BACK_ICON;
     topActionLeft.setAttribute('aria-label', config.leftLabel || '返回');
     topActionLeft.onclick = config.onLeft || function () {};
@@ -3661,46 +4041,50 @@
     topActionRight.setAttribute('aria-label', config.rightLabel || '页面操作');
     topActionRight.onclick = config.rightAction || function () {};
     topActionNav.classList.add('no-anim');
-    topActionNav.classList.remove('pressing', 'nav-thumb-animating');
+    topActionNav.classList.remove('pressing', 'nav-thumb-animating', 'liquid-glass-ready', 'top-action-search-nav');
+    hideTopActionLiquidGlassSurface();
     topActionNav.innerHTML = '';
     var thumb = document.createElement('div');
     thumb.className = 'topnav-thumb top-action-thumb';
     topActionNav.appendChild(thumb);
+    var topActionButtons = [];
     config.items.forEach(function (entry) {
       var button = document.createElement('button');
       button.type = 'button';
       button.className = 'topnav-item top-action-item' + (entry[0] === config.active ? ' is-active' : '');
       button.dataset.view = entry[0];
-      button.textContent = entry[1];
+      var content = document.createElement('span');
+      content.className = 'topnav-item-content';
+      var label = document.createElement('span');
+      label.className = 'topnav-item-label';
+      label.textContent = entry[1];
+      content.appendChild(label);
+      button.appendChild(content);
       button.onclick = function () {
-        if (topActionSuppressClick) { topActionSuppressClick = false; return; }
         selectTopAction(entry[0]);
       };
-      button.addEventListener('pointerup', function (event) {
-        event.preventDefault();
-        selectTopAction(entry[0]);
-      });
-      button.addEventListener('mousedown', function (event) {
-        event.preventDefault();
-        selectTopAction(entry[0]);
-      });
+      topActionButtons.push(button);
       topActionNav.appendChild(button);
     });
+    topActionColorOverlay = null;
+    topActionColorItems = [];
     bindTopActionEvents();
     positionTopActionThumb();
+    scheduleTopActionLiquidGlassSync(true);
     requestAnimationFrame(function () {
       topActionNav.classList.remove('no-anim');
       positionTopActionThumb();
+      scheduleTopActionLiquidGlassSync(false);
     });
   }
 
   function setHomeOuterView(section, view, animate) {
     if (!section) return;
-    var next = view === 'achv' ? 'achv' : view === 'review' ? 'review' : 'detail';
+    var next = view === 'achv' ? 'achv' : 'home';
     section._outerHomeView = next;
-    section.classList.remove('outer-home-view-detail', 'outer-home-view-achv', 'outer-home-view-review');
+    section.classList.remove('outer-home-view-home', 'outer-home-view-detail', 'outer-home-view-achv', 'outer-home-view-review');
     section.classList.add('outer-home-view-' + next);
-    var card = section.querySelector(next === 'detail' ? '.home-detail-card' : next === 'achv' ? '.home-achv-card' : '.home-review-card');
+    var card = section.querySelector(next === 'achv' ? '.home-achv-card' : '.home-detail-card');
     var body = card ? card.querySelector('.section-card-body') : null;
     if (body) {
       body.scrollTop = 0;
@@ -3713,7 +4097,7 @@
   function setFilesOuterView(section, view, animate) {
     if (!section) return;
     var next = view === 'viewer' ? 'viewer' : view === 'schedule' ? 'schedule' : 'browse';
-    section._outerFilesView = next;
+    section._outerFilesView = next === 'viewer' ? 'browse' : next;
     section.classList.toggle('outer-show-browse', next === 'browse');
     section.classList.toggle('outer-show-viewer', next === 'viewer');
     section.classList.toggle('outer-show-schedule', next === 'schedule');
@@ -3746,6 +4130,110 @@
     configureTopActions();
   }
 
+  function syncSettingsPersonalExp() {
+    for (var i = 0; i < settingsPersonalViews.length; i++) {
+      var view = settingsPersonalViews[i];
+      if (!view || !view.badge) continue;
+      if (sidebarLevelBadge) view.badge.textContent = sidebarLevelBadge.textContent;
+      if (sidebarExpTotal) view.total.textContent = sidebarExpTotal.textContent;
+      if (sidebarExpFill) view.fill.style.width = sidebarExpFill.style.width;
+      if (sidebarExpValue) view.value.textContent = sidebarExpValue.textContent;
+    }
+  }
+
+  function openSettingsPersonalPanel(openPanel) {
+    openSidebar('left');
+    sidebarPanelOrigin = 'home';
+    openPanel();
+  }
+
+  function makeSettingsPersonalAction(iconMarkup, label, handler) {
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'sidebar-item settings-personal-action';
+    button.innerHTML = iconMarkup + '<span>' + label + '</span>';
+    button.onclick = handler;
+    return button;
+  }
+
+  function buildSettingsSection(section) {
+    if (!section || section._settingsBuilt) return;
+    section._settingsBuilt = true;
+    section.classList.add('settings-section');
+    section.innerHTML = '';
+
+    var rankCard = makeHotspotCard('排名', 'settings-rank-card', false);
+    var personalCard = makeHotspotCard('个人', 'settings-personal-card', false);
+    var rankList = document.createElement('div');
+    rankList.className = 'settings-rank-list';
+    var rankSlots = [];
+    ['experience', 'value', 'comments'].forEach(function (type) {
+      var slot = document.createElement('div');
+      slot.className = 'pause-ad-slot settings-rank-slot';
+      slot.setAttribute('data-leaderboard', type);
+      rankList.appendChild(slot);
+      rankSlots.push(slot);
+    });
+    rankCard.body.appendChild(rankList);
+
+    var personalExp = document.createElement('div');
+    personalExp.className = 'settings-personal-exp';
+    personalExp.innerHTML = '<div class="settings-personal-level-badge"></div>' +
+      '<div class="settings-personal-level-row">' +
+      '<span class="settings-personal-exp-total"></span>' +
+      '<div class="settings-personal-exp-track"><div class="settings-personal-exp-fill"></div></div>' +
+      '<span class="settings-personal-exp-value"></span>' +
+      '</div>';
+    var badge = personalExp.querySelector('.settings-personal-level-badge');
+    var total = personalExp.querySelector('.settings-personal-exp-total');
+    var fill = personalExp.querySelector('.settings-personal-exp-fill');
+    var value = personalExp.querySelector('.settings-personal-exp-value');
+    personalCard.body.appendChild(personalExp);
+
+    var actions = document.createElement('div');
+    actions.className = 'settings-personal-actions';
+    actions.appendChild(makeSettingsPersonalAction('', '用户切换', function () { openSettingsPersonalPanel(openAccountPanel); }));
+    actions.appendChild(makeSettingsPersonalAction('', '称号', function () { openSettingsPersonalPanel(openTitlePanel); }));
+    actions.appendChild(makeSettingsPersonalAction('', '设置', function () { openSettingsPersonalPanel(function () { openSettingsPanel('interface'); }); }));
+    actions.appendChild(makeSettingsPersonalAction('', 'GITHUB REPOSITORY', function () {
+      window.open('https://github.com/JianZhaNoSwine/FGEXPIG-Official-Website', '_blank', 'noopener,noreferrer');
+    }));
+    personalCard.body.appendChild(actions);
+
+    section.appendChild(rankCard.card);
+    section.appendChild(personalCard.card);
+    section._outerSettingsView = 'rank';
+    section.classList.add('outer-settings-view-rank');
+    section._settingsPersonal = { badge: badge, total: total, fill: fill, value: value };
+    settingsPersonalViews.push(section._settingsPersonal);
+    syncSettingsPersonalExp();
+
+    for (var i = 0; i < rankSlots.length; i++) {
+      if (typeof pauseAdSlots !== 'undefined' && pauseAdSlots.indexOf(rankSlots[i]) < 0) pauseAdSlots.push(rankSlots[i]);
+      if (typeof pauseLeaderboardResizeObserver !== 'undefined' && pauseLeaderboardResizeObserver) pauseLeaderboardResizeObserver.observe(rankSlots[i]);
+    }
+  }
+
+  function setSettingsOuterView(section, view, animate) {
+    if (!section || !section._settingsBuilt) return;
+    var next = view === 'personal' ? 'personal' : 'rank';
+    section._outerSettingsView = next;
+    section.classList.toggle('outer-settings-view-rank', next === 'rank');
+    section.classList.toggle('outer-settings-view-personal', next === 'personal');
+    if (next === 'rank') {
+      renderPauseLeaderboards();
+      schedulePauseLeaderboardViewportUpdate();
+    } else {
+      syncSettingsPersonalExp();
+    }
+    if (animate) {
+      var card = section.querySelector(next === 'rank' ? '.settings-rank-card' : '.settings-personal-card');
+      var body = card ? card.querySelector('.section-card-body') : null;
+      if (body) requestAnimationFrame(function () { animateCardBody(body, 0); });
+    }
+    configureTopActions();
+  }
+
   function configureTopActions() {
     if (!topActionsEl || !document.documentElement.classList.contains('outer-screen-layout')) {
       hideTopActions();
@@ -3760,28 +4248,43 @@
     if (sectionKey === 'home') {
       showTopActions({
         mode: 'home',
-        items: [['detail', '详情'], ['achv', '实绩'], ['review', '测评']],
-        active: section._outerHomeView || 'detail',
-        leftLabel: '回到详情',
-        onLeft: function () { setHomeOuterView(section, 'detail', true); },
+        items: [['home', '首页'], ['achv', '实绩']],
+        active: section._outerHomeView === 'achv' ? 'achv' : 'home',
+        showLeft: false,
         onSelect: function (view) { setHomeOuterView(section, view, true); }
       });
       return;
     }
     if (sectionKey === 'files') {
-      var filesView = section._outerFilesView || (section.classList.contains('outer-show-viewer') ? 'viewer' : section.classList.contains('outer-show-schedule') ? 'schedule' : 'browse');
+      var filesView = section._outerFilesView || (section.classList.contains('outer-show-viewer') ? 'browse' : section.classList.contains('outer-show-schedule') ? 'schedule' : 'browse');
       showTopActions({
         mode: 'files',
-        items: [['browse', '浏览'], ['viewer', '观赏'], ['schedule', '日程']],
-        active: filesView,
+        items: [['browse', '浏览'], ['schedule', '日程']],
+        active: filesView === 'schedule' ? 'schedule' : 'browse',
+        showLeft: section.classList.contains('outer-show-viewer'),
         leftLabel: '回到浏览',
         onLeft: function () { setFilesOuterView(section, 'browse', true); },
         onSelect: function (view) { setFilesOuterView(section, view, true); }
       });
       return;
     }
+    if (sectionKey === 'settings') {
+      buildSettingsSection(section);
+      showTopActions({
+        mode: 'settings',
+        items: [['rank', '排名'], ['personal', '个人']],
+        active: section._outerSettingsView === 'personal' ? 'personal' : 'rank',
+        showLeft: false,
+        onSelect: function (view) { setSettingsOuterView(section, view, true); }
+      });
+      return;
+    }
     if (sectionKey === 'news') {
       var newsView = section._outerNewsView || (section.classList.contains('outer-show-secondary') ? (section.classList.contains('portrait-show-comments') ? 'comments' : 'content') : 'title');
+      if (newsView === 'title') {
+        showTopActionSearch(section);
+        return;
+      }
       var newsRightAction = null;
       if (newsView === 'comments' && section._hotspot && curNavLogo) {
         newsRightAction = function () {
@@ -3793,9 +4296,9 @@
       }
       showTopActions({
         mode: 'news',
-        items: [['title', '标题'], ['content', '内容'], ['comments', '评论']],
+        items: [['content', '内容'], ['comments', '评论']],
         active: newsView,
-        leftLabel: '回到标题',
+        leftLabel: '返回帖子列表',
         rightAction: newsRightAction,
         rightIcon: TOP_ACTION_SORT_ICON,
         rightLabel: '切换评论排序方向',
@@ -4329,6 +4832,7 @@
     'uniform float uPress;',
     'uniform float uContentSample;',
     'uniform vec2 uPointer;',
+    'uniform float uGlassDarken;',
     '',
     'const vec3 DARK = vec3(0.031372549, 0.035294118, 0.054901961);',
     'const vec3 SURFACE = vec3(0.98, 0.98, 0.98);',
@@ -4521,6 +5025,7 @@
     '  float alpha = max(activeBaseCoverage, thumbRingCoverage * thumbHighlight);',
     '  alpha *= mix(1.0, 0.42, uContentSample);',
     '  alpha = mix(alpha, max(alpha, thumbCoverage), uContentSample);',
+    '  color = mix(color, DARK, uGlassDarken);',
     '  outColor = vec4(clamp(color, 0.0, 1.0), alpha);',
     '}'
   ].join('\n');
@@ -4590,7 +5095,7 @@
         'uDimTop', 'uDimBottom', 'uBaseCenter', 'uBaseHalf', 'uBaseRadius',
         'uBaseRefractionHeight', 'uBaseRefractionAmount', 'uThumbCenter',
         'uThumbHalf', 'uThumbRadius', 'uThumbRefractionHeight',
-        'uThumbRefractionAmount', 'uThumbMagnification', 'uPress', 'uContentSample', 'uPointer'
+        'uThumbRefractionAmount', 'uThumbMagnification', 'uPress', 'uContentSample', 'uPointer', 'uGlassDarken'
       ];
       var uniforms = {};
       uniformNames.forEach(function (name) { uniforms[name] = gl.getUniformLocation(program, name); });
@@ -4670,6 +5175,7 @@
   function updateLiquidGlassWallpaper(image) {
     liquidGlassWallpaperImage = image || null;
     if (liquidGlass && liquidGlassWallpaperImage) uploadLiquidGlassTexture();
+    if (topActionLiquidGlass && liquidGlassWallpaperImage) uploadTopActionLiquidGlassTexture();
   }
 
   function resizeLiquidGlassRenderer() {
@@ -4795,6 +5301,8 @@
     gl.uniform1f(uniforms.uPress, liquidGlass.press);
     gl.uniform1f(uniforms.uContentSample, document.documentElement.classList.contains('outer-screen-layout') ? 1 : 0);
     gl.uniform2f(uniforms.uPointer, pointerX, pointerY);
+    var glassDarken = parseFloat(rootStyle.getPropertyValue('--glass-darken')) || 0.175;
+    gl.uniform1f(uniforms.uGlassDarken, Math.max(0, Math.min(1, glassDarken)));
     navEl.style.setProperty('--glass-shadow-alpha', (liquidGlass.press * 0.1).toFixed(3));
     syncNavColorOverlay();
     gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -4817,9 +5325,335 @@
     scheduleLiquidGlassRender();
   }
 
+  /* 顶部文字导航使用独立的 WebGL 上下文，但着色器和参数完全复用底栏。 */
+  var topActionLiquidGlassBackdrop = null;
+  var topActionLiquidGlassCanvas = null;
+  var topActionLiquidGlass = null;
+  var topActionLiquidGlassRenderFrame = 0;
+  var topActionLiquidGlassSyncFrame = 0;
+  var topActionLiquidGlassFailed = false;
+  var topActionLiquidGlassPointer = { x: 0, y: 0, active: false };
+  var topActionLiquidGlassTextureSize = [0, 0];
+
+  function topActionGlassActive() {
+    return !!(
+      topActionNav &&
+      topActionsEl &&
+      !topActionsEl.hidden &&
+      (topActionNav.classList.contains('top-action-search-nav') || topActionNav.querySelector('.top-action-item')) &&
+      document.documentElement.classList.contains('outer-screen-layout') &&
+      innerScreenLayoutActive
+    );
+  }
+
+  function hideTopActionLiquidGlassSurface() {
+    if (topActionLiquidGlassRenderFrame) {
+      cancelAnimationFrame(topActionLiquidGlassRenderFrame);
+      topActionLiquidGlassRenderFrame = 0;
+    }
+    if (topActionNav) topActionNav.classList.remove('liquid-glass-ready');
+    if (topActionLiquidGlassCanvas) {
+      topActionLiquidGlassCanvas.classList.remove('is-ready');
+      topActionLiquidGlassCanvas.style.display = 'none';
+    }
+    if (topActionLiquidGlassBackdrop) topActionLiquidGlassBackdrop.style.display = 'none';
+  }
+
+  function clearTopActionColorMasks() {
+    for (var i = 0; i < topActionColorItems.length; i++) {
+      clearTopActionLabelMask(topActionColorItems[i].label);
+    }
+  }
+
+  function scheduleTopActionLiquidGlassSync(force) {
+    syncTopActionLiquidGlassRenderer(force);
+    if (topActionLiquidGlassSyncFrame) cancelAnimationFrame(topActionLiquidGlassSyncFrame);
+    topActionLiquidGlassSyncFrame = requestAnimationFrame(function () {
+      topActionLiquidGlassSyncFrame = 0;
+      syncTopActionLiquidGlassRenderer(false);
+    });
+  }
+
+  function ensureTopActionLiquidGlassCanvas() {
+    if (!topActionLiquidGlassBackdrop) {
+      topActionLiquidGlassBackdrop = document.createElement('div');
+      topActionLiquidGlassBackdrop.className = 'top-action-glass-backdrop';
+      topActionLiquidGlassBackdrop.setAttribute('aria-hidden', 'true');
+    }
+    if (!topActionLiquidGlassBackdrop.parentNode) document.body.appendChild(topActionLiquidGlassBackdrop);
+    if (!topActionLiquidGlassCanvas) {
+      topActionLiquidGlassCanvas = document.createElement('canvas');
+      topActionLiquidGlassCanvas.className = 'top-action-liquid-glass';
+      topActionLiquidGlassCanvas.setAttribute('aria-hidden', 'true');
+    }
+    if (!topActionLiquidGlassCanvas.parentNode) document.body.appendChild(topActionLiquidGlassCanvas);
+    return topActionLiquidGlassCanvas;
+  }
+
+  function initTopActionLiquidGlassRenderer() {
+    if (topActionLiquidGlass || topActionLiquidGlassFailed || !topActionLiquidGlassCanvas) return topActionLiquidGlass;
+    var gl = topActionLiquidGlassCanvas.getContext('webgl2', {
+      alpha: true,
+      antialias: true,
+      premultipliedAlpha: false,
+      preserveDrawingBuffer: false,
+      powerPreference: 'high-performance'
+    });
+    if (!gl) {
+      topActionLiquidGlassFailed = true;
+      console.warn('Liquid Glass WebGL2 unavailable');
+      return null;
+    }
+    try {
+      var vertex = compileLiquidGlassShader(gl, gl.VERTEX_SHADER, LIQUID_GLASS_VERTEX);
+      var fragment = compileLiquidGlassShader(gl, gl.FRAGMENT_SHADER, LIQUID_GLASS_FRAGMENT);
+      var program = gl.createProgram();
+      gl.attachShader(program, vertex);
+      gl.attachShader(program, fragment);
+      gl.linkProgram(program);
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        throw new Error(gl.getProgramInfoLog(program) || 'program link error');
+      }
+      gl.deleteShader(vertex);
+      gl.deleteShader(fragment);
+      var vbo = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+      var position = gl.getAttribLocation(program, 'aPos');
+      gl.enableVertexAttribArray(position);
+      gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+      var uniformNames = [
+        'uBackdrop', 'uCanvasSize', 'uViewportSize', 'uCanvasOrigin', 'uDpr', 'uHasTexture',
+        'uDimTop', 'uDimBottom', 'uBaseCenter', 'uBaseHalf', 'uBaseRadius',
+        'uBaseRefractionHeight', 'uBaseRefractionAmount', 'uThumbCenter',
+        'uThumbHalf', 'uThumbRadius', 'uThumbRefractionHeight',
+        'uThumbRefractionAmount', 'uThumbMagnification', 'uPress', 'uContentSample', 'uPointer', 'uGlassDarken'
+      ];
+      var uniforms = {};
+      uniformNames.forEach(function (name) { uniforms[name] = gl.getUniformLocation(program, name); });
+      var texture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.useProgram(program);
+      gl.uniform1i(uniforms.uBackdrop, 0);
+      topActionLiquidGlass = {
+        gl: gl,
+        program: program,
+        uniforms: uniforms,
+        texture: texture,
+        textureCanvas: document.createElement('canvas'),
+        width: 0,
+        height: 0,
+        dpr: 1,
+        press: 0,
+        lastTime: 0,
+        hasTexture: false
+      };
+      topActionNav.classList.add('liquid-glass-ready');
+      topActionLiquidGlassCanvas.classList.add('is-ready');
+      syncTopActionLiquidGlassRenderer(true);
+      return topActionLiquidGlass;
+    } catch (err) {
+      topActionLiquidGlassFailed = true;
+      topActionLiquidGlass = null;
+      topActionNav.classList.remove('liquid-glass-ready');
+      if (topActionLiquidGlassCanvas) topActionLiquidGlassCanvas.classList.remove('is-ready');
+      console.warn('Liquid Glass WebGL2 init failed', err);
+      return null;
+    }
+  }
+
+  function uploadTopActionLiquidGlassTexture() {
+    if (!topActionLiquidGlass || !liquidGlassWallpaperImage) return;
+    var image = liquidGlassWallpaperImage;
+    var viewportWidth = Math.max(1, window.innerWidth);
+    var viewportHeight = Math.max(1, window.innerHeight);
+    var textureDpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    var canvas = topActionLiquidGlass.textureCanvas;
+    var pixelWidth = Math.max(1, Math.round(viewportWidth * textureDpr));
+    var pixelHeight = Math.max(1, Math.round(viewportHeight * textureDpr));
+    if (canvas.width !== pixelWidth) canvas.width = pixelWidth;
+    if (canvas.height !== pixelHeight) canvas.height = pixelHeight;
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    var naturalWidth = image.naturalWidth || image.width || viewportWidth;
+    var naturalHeight = image.naturalHeight || image.height || viewportHeight;
+    var cover = Math.max(viewportWidth / naturalWidth, viewportHeight / naturalHeight);
+    var drawWidth = naturalWidth * cover;
+    var drawHeight = naturalHeight * cover;
+    ctx.filter = 'saturate(150%) blur(' + (1.5 * textureDpr).toFixed(2) + 'px)';
+    ctx.drawImage(
+      image,
+      (viewportWidth - drawWidth) * 0.5 * textureDpr,
+      (viewportHeight - drawHeight) * 0.5 * textureDpr,
+      drawWidth * textureDpr,
+      drawHeight * textureDpr
+    );
+    ctx.filter = 'none';
+    var gl = topActionLiquidGlass.gl;
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, topActionLiquidGlass.texture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
+    topActionLiquidGlass.hasTexture = true;
+    topActionLiquidGlassTextureSize = [viewportWidth, viewportHeight];
+    scheduleTopActionLiquidGlassRender();
+  }
+
+  function resizeTopActionLiquidGlassRenderer() {
+    if (!topActionLiquidGlass || !topActionLiquidGlassCanvas) return false;
+    var rect = topActionNav.getBoundingClientRect();
+    var thumbEl = topActionNav.querySelector('.top-action-thumb');
+    var navWidth = Math.max(1, rect.width);
+    var navHeight = Math.max(1, rect.height);
+    var thumbHeight = thumbEl ? Math.max(1, thumbEl.offsetHeight) : 28;
+    var thumbTop = 4;
+    if (thumbEl) {
+      var computedThumbTop = parseFloat(getComputedStyle(thumbEl).top);
+      if (isFinite(computedThumbTop)) thumbTop = computedThumbTop;
+    }
+    var pad = LIQUID_GLASS_PADDING;
+    var width = navWidth + pad * 2;
+    var height = navHeight + pad * 2;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var pixelWidth = Math.max(1, Math.round(width * dpr));
+    var pixelHeight = Math.max(1, Math.round(height * dpr));
+    var changed = false;
+    if (topActionLiquidGlassCanvas.width !== pixelWidth) {
+      topActionLiquidGlassCanvas.width = pixelWidth;
+      changed = true;
+    }
+    if (topActionLiquidGlassCanvas.height !== pixelHeight) {
+      topActionLiquidGlassCanvas.height = pixelHeight;
+      changed = true;
+    }
+    topActionLiquidGlass.width = width;
+    topActionLiquidGlass.height = height;
+    topActionLiquidGlass.navWidth = navWidth;
+    topActionLiquidGlass.navHeight = navHeight;
+    topActionLiquidGlass.thumbHeight = thumbHeight;
+    topActionLiquidGlass.thumbTop = thumbTop;
+    topActionLiquidGlass.padding = pad;
+    topActionLiquidGlass.dpr = dpr;
+    topActionLiquidGlassCanvas.style.left = (rect.left - pad) + 'px';
+    topActionLiquidGlassCanvas.style.top = (rect.top - pad) + 'px';
+    topActionLiquidGlassCanvas.style.bottom = 'auto';
+    if (topActionLiquidGlassBackdrop) {
+      topActionLiquidGlassBackdrop.style.left = rect.left + 'px';
+      topActionLiquidGlassBackdrop.style.top = rect.top + 'px';
+      topActionLiquidGlassBackdrop.style.bottom = 'auto';
+      topActionLiquidGlassBackdrop.style.width = navWidth + 'px';
+      topActionLiquidGlassBackdrop.style.height = navHeight + 'px';
+    }
+    topActionLiquidGlassCanvas.style.width = width + 'px';
+    topActionLiquidGlassCanvas.style.height = height + 'px';
+    topActionLiquidGlass.gl.viewport(0, 0, pixelWidth, pixelHeight);
+    if (
+      topActionLiquidGlassTextureSize[0] !== window.innerWidth ||
+      topActionLiquidGlassTextureSize[1] !== window.innerHeight
+    ) uploadTopActionLiquidGlassTexture();
+    return changed;
+  }
+
+  function scheduleTopActionLiquidGlassRender() {
+    if (!topActionLiquidGlass || topActionLiquidGlassRenderFrame || !topActionGlassActive()) return;
+    topActionLiquidGlassRenderFrame = requestAnimationFrame(renderTopActionLiquidGlass);
+  }
+
+  function renderTopActionLiquidGlass(now) {
+    topActionLiquidGlassRenderFrame = 0;
+    if (!topActionLiquidGlass || !topActionGlassActive() || topActionNav.classList.contains('empty')) return;
+    if (document.documentElement.classList.contains('ui-hidden') || document.hidden) return;
+    resizeTopActionLiquidGlassRenderer();
+    var gl = topActionLiquidGlass.gl;
+    var uniforms = topActionLiquidGlass.uniforms;
+    var targetPress = topActionNav.classList.contains('pressing') ? 1 : 0;
+    var dt = topActionLiquidGlass.lastTime ? Math.min(48, now - topActionLiquidGlass.lastTime) : 16;
+    topActionLiquidGlass.lastTime = now;
+    var mix = 1 - Math.exp(-dt / 72);
+    topActionLiquidGlass.press += (targetPress - topActionLiquidGlass.press) * mix;
+    if (Math.abs(topActionLiquidGlass.press - targetPress) < 0.002) topActionLiquidGlass.press = targetPress;
+    var baseScale = 1;
+    var baseHalfWidth = topActionLiquidGlass.navWidth * baseScale * 0.5;
+    var baseHalfHeight = topActionLiquidGlass.navHeight * baseScale * 0.5;
+    var searchMode = topActionNav.classList.contains('top-action-search-nav');
+    var thumbScale = searchMode ? 1 : 1 + ((74 / 56) - 1) * topActionLiquidGlass.press;
+    var thumbHeight = searchMode ? topActionLiquidGlass.navHeight : (topActionLiquidGlass.thumbHeight || 28);
+    var thumbTop = searchMode ? 0 : (typeof topActionLiquidGlass.thumbTop === 'number' ? topActionLiquidGlass.thumbTop : 4);
+    var thumbHalfHeight = thumbHeight * 0.5;
+    var thumbSizeScale = searchMode ? 1 : thumbHeight / 28;
+    var thumbCenterX = searchMode
+      ? topActionLiquidGlass.padding + topActionLiquidGlass.navWidth * 0.5
+      : topActionLiquidGlass.padding + topActionThumbX + topActionThumbW * 0.5;
+    var thumbCenterY = searchMode
+      ? topActionLiquidGlass.padding + topActionLiquidGlass.navHeight * 0.5
+      : topActionLiquidGlass.padding + thumbTop + thumbHalfHeight;
+    var pointerX = topActionLiquidGlassPointer.active ? topActionLiquidGlass.padding + topActionLiquidGlassPointer.x : thumbCenterX;
+    var pointerY = topActionLiquidGlassPointer.active ? topActionLiquidGlass.padding + topActionLiquidGlassPointer.y : thumbCenterY;
+    gl.useProgram(topActionLiquidGlass.program);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, topActionLiquidGlass.texture);
+    var rootStyle = getComputedStyle(document.documentElement);
+    gl.uniform2f(uniforms.uCanvasSize, topActionLiquidGlass.width, topActionLiquidGlass.height);
+    var navRect = topActionNav.getBoundingClientRect();
+    gl.uniform2f(uniforms.uViewportSize, window.innerWidth, window.innerHeight);
+    gl.uniform2f(uniforms.uCanvasOrigin, navRect.left - topActionLiquidGlass.padding, navRect.top - topActionLiquidGlass.padding);
+    gl.uniform1f(uniforms.uDpr, topActionLiquidGlass.dpr);
+    gl.uniform1f(uniforms.uHasTexture, topActionLiquidGlass.hasTexture ? 1 : 0);
+    gl.uniform1f(uniforms.uDimTop, parseFloat(rootStyle.getPropertyValue('--wallpaper-dim-top')) || 0.175);
+    gl.uniform1f(uniforms.uDimBottom, parseFloat(rootStyle.getPropertyValue('--wallpaper-dim-bottom')) || 0.42);
+    gl.uniform2f(uniforms.uBaseCenter, topActionLiquidGlass.padding + topActionLiquidGlass.navWidth * 0.5, topActionLiquidGlass.padding + topActionLiquidGlass.navHeight * 0.5);
+    gl.uniform2f(uniforms.uBaseHalf, baseHalfWidth, baseHalfHeight);
+    gl.uniform1f(uniforms.uBaseRadius, Math.min(baseHalfWidth, baseHalfHeight));
+    gl.uniform1f(uniforms.uBaseRefractionHeight, 12);
+    gl.uniform1f(uniforms.uBaseRefractionAmount, -12);
+    var thumbUniformWidth = searchMode ? topActionLiquidGlass.navWidth * 0.5 : Math.max(14, topActionThumbW * thumbScale * 0.5);
+    var thumbUniformHeight = searchMode ? topActionLiquidGlass.navHeight * 0.5 : thumbHalfHeight * thumbScale;
+    gl.uniform2f(uniforms.uThumbCenter, thumbCenterX, thumbCenterY);
+    gl.uniform2f(uniforms.uThumbHalf, thumbUniformWidth, thumbUniformHeight);
+    gl.uniform1f(uniforms.uThumbRadius, Math.min(thumbUniformWidth, thumbUniformHeight));
+    gl.uniform1f(uniforms.uThumbRefractionHeight, searchMode ? 12 : 5 * thumbSizeScale * thumbScale);
+    gl.uniform1f(uniforms.uThumbRefractionAmount, searchMode ? -12 : -7 * thumbSizeScale * thumbScale);
+    gl.uniform1f(uniforms.uThumbMagnification, searchMode ? 1 : thumbScale);
+    gl.uniform1f(uniforms.uPress, topActionLiquidGlass.press);
+    gl.uniform1f(uniforms.uContentSample, document.documentElement.classList.contains('outer-screen-layout') ? 1 : 0);
+    gl.uniform2f(uniforms.uPointer, pointerX, pointerY);
+    var glassDarken = parseFloat(rootStyle.getPropertyValue('--glass-darken')) || 0.175;
+    gl.uniform1f(uniforms.uGlassDarken, Math.max(0, Math.min(1, glassDarken)));
+    topActionNav.style.setProperty('--glass-shadow-alpha', (topActionLiquidGlass.press * 0.1).toFixed(3));
+    syncTopActionColorOverlay();
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    if (Math.abs(topActionLiquidGlass.press - targetPress) > 0.002) scheduleTopActionLiquidGlassRender();
+  }
+
+  function syncTopActionLiquidGlassRenderer(force) {
+    if (!topActionGlassActive()) {
+      hideTopActionLiquidGlassSurface();
+      clearTopActionColorMasks();
+      return;
+    }
+    if (!topActionLiquidGlassCanvas) {
+      ensureTopActionLiquidGlassCanvas();
+      if (!topActionLiquidGlassCanvas) return;
+    }
+    if (!topActionLiquidGlass && !initTopActionLiquidGlassRenderer()) return;
+    if (!topActionLiquidGlass) return;
+    topActionNav.classList.add('liquid-glass-ready');
+    topActionLiquidGlassCanvas.classList.add('is-ready');
+    topActionLiquidGlassCanvas.style.display = 'block';
+    if (topActionLiquidGlassBackdrop) topActionLiquidGlassBackdrop.style.display = 'block';
+    resizeTopActionLiquidGlassRenderer();
+    if (force && liquidGlassWallpaperImage) uploadTopActionLiquidGlassTexture();
+    scheduleTopActionLiquidGlassRender();
+  }
+
   window.addEventListener('resize', function () {
-    if (!liquidGlass) return;
-    syncLiquidGlassRenderer(false);
+    if (liquidGlass) syncLiquidGlassRenderer(false);
+    scheduleTopActionLiquidGlassSync(false);
   }, { passive: true });
 
   function select(i) {
@@ -5536,6 +6370,7 @@
       sidebarExpValue.textContent = formatExperienceNumber(metrics.nextRequiredExp);
     }
     setUserExpRing(metrics.ratio);
+    syncSettingsPersonalExp();
     schedulePauseLeaderboardRender();
     // 数据变化后成就型称号可能新增，称号页开着时同步刷新
     if (titleListEl && currentSidebarPanel === 'titles') renderTitleList();
@@ -5685,6 +6520,10 @@
         closeStartupOverlay();
       });
       document.addEventListener('keydown', function (event) {
+        var active = document.activeElement;
+        var outerSearchFocused = !!(event.target && event.target.classList && event.target.classList.contains('top-action-search')) ||
+          !!(active && active.classList && active.classList.contains('top-action-search'));
+        if (startupOverlay && startupOverlay.hidden && outerSearchFocused) return;
         event.preventDefault();
         event.stopPropagation();
         closeStartupOverlay();
@@ -8553,14 +9392,12 @@
 
   function activityTitle(id) {
     var info = infoOf(id);
-    return info && info.name ? info.name : id;
+    return info ? (info.name ? info.name : id) : id;
   }
 
-  // 网页标题：活动数据未知时用站点名，已知时用「活动名 - 站点名」
-  function pageTitle(id) {
-    var name = activityTitle(id);
-    if (!name || name === id || name === SITE_NAME) return SITE_NAME;
-    return name + ' - ' + SITE_NAME;
+  // 网页标题固定为站点名
+  function pageTitle() {
+    return SITE_NAME;
   }
 
   // 网页描述：活动数据已知时带上活动名，便于搜索引擎生成摘要
@@ -8572,7 +9409,7 @@
 
   // 同步 <title> 与 description / og:title / og:description
   function applyPageMeta(id) {
-    var title = pageTitle(id);
+    var title = pageTitle();
     var desc = pageDescription(id);
     document.title = title;
     var metaDesc = document.querySelector('meta[name="description"]');
@@ -9671,7 +10508,7 @@
         : '未加载';
     }
     syncDockWithData();
-    // 核心数据到位后按真实活动名刷新标题/描述（列表未变化时 syncDockWithData 会提前返回）
+    // 核心数据到位后刷新页面描述（列表未变化时 syncDockWithData 会提前返回）
     applyPageMeta(LOGOS[state.index]);
     refreshPlayerMedia();
   }
@@ -10348,11 +11185,18 @@
   var pauseLeaderboardViewportFrame = 0;
   var pauseLeaderboardShopRequested = false;
 
+  function leaderboardsVisible() {
+    return !!(
+      (pauseMenu && pauseMenu.classList.contains('open')) ||
+      document.querySelector('.settings-section.outer-settings-view-rank')
+    );
+  }
+
   function schedulePauseLeaderboardRender() {
     if (pauseLeaderboardRenderFrame) return;
     pauseLeaderboardRenderFrame = requestAnimationFrame(function () {
       pauseLeaderboardRenderFrame = 0;
-      if (!pauseMenu || !pauseMenu.classList.contains('open')) return;
+      if (!leaderboardsVisible()) return;
       renderPauseLeaderboards();
     });
   }
@@ -10372,8 +11216,12 @@
     return Math.max(0, available);
   }
 
+  function allPauseLeaderboardSlots() {
+    return Array.prototype.slice.call(document.querySelectorAll('.pause-ad-slot[data-leaderboard]'));
+  }
+
   function updatePauseLeaderboardViewports() {
-    pauseAdSlots.forEach(function (slot) {
+    allPauseLeaderboardSlots().forEach(function (slot) {
       var chart = slot.querySelector('.pause-leaderboard');
       if (!chart || !chart._pauseLeaderboardRows || !chart._pauseLeaderboardRows.length) return;
       drawPauseLeaderboardChart(chart, chart._pauseLeaderboardRows, chart._pauseLeaderboardValueFormatter, chart._pauseLeaderboardBarValueFormatter);
@@ -10384,7 +11232,7 @@
     if (pauseLeaderboardViewportFrame) return;
     pauseLeaderboardViewportFrame = requestAnimationFrame(function () {
       pauseLeaderboardViewportFrame = 0;
-      if (!pauseMenu || !pauseMenu.classList.contains('open')) return;
+      if (!leaderboardsVisible()) return;
       updatePauseLeaderboardViewports();
     });
   }
@@ -10808,7 +11656,8 @@
   }
 
   function renderPauseLeaderboards() {
-    if (!pauseAdSlots.length) return;
+    var leaderboardSlots = allPauseLeaderboardSlots();
+    if (!leaderboardSlots.length) return;
     if (!allHotspotLeaderboardLoadPromise) {
       loadAllHotspotDataForLeaderboards();
       return;
@@ -10823,7 +11672,7 @@
     var valueRows = buildPauseRanking(names, accountValueForUser);
     var commentRows = buildPauseRanking(names, hotspotCharacterCountForUser);
 
-    pauseAdSlots.forEach(function (slot) {
+    leaderboardSlots.forEach(function (slot) {
       var type = slot.getAttribute('data-leaderboard');
       if (type === 'experience') {
         renderPauseLeaderboardSlot(slot, '老登等级榜', experienceRows, function (value) {
@@ -10936,6 +11785,23 @@
     entries.forEach(function (entry) { refreshLineMarquee(entry.target); });
   }) : null;
 
+  var outerAutoMarqueeObserver = window.IntersectionObserver ? new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      var el = entry.target;
+      el.dataset.outerAutoMarqueeInView = entry.isIntersecting ? '1' : '0';
+      if (!document.documentElement.classList.contains('outer-screen-layout')) {
+        stopLineMarquee(el);
+        return;
+      }
+      if (entry.isIntersecting) {
+        refreshLineMarquee(el);
+        startLineMarquee(el);
+      } else {
+        stopLineMarquee(el);
+      }
+    });
+  }, { threshold: 0.01 }) : null;
+
   function refreshLineMarquee(el) {
     if (!el || !el.classList || !el.classList.contains('line-marquee')) return;
     var content = el.querySelector('.line-marquee__content');
@@ -10946,7 +11812,10 @@
     el.classList.toggle('is-overflowing', overflowing);
     if (!overflowing) {
       stopLineMarquee(el);
-    } else if (el.matches(':hover')) {
+    } else if (
+      el.matches(':hover') ||
+      (document.documentElement.classList.contains('outer-screen-layout') && el.dataset.outerAutoMarqueeInView === '1')
+    ) {
       startLineMarquee(el);
     }
   }
@@ -10982,6 +11851,7 @@
     el.addEventListener('mouseenter', function () { startLineMarquee(el); });
     el.addEventListener('mouseleave', function () { stopLineMarquee(el); });
     if (lineMarqueeResizeObserver) lineMarqueeResizeObserver.observe(el);
+    if (outerAutoMarqueeObserver && el.classList.contains('outer-auto-marquee')) outerAutoMarqueeObserver.observe(el);
     requestAnimationFrame(function () { refreshLineMarquee(el); });
   }
 
@@ -11158,9 +12028,9 @@
   function renderHomeInto(container, id) {
     disposeSectionCardResources(container);
     container.innerHTML = '';
-    container._outerHomeView = 'detail';
-    container.classList.remove('outer-home-view-achv', 'outer-home-view-review');
-    container.classList.add('outer-home-view-detail');
+    container._outerHomeView = 'home';
+    container.classList.remove('outer-home-view-detail', 'outer-home-view-achv', 'outer-home-view-review');
+    container.classList.add('outer-home-view-home');
 
     var rightColumn = null;
     var rightColumnBody = null;
@@ -11327,7 +12197,7 @@
         return segment;
       }
 
-      function makeReviewItem(review) {
+      function makeReviewItem(review, flat) {
         var item = document.createElement('div');
         item.className = 'review-item';
         var head = document.createElement('div');
@@ -11349,7 +12219,7 @@
         excerpt.textContent = text || '暂无评测内容';
         item.appendChild(excerpt);
 
-        if (text) {
+        if (text && !flat) {
           item.classList.add('is-clickable');
           item.tabIndex = 0;
           item.setAttribute('role', 'button');
@@ -11377,18 +12247,15 @@
         animateCardBody(list, 0);
       }
 
-      function makeReviewOverview() {
-        var view = document.createElement('div');
-        view.className = 'review-overview';
-
-        var stats = reviewStats(reviews);
+      function makeReviewOverviewHead(sourceReviews, displayName, autoMarquee) {
+        var stats = reviewStats(sourceReviews);
         var overviewHead = document.createElement('div');
         overviewHead.className = 'review-overview-head';
         var overviewMain = document.createElement('div');
         overviewMain.className = 'review-overview-main';
         var name = document.createElement('div');
-        name.className = 'review-activity-name';
-        name.textContent = (reviewGroups[reviewPageIndex] && reviewGroups[reviewPageIndex].name) || activityName;
+        name.className = 'review-activity-name' + (autoMarquee ? ' outer-auto-marquee' : '');
+        name.textContent = displayName || activityName;
         var bar = document.createElement('div');
         bar.className = 'review-score-bar review-overview-bar' + (stats.count ? '' : ' is-empty');
         if (stats.count) {
@@ -11413,7 +12280,14 @@
           mediaScore.textContent = String(stats.average);
           overviewHead.appendChild(mediaScore);
         }
-        view.appendChild(overviewHead);
+        return { head: overviewHead, stats: stats };
+      }
+
+      function makeReviewOverview() {
+        var view = document.createElement('div');
+        view.className = 'review-overview';
+        var overview = makeReviewOverviewHead(reviews, (reviewGroups[reviewPageIndex] && reviewGroups[reviewPageIndex].name) || activityName, false);
+        view.appendChild(overview.head);
 
         var list = document.createElement('div');
         list.className = 'review-list';
@@ -11518,6 +12392,31 @@
         setReviewView(makeReviewDetail(review), true);
       }
 
+      if (document.documentElement.classList.contains('outer-screen-layout')) {
+        reviewCard.classList.add('review-flat');
+        reviewTitleEl.hidden = true;
+        var flatList = document.createElement('div');
+        flatList.className = 'review-list review-flat-list';
+        reviewGroups.forEach(function (group, groupIndex) {
+          var groupReviews = (group.reviews || []).filter(function (review) {
+            return reviewScoreBand(review.score) !== 'none';
+          }).sort(compareReviewsByScore);
+          if (!groupReviews.length) return;
+          var groupName = group.name || activityName || ('测评 ' + (groupIndex + 1));
+          var flatSummary = document.createElement('div');
+          flatSummary.className = 'review-overview review-flat-summary';
+          flatSummary.appendChild(makeReviewOverviewHead(groupReviews, groupName, true).head);
+          flatList.appendChild(flatSummary);
+          groupReviews.forEach(function (review) {
+            flatList.appendChild(makeReviewItem(review, true));
+          });
+        });
+        reviewBody.innerHTML = '';
+        reviewBody.appendChild(flatList);
+        initLineMarquees(reviewBody);
+        animateCardBody(flatList, 0);
+        return reviewCard;
+      }
       showReviewOverview();
       return reviewCard;
     }

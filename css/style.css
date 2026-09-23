@@ -57,6 +57,9 @@
   --slot: calc(var(--card-w) + var(--card-gap));
   --glass-border: rgba(255, 255, 255, 0.28);
   --glass-blur: blur(14px) saturate(160%);
+  --outer-glass-blur: blur(3px) saturate(160%) brightness(1.05);
+  --glass-darken: 0.175;
+  --top-action-nav-2-width: 152px;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   /* 全局卡片内容动画：所有现有与后续卡片统一使用 */
   --card-content-duration: 580ms;
@@ -3430,13 +3433,13 @@ html.has-card-blur .login-dialog {
 .topbar.entering {
   animation: topbar-enter 0.55s var(--ease-out) 0.03s both;
 }
-#pages.entering .page.active .page-section.active .section-card:nth-child(1) {
+#pages.entering .page.active .page-section.active > .section-card:nth-child(1) {
   animation: section-card-enter-left 0.58s var(--ease-out) 0.10s both;
 }
-#pages.entering .page.active .page-section.active .section-card:nth-child(2) {
+#pages.entering .page.active .page-section.active > .section-card:nth-child(2) {
   animation: section-card-enter-center 0.58s var(--ease-out) 0.04s both;
 }
-#pages.entering .page.active .page-section.active .section-card:nth-child(3) {
+#pages.entering .page.active .page-section.active > .section-card:nth-child(3) {
   animation: section-card-enter-right 0.58s var(--ease-out) 0.10s both;
 }
 html.portrait-layout #pages.entering .page.active .page-section.active .hotspot-comments-card {
@@ -3455,13 +3458,13 @@ html.has-card-blur .page,
 html.has-card-blur .page-section {
   transition: none;
 }
-html.has-card-blur #pages.entering .page.active .page-section.active .section-card:nth-child(1) {
+html.has-card-blur #pages.entering .page.active .page-section.active > .section-card:nth-child(1) {
   animation-name: section-card-enter-left-blur !important;
 }
-html.has-card-blur #pages.entering .page.active .page-section.active .section-card:nth-child(2) {
+html.has-card-blur #pages.entering .page.active .page-section.active > .section-card:nth-child(2) {
   animation-name: section-card-enter-center-blur;
 }
-html.has-card-blur #pages.entering .page.active .page-section.active .section-card:nth-child(3) {
+html.has-card-blur #pages.entering .page.active .page-section.active > .section-card:nth-child(3) {
   animation-name: section-card-enter-right-blur;
 }
 html.portrait-layout.has-card-blur #pages.entering .page.active .page-section.active .hotspot-comments-card {
@@ -3718,6 +3721,40 @@ html.performance-mode .dock-item::after {
   user-select: none;
   -webkit-user-select: none;
   -webkit-user-drag: none;
+}
+/* 外屏浏览图片：全屏半透明黑底，可缩放/平移 */
+.resource-image-overlay {
+  position: fixed;
+  margin: 0;
+  padding: 0;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.82);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  overscroll-behavior: none;
+  cursor: zoom-out;
+}
+.resource-image-overlay.is-tall { align-items: flex-start; }
+.resource-image-overlay-img {
+  display: block;
+  margin: 0;
+  max-width: none;
+  max-height: none;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  transform-origin: center center;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  will-change: transform;
 }
 @keyframes resource-viewer-fade-in {
   from { opacity: 0; }
@@ -5061,6 +5098,7 @@ html.outer-screen-layout .topbar::before {
   height: calc(env(safe-area-inset-top, 0px) + 76px);
   border-radius: 0 0 22px 22px;
   background:
+    linear-gradient(rgba(8, 9, 14, var(--glass-darken, 0.175)), rgba(8, 9, 14, var(--glass-darken, 0.175))),
     linear-gradient(
       145deg,
       rgba(255, 255, 255, 0.18),
@@ -5070,8 +5108,8 @@ html.outer-screen-layout .topbar::before {
     rgba(255, 255, 255, 0.08);
   border-bottom: 1px solid rgba(255, 255, 255, 0.20);
   box-shadow: 0 14px 34px rgba(18, 10, 24, 0.14);
-  -webkit-backdrop-filter: blur(3px) saturate(160%) brightness(1.05);
-  backdrop-filter: blur(3px) saturate(160%) brightness(1.05);
+  -webkit-backdrop-filter: var(--outer-glass-blur);
+  backdrop-filter: var(--outer-glass-blur);
   pointer-events: none;
   z-index: 0;
 }
@@ -5110,20 +5148,29 @@ html.outer-screen-layout .outer-activity-button img {
 html.outer-screen-layout .outer-activity-button:active { transform: translate(-50%, -50%) scale(0.95); }
 
 html.outer-screen-layout .page {
-  /* 内容区上下各距屏幕边缘 10px，顶栏和底栏悬浮覆盖在内容之上。 */
+  /* 内容区上沿留出顶栏空间；下沿对齐底部导航栏垂直中心。 */
   top: calc(env(safe-area-inset-top, 0px) + 10px);
-  bottom: 10px;
+  bottom: calc(max(env(safe-area-inset-bottom, 0px), 28px) + 27px);
 }
 html.outer-screen-layout .page-section {
   left: 50%;
   width: 100%;
   height: 100%;
-  padding: 16px;
+  padding: 132px 16px 40px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
   gap: 16px;
+  --outer-content-fade-height: 80px;
+  -webkit-mask-image:
+    linear-gradient(to bottom, #000 calc(100% - var(--outer-content-fade-height)), transparent 100%),
+    linear-gradient(to right, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to bottom, #000 calc(100% - var(--outer-content-fade-height)), transparent 100%),
+    linear-gradient(to right, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+  mask-composite: intersect;
   grid-template-columns: none;
   grid-template-rows: none;
   overflow-x: hidden;
@@ -5195,14 +5242,17 @@ html.outer-screen-layout .topnav-glass-backdrop {
   border-radius: 999px;
   clip-path: inset(0 round 999px);
   pointer-events: none;
-  -webkit-backdrop-filter: blur(3px) saturate(160%) brightness(1.05);
-  backdrop-filter: blur(3px) saturate(160%) brightness(1.05);
+  background: rgba(8, 9, 14, var(--glass-darken, 0.175));
+  -webkit-backdrop-filter: var(--outer-glass-blur);
+  backdrop-filter: var(--outer-glass-blur);
   z-index: 28;
 }
 /* 顶栏下方操作栏：左侧圆形返回、中央文字分页、右侧情境按钮 */
 html.outer-screen-layout .top-actions {
   position: fixed;
-  top: calc(env(safe-area-inset-top, 0px) + 76px);
+  --top-actions-space-start: calc(env(safe-area-inset-top, 0px) + 76px);
+  --top-actions-space-end: calc(env(safe-area-inset-top, 0px) + 142px);
+  top: calc((var(--top-actions-space-start) + var(--top-actions-space-end)) / 2 - 26px);
   left: var(--topbar-left-edge, 16px);
   right: var(--topbar-right-edge, 16px);
   display: flex;
@@ -5221,25 +5271,16 @@ html.outer-screen-layout .top-action-nav.pressing .top-action-thumb { --top-acti
 html.outer-screen-layout .top-action-nav {
   border: 1px solid rgba(255, 255, 255, 0.22);
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05) 42%, rgba(255, 255, 255, 0.13)),
-    rgba(255, 255, 255, 0.08);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.42),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.08),
-    0 10px 28px rgba(25, 18, 22, 0.2);
-  -webkit-backdrop-filter: blur(18px) saturate(185%) brightness(1.06) !important;
-  backdrop-filter: blur(18px) saturate(185%) brightness(1.06) !important;
-  pointer-events: auto;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background:
+    linear-gradient(rgba(8, 9, 14, var(--glass-darken, 0.175)), rgba(8, 9, 14, var(--glass-darken, 0.175))),
     linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05) 42%, rgba(255, 255, 255, 0.13)),
     rgba(255, 255, 255, 0.08);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.42),
     inset 0 -1px 0 rgba(255, 255, 255, 0.08),
     0 10px 28px rgba(25, 18, 22, 0.18);
-  -webkit-backdrop-filter: blur(3px) saturate(160%) brightness(1.05);
-  backdrop-filter: blur(3px) saturate(160%) brightness(1.05);
+  -webkit-backdrop-filter: var(--outer-glass-blur);
+  backdrop-filter: var(--outer-glass-blur);
+  pointer-events: auto;
 }
 html.outer-screen-layout .top-action-button.top-action-left {
   position: absolute;
@@ -5266,15 +5307,17 @@ html.outer-screen-layout .top-action-button {
 html.outer-screen-layout .top-action-button {
   border: 1px solid rgba(255, 255, 255, 0.26);
   background:
+    linear-gradient(rgba(8, 9, 14, var(--glass-darken, 0.175)), rgba(8, 9, 14, var(--glass-darken, 0.175))),
     linear-gradient(145deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.08) 52%, rgba(255, 255, 255, 0.14)),
     rgba(255, 255, 255, 0.1);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.55),
     inset 0 -6px 12px rgba(255, 255, 255, 0.04),
     0 6px 16px rgba(22, 16, 20, 0.14);
-  -webkit-backdrop-filter: blur(3px) saturate(160%) brightness(1.05);
-  backdrop-filter: blur(3px) saturate(160%) brightness(1.05);
+  -webkit-backdrop-filter: var(--outer-glass-blur);
+  backdrop-filter: var(--outer-glass-blur);
 }
+html.outer-screen-layout .top-action-button { pointer-events: auto; }
 html.outer-screen-layout .top-action-button[hidden] { display: none !important; }
 html.outer-screen-layout .top-action-button svg {
   display: block;
@@ -5299,7 +5342,7 @@ html.outer-screen-layout .top-action-nav {
 html.outer-screen-layout .top-action-thumb {
   position: absolute;
   top: 4px;
-  left: 4px;
+  left: 0;
   height: 28px;
   width: 0;
   pointer-events: none;
@@ -5329,17 +5372,319 @@ html.outer-screen-layout .top-action-item {
   cursor: pointer;
 }
 html.outer-screen-layout .top-action-item.is-active { color: #fff; text-shadow: 0 0 8px rgba(var(--accent-pink-rgb), 0.42); }
+html.outer-screen-layout .top-action-nav.nav-thumb-animating .top-action-thumb,
+html.outer-screen-layout .top-action-nav.dragging .top-action-thumb { transition: none; }
+html.outer-screen-layout .top-action-search-nav::before,
+html.outer-screen-layout .top-action-search-nav::after { display: none; }
+html.outer-screen-layout .top-action-search-nav {
+  width: var(--top-action-nav-2-width);
+  max-width: calc(100% - 32px);
+  height: 36px;
+  padding: 0 10px 0 12px;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  background:
+    linear-gradient(rgba(8, 9, 14, var(--glass-darken, 0.175)), rgba(8, 9, 14, var(--glass-darken, 0.175))),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05) 42%, rgba(255, 255, 255, 0.13)),
+    rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+    0 10px 28px rgba(25, 18, 22, 0.18);
+  -webkit-backdrop-filter: var(--outer-glass-blur);
+  backdrop-filter: var(--outer-glass-blur);
+}
+html.outer-screen-layout .top-action-search {
+  position: relative;
+  z-index: 1;
+  touch-action: auto;
+  -webkit-user-select: text;
+  user-select: text;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0 24px 0 0;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: inherit;
+  outline: 0;
+  background: transparent;
+  color: #fff;
+  caret-color: #fff;
+  font-family: inherit;
+  font-size: var(--text-large);
+  line-height: 1;
+  text-align: left;
+}
+html.outer-screen-layout .top-action-search::placeholder { color: transparent; opacity: 0; }
+html.outer-screen-layout .top-action-search::-webkit-search-cancel-button,
+html.outer-screen-layout .top-action-search::-webkit-search-decoration {
+  display: none; appearance: none; -webkit-appearance: none;
+}
+html.outer-screen-layout .top-action-search-icon {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  right: 10px;
+  width: 16px;
+  height: 16px;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+}
+html.outer-screen-layout .top-action-search-icon svg { display: block; width: 100%; height: 100%; }
 
-/* 商店：详情 → 实绩 → 测评 */
+/* 顶部文字导航复用底栏同款液态玻璃表面：背景模糊层、WebGL 折射层与选中文字遮罩。 */
+html.outer-screen-layout .top-action-nav.liquid-glass-ready {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+html.outer-screen-layout .top-action-nav:not(.liquid-glass-ready) .topnav-color-overlay {
+  display: none;
+}
+html.outer-screen-layout .top-action-nav.liquid-glass-ready .top-action-item.is-active .topnav-item-label {
+  color: var(--accent-pink);
+  -webkit-text-fill-color: var(--accent-pink);
+  -webkit-text-stroke: 0;
+  text-shadow: 0 0 8px rgba(var(--accent-pink-rgb), 0.42);
+}
+html.outer-screen-layout .top-action-nav.nav-thumb-animating.liquid-glass-ready .top-action-item.is-active .topnav-item-label {
+  color: var(--accent-pink);
+  -webkit-text-fill-color: var(--accent-pink);
+}
+html.outer-screen-layout .top-action-glass-backdrop {
+  position: fixed;
+  inset: auto;
+  display: none;
+  overflow: hidden;
+  border-radius: 999px;
+  clip-path: inset(0 round 999px);
+  pointer-events: none;
+  background: rgba(8, 9, 14, var(--glass-darken, 0.175));
+  -webkit-backdrop-filter: var(--outer-glass-blur);
+  backdrop-filter: var(--outer-glass-blur);
+  z-index: 27;
+}
+html.outer-screen-layout .top-action-liquid-glass {
+  position: fixed;
+  inset: auto;
+  display: none;
+  pointer-events: none;
+  z-index: 28;
+}
+html.outer-screen-layout .top-action-liquid-glass.is-ready { display: block; }
+html.pause-menu-open .top-action-glass-backdrop,
+html.pause-menu-open .top-action-liquid-glass,
+html.ui-hidden .top-action-glass-backdrop,
+html.ui-hidden .top-action-liquid-glass {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* 外屏：卡片扁平化，大卡片只做布局，不再绘制卡片外观 */
+html.outer-screen-layout .section-card {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  padding: 0 !important;
+}
+html.outer-screen-layout .section-card > .section-card-title { display: none !important; }
+html.outer-screen-layout #pages.entering .page.active .page-section.active .section-card { animation: none !important; }
+html.outer-screen-layout .hotspot-comments-card > .section-card-title {
+  display: flex !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+html.outer-screen-layout .hotspot-comments-card > .section-card-title > .hotspot-card-title-label { display: none !important; }
+html.outer-screen-layout .section-card > .section-card-body {
+  width: 100%;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  overflow: visible !important;
+}
+html.outer-screen-layout .home-detail,
+html.outer-screen-layout .review-view,
+html.outer-screen-layout .review-list,
+html.outer-screen-layout .achv-view,
+html.outer-screen-layout .resource-schedule-view,
+html.outer-screen-layout .resource-day-schedule,
+html.outer-screen-layout .hotspot-post-list,
+html.outer-screen-layout .hotspot-comment-list,
+html.outer-screen-layout .resource-preview-grid,
+html.outer-screen-layout .home-achv-list,
+html.outer-screen-layout .achv-group-list,
+html.outer-screen-layout .settings-rank-list,
+html.outer-screen-layout .settings-personal-actions {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: visible !important;
+}
+html.outer-screen-layout .hotspot-title-card > .section-card-body { overflow: visible !important; }
+html.outer-screen-layout .home-detail > *,
+html.outer-screen-layout .review-view > *,
+html.outer-screen-layout .achv-view > *,
+html.outer-screen-layout .resource-schedule-view > *,
+html.outer-screen-layout .hotspot-post-list > *,
+html.outer-screen-layout .hotspot-comment-list > *,
+html.outer-screen-layout .settings-rank-list > *,
+html.outer-screen-layout .settings-personal-actions > * {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+/* 所有真正承载内容的卡片统一为底栏大胶囊同款液态玻璃，只改为卡片圆角 */
+html.outer-screen-layout .home-detail-logo-card,
+html.outer-screen-layout .home-info-card,
+html.outer-screen-layout .shop-version-card,
+html.outer-screen-layout .shop-library-owner-group,
+html.outer-screen-layout .review-overview,
+html.outer-screen-layout .review-item,
+html.outer-screen-layout .review-detail,
+html.outer-screen-layout .achv-summary,
+html.outer-screen-layout .achv-group-row,
+html.outer-screen-layout .home-achv,
+html.outer-screen-layout .resource-calendar,
+html.outer-screen-layout .hotspot-post-item,
+html.outer-screen-layout .hotspot-comment,
+html.outer-screen-layout .settings-rank-slot,
+html.outer-screen-layout .settings-personal-exp,
+html.outer-screen-layout .settings-personal-action {
+  width: 100% !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  border-radius: 18px !important;
+  background:
+    linear-gradient(rgba(8, 9, 14, var(--glass-darken, 0.175)), rgba(8, 9, 14, var(--glass-darken, 0.175))),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05) 42%, rgba(255, 255, 255, 0.13)),
+    rgba(255, 255, 255, 0.08) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.08) !important;
+  -webkit-backdrop-filter: var(--outer-glass-blur) !important;
+  backdrop-filter: var(--outer-glass-blur) !important;
+}
+html.outer-screen-layout .home-detail-logo-card {
+  height: calc(2 * var(--achv-item-h) + var(--subcard-gap)) !important;
+}
+html.outer-screen-layout .home-info-card {
+  height: calc(3 * var(--achv-item-h) + 2 * var(--subcard-gap)) !important;
+  box-shadow: none !important;
+}
+html.outer-screen-layout .home-info-card .shop-owned-bar { margin-top: auto !important; }
+html.outer-screen-layout .home-info-grid {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) !important;
+  column-gap: 14px !important;
+  row-gap: 0 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+html.outer-screen-layout .home-info-grid > dt,
+html.outer-screen-layout .home-info-grid > dd {
+  grid-column: auto !important;
+  grid-row: auto !important;
+}
+html.outer-screen-layout .home-info-grid dt,
+html.outer-screen-layout .home-info-grid dd,
+html.outer-screen-layout .home-info-grid dt *,
+html.outer-screen-layout .home-info-grid dd * {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+  outline: 0 !important;
+  -webkit-text-stroke: 0 !important;
+  text-decoration: none !important;
+  -webkit-text-decoration: none !important;
+}
+html.outer-screen-layout .home-info-grid dt::before,
+html.outer-screen-layout .home-info-grid dt::after,
+html.outer-screen-layout .home-info-grid dd::before,
+html.outer-screen-layout .home-info-grid dd::after { display: none !important; }
+html.outer-screen-layout .home-achv {
+  border-color: rgba(var(--achv-rgb), 0.62) !important;
+  background:
+    linear-gradient(rgba(var(--achv-rgb), 0.20), rgba(var(--achv-rgb), 0.20)),
+    linear-gradient(rgba(8, 9, 14, var(--glass-darken, 0.175)), rgba(8, 9, 14, var(--glass-darken, 0.175))),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05) 42%, rgba(255, 255, 255, 0.13)),
+    rgba(255, 255, 255, 0.08) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 22px rgba(var(--achv-rgb), 0.12) !important;
+}
+html.outer-screen-layout .home-achv.r-iridescent {
+  background:
+    linear-gradient(100deg, rgba(255, 145, 200, 0.20), rgba(120, 180, 255, 0.20), rgba(120, 230, 220, 0.20), rgba(255, 222, 140, 0.20), rgba(185, 150, 255, 0.20)),
+    linear-gradient(rgba(8, 9, 14, var(--glass-darken, 0.175)), rgba(8, 9, 14, var(--glass-darken, 0.175))),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05) 42%, rgba(255, 255, 255, 0.13)),
+    rgba(255, 255, 255, 0.08) !important;
+}
+html.outer-screen-layout .section-card-body :where(
+  .home-info-card,
+  .home-detail-logo-card,
+  .home-achv,
+  .shop-version-card,
+  .review-overview,
+  .review-item,
+  .achv-summary,
+  .achv-group-row,
+  .hotspot-post-item,
+  .hotspot-comment,
+  .resource-calendar
+) { outline: 0 !important; }
+html.outer-screen-layout .review-overview-bar {
+  width: calc(50% + 59px) !important;
+  max-width: calc(50% + 59px) !important;
+}
+html.outer-screen-layout .hotspot-comment { padding: 10px 12px !important; }
+html.outer-screen-layout .settings-personal-action { color: #fff !important; }
+
+/* 商店：首页（详情 + 测评） / 实绩 */
 html.outer-screen-layout .home-right-column,
 html.outer-screen-layout .home-right-column-body { display: contents; }
 html.outer-screen-layout .home-detail-card { order: 1; display: none !important; }
-html.outer-screen-layout .home-achv-card { order: 2; display: none !important; }
-html.outer-screen-layout .home-review-card { order: 3; display: none !important; }
-html.outer-screen-layout .page-section[data-section="home"].outer-home-view-detail .home-detail-card { display: flex !important; }
+html.outer-screen-layout .home-review-card { order: 2; display: none !important; }
+html.outer-screen-layout .home-achv-card { order: 3; display: none !important; }
+html.outer-screen-layout .page-section[data-section="home"].outer-home-view-home .home-detail-card,
+html.outer-screen-layout .page-section[data-section="home"].outer-home-view-home .home-review-card { display: flex !important; }
 html.outer-screen-layout .page-section[data-section="home"].outer-home-view-achv .home-achv-card { display: flex !important; }
-html.outer-screen-layout .page-section[data-section="home"].outer-home-view-review .home-review-card { display: flex !important; }
 
+/* 外屏模式隐藏小游戏入口与浮层 */
+html.outer-screen-layout .resource-day-schedule-item.is-upcoming {
+  border-color: rgba(var(--accent-pink-rgb), 0.72) !important;
+  background:
+    linear-gradient(rgba(var(--accent-pink-rgb), 0.22), rgba(var(--accent-pink-rgb), 0.22)),
+    linear-gradient(rgba(8, 9, 14, var(--glass-darken, 0.175)), rgba(8, 9, 14, var(--glass-darken, 0.175))),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05) 42%, rgba(255, 255, 255, 0.13)),
+    rgba(255, 255, 255, 0.08) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 22px rgba(var(--accent-pink-rgb), 0.16) !important;
+}
+html.outer-screen-layout .resource-preview-grid { margin-top: 0 !important; }
+html.outer-screen-layout .resource-browse-summary,
+html.outer-screen-layout .resource-game-entry,
+html.outer-screen-layout .minigame-overlay {
+  display: none !important;
+}
 /* 资源：目录 → 观赏二级页 */
 html.outer-screen-layout .files-portrait-page-btn { display: none !important; }
 html.outer-screen-layout .files-schedule-card { display: none !important; }
@@ -5363,7 +5708,8 @@ html.outer-screen-layout .files-viewer-card > .section-card-body {
   overflow: hidden;
 }
 
-/* 热点：标题列表 → 内容 / 评论二级页 */
+/* 热点：帖子列表 → 内容 / 评论二级页 */
+html.outer-screen-layout .hotspot-search-wrap { display: none !important; }
 html.outer-screen-layout .hotspot-title-card { display: flex; }
 html.outer-screen-layout .hotspot-section:not(.outer-show-secondary) .hotspot-content-card,
 html.outer-screen-layout .hotspot-section:not(.outer-show-secondary) .hotspot-comments-card { display: none !important; }
@@ -5376,3 +5722,63 @@ html.outer-screen-layout .outer-secondary-back { display: none !important; }
 html.outer-screen-layout .hotspot-portrait-tabs { display: none !important; }
 html.outer-screen-layout .hotspot-content-card-title > .hotspot-card-title-label,
 html.outer-screen-layout .hotspot-comments-card-title > .hotspot-card-title-label { display: inline; }
+
+/* 设置：排名 / 个人 */
+html.outer-screen-layout .settings-rank-card,
+html.outer-screen-layout .settings-personal-card { display: none !important; }
+html.outer-screen-layout .settings-section.outer-settings-view-rank .settings-rank-card,
+html.outer-screen-layout .settings-section.outer-settings-view-personal .settings-personal-card { display: flex !important; }
+html.outer-screen-layout .settings-rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+html.outer-screen-layout .settings-rank-slot {
+  flex: 0 0 auto;
+  height: clamp(150px, 24vh, 230px);
+}
+html.outer-screen-layout .settings-personal-exp {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0 18px;
+}
+html.outer-screen-layout .settings-personal-level-badge {
+  align-self: center;
+  color: #fff;
+  font-size: var(--text-display);
+  font-weight: 700;
+  line-height: 1;
+}
+html.outer-screen-layout .settings-personal-level-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+html.outer-screen-layout .settings-personal-exp-total,
+html.outer-screen-layout .settings-personal-exp-value {
+  flex: none;
+  color: #fff;
+  font-size: var(--text-small);
+  font-variant-numeric: tabular-nums;
+}
+html.outer-screen-layout .settings-personal-exp-track {
+  flex: 1 1 auto;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+}
+html.outer-screen-layout .settings-personal-exp-fill {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ff91c8, #78b4ff, #78e6dc);
+  transition: width 0.3s linear;
+}
+html.outer-screen-layout .settings-personal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+html.outer-screen-layout .settings-personal-action { margin: 0; }
