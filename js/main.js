@@ -849,6 +849,14 @@
   var topActionLeft = document.getElementById('topActionLeft');
   var topActionNav = document.getElementById('topActionNav');
   var topActionRight = document.getElementById('topActionRight');
+  var topActionRightSecondary = document.createElement('button');
+  topActionRightSecondary.className = 'top-action-button top-action-right top-action-right-secondary';
+  topActionRightSecondary.id = 'topActionRightSecondary';
+  topActionRightSecondary.type = 'button';
+  topActionRightSecondary.setAttribute('aria-label', '页面操作');
+  if (topActionRight != null) {
+    if (topActionRight.parentElement != null) topActionRight.parentElement.insertBefore(topActionRightSecondary, topActionRight);
+  }
   var navCache = {};
   var activeNavKey = SECTIONS[0][0]; // 跨活动保持当前导航栏目
 
@@ -3543,6 +3551,49 @@
     }
   }
 
+  function resetOuterPageScroll(section) {
+    clearOuterPageScroll(section);
+  }
+
+  function setOuterPageScroll(section, top) {
+    if (section == null) return;
+    if (document.documentElement.classList.contains('outer-screen-layout') === false) return;
+    section.scrollTop = top;
+    requestAnimationFrame(function () {
+      if (section.isConnected) section.scrollTop = top;
+    });
+  }
+
+  function clearOuterPageScroll(section) {
+    if (section == null) return;
+    section._outerSecondaryActive = false;
+    section._outerFirstLevelScrollTop = 0;
+    setOuterPageScroll(section, 0);
+  }
+
+  function enterOuterSecondary(section, resetToTop) {
+    if (section == null) return;
+    if (document.documentElement.classList.contains('outer-screen-layout') === false) return;
+    if (section._outerSecondaryActive === true) {
+      if (resetToTop === false) return;
+      setOuterPageScroll(section, 0);
+      return;
+    }
+    section._outerFirstLevelScrollTop = section.scrollTop;
+    section._outerSecondaryActive = true;
+    if (resetToTop === false) return;
+    setOuterPageScroll(section, 0);
+  }
+
+  function leaveOuterSecondary(section) {
+    if (section == null) return;
+    if (document.documentElement.classList.contains('outer-screen-layout') === false) return;
+    var top = 0;
+    if (typeof section._outerFirstLevelScrollTop === 'number') top = section._outerFirstLevelScrollTop;
+    section._outerSecondaryActive = false;
+    setOuterPageScroll(section, top);
+  }
+
   // 切换 logo 页内的板块子页
   function showSection(logo, key) {
     var page = pages[LOGOS.indexOf(logo)];
@@ -3583,6 +3634,7 @@
       var activeSettingsSection = page.querySelector('.page-section[data-section="settings"].active');
       if (activeSettingsSection) setSettingsOuterView(activeSettingsSection, activeSettingsSection._outerSettingsView || 'rank', false);
     }
+    resetOuterPageScroll(page.querySelector('.page-section.active'));
     configureTopActions();
   }
 
@@ -3620,6 +3672,7 @@
     topActionColorItems = [];
     hideTopActionLiquidGlassSurface();
     topActionRight.hidden = true;
+    topActionRightSecondary.hidden = true;
   }
 
   function applyTopActionThumbPosition() {
@@ -3950,6 +4003,7 @@
       topActionsEl.dataset.mode = 'news-search';
       topActionLeft.hidden = true;
       topActionRight.hidden = true;
+    topActionRightSecondary.hidden = true;
       if (existingInput.value !== searchValue) existingInput.value = searchValue;
       scheduleTopActionLiquidGlassSync(true);
       return;
@@ -3959,6 +4013,7 @@
     topActionsEl.dataset.mode = 'news-search';
     topActionLeft.hidden = true;
     topActionRight.hidden = true;
+    topActionRightSecondary.hidden = true;
     topActionNav.classList.remove('pressing', 'dragging', 'no-anim', 'nav-thumb-animating', 'liquid-glass-ready');
     topActionNav.classList.add('top-action-search-nav');
     hideTopActionLiquidGlassSurface();
@@ -4021,6 +4076,11 @@
       topActionLeft.setAttribute('aria-label', config.leftLabel || '返回');
       topActionLeft.onclick = config.onLeft || function () {};
       topActionRight.hidden = !config.rightAction;
+      topActionRightSecondary.hidden = config.rightAction2 ? false : true;
+      topActionRightSecondary.innerHTML = config.rightIcon2 ? config.rightIcon2 : '';
+      topActionRightSecondary.setAttribute('aria-label', config.rightLabel2 ? config.rightLabel2 : '页面操作');
+      topActionRightSecondary.onclick = config.rightAction2 ? config.rightAction2 : function () {};
+      topActionRight.classList.toggle('is-ascending', config.rightAscending === true);
       topActionRight.innerHTML = config.rightIcon || '';
       topActionRight.setAttribute('aria-label', config.rightLabel || '页面操作');
       topActionRight.onclick = config.rightAction || function () {};
@@ -4037,6 +4097,11 @@
     topActionLeft.setAttribute('aria-label', config.leftLabel || '返回');
     topActionLeft.onclick = config.onLeft || function () {};
     topActionRight.hidden = !config.rightAction;
+      topActionRightSecondary.hidden = config.rightAction2 ? false : true;
+      topActionRightSecondary.innerHTML = config.rightIcon2 ? config.rightIcon2 : '';
+      topActionRightSecondary.setAttribute('aria-label', config.rightLabel2 ? config.rightLabel2 : '页面操作');
+      topActionRightSecondary.onclick = config.rightAction2 ? config.rightAction2 : function () {};
+      topActionRight.classList.toggle('is-ascending', config.rightAscending === true);
     topActionRight.innerHTML = config.rightIcon || '';
     topActionRight.setAttribute('aria-label', config.rightLabel || '页面操作');
     topActionRight.onclick = config.rightAction || function () {};
@@ -4084,6 +4149,7 @@
     section._outerHomeView = next;
     section.classList.remove('outer-home-view-home', 'outer-home-view-detail', 'outer-home-view-achv', 'outer-home-view-review');
     section.classList.add('outer-home-view-' + next);
+    resetOuterPageScroll(section);
     var card = section.querySelector(next === 'achv' ? '.home-achv-card' : '.home-detail-card');
     var body = card ? card.querySelector('.section-card-body') : null;
     if (body) {
@@ -4101,6 +4167,14 @@
     section.classList.toggle('outer-show-browse', next === 'browse');
     section.classList.toggle('outer-show-viewer', next === 'viewer');
     section.classList.toggle('outer-show-schedule', next === 'schedule');
+    if (next === 'viewer') {
+      enterOuterSecondary(section, true);
+    } else if (next === 'browse') {
+      if (section._outerSecondaryActive === true) leaveOuterSecondary(section);
+      else resetOuterPageScroll(section);
+    } else {
+      resetOuterPageScroll(section);
+    }
     if (section._files) {
       setFilesPortraitPage(section, next === 'schedule' ? 'schedule' : 'browse', false);
       var body = next === 'viewer' ? section._files.viewerBody : next === 'schedule' ? section._files.scheduleBody : section._files.browseBody;
@@ -4118,6 +4192,12 @@
     var next = view === 'content' ? 'content' : view === 'comments' ? 'comments' : 'title';
     section._outerNewsView = next;
     if (next === 'title') {
+      if (section._outerSecondaryActive === true) leaveOuterSecondary(section);
+      else resetOuterPageScroll(section);
+    } else if (section._outerSecondaryActive !== true) {
+      enterOuterSecondary(section, false);
+    }
+    if (next === 'title') {
       section.classList.remove('outer-show-secondary');
       section._hotspot.portraitView = 'content';
       section.classList.remove('portrait-show-comments');
@@ -4133,8 +4213,12 @@
   function syncSettingsPersonalExp() {
     for (var i = 0; i < settingsPersonalViews.length; i++) {
       var view = settingsPersonalViews[i];
-      if (!view || !view.badge) continue;
-      if (sidebarLevelBadge) view.badge.textContent = sidebarLevelBadge.textContent;
+      if (view == null) continue;
+      if (view.level == null) continue;
+      if (sidebarLevelBadge) view.level.textContent = sidebarLevelBadge.textContent + '：';
+      if (sidebarLevelRow) {
+        if (view.row) view.row.className = 'settings-personal-exp ' + sidebarLevelRow.className;
+      }
       if (sidebarExpTotal) view.total.textContent = sidebarExpTotal.textContent;
       if (sidebarExpFill) view.fill.style.width = sidebarExpFill.style.width;
       if (sidebarExpValue) view.value.textContent = sidebarExpValue.textContent;
@@ -4177,34 +4261,53 @@
     rankCard.body.appendChild(rankList);
 
     var personalExp = document.createElement('div');
-    personalExp.className = 'settings-personal-exp';
-    personalExp.innerHTML = '<div class="settings-personal-level-badge"></div>' +
-      '<div class="settings-personal-level-row">' +
-      '<span class="settings-personal-exp-total"></span>' +
-      '<div class="settings-personal-exp-track"><div class="settings-personal-exp-fill"></div></div>' +
-      '<span class="settings-personal-exp-value"></span>' +
-      '</div>';
-    var badge = personalExp.querySelector('.settings-personal-level-badge');
-    var total = personalExp.querySelector('.settings-personal-exp-total');
-    var fill = personalExp.querySelector('.settings-personal-exp-fill');
-    var value = personalExp.querySelector('.settings-personal-exp-value');
-    personalCard.body.appendChild(personalExp);
+    personalExp.className = 'settings-personal-exp sidebar-level-row';
+    var levelLabel = document.createElement('span');
+    levelLabel.className = 'settings-personal-exp-level';
+    var track = document.createElement('div');
+    track.className = 'sidebar-exp-track';
+    var fill = document.createElement('div');
+    fill.className = 'sidebar-exp-fill';
+    track.appendChild(fill);
+    var numbers = document.createElement('span');
+    numbers.className = 'settings-personal-exp-numbers';
+    var total = document.createElement('span');
+    total.className = 'bottom-exp-total';
+    var slash = document.createElement('span');
+    slash.className = 'settings-personal-exp-slash';
+    slash.textContent = '/';
+    var value = document.createElement('span');
+    value.className = 'sidebar-exp-value';
+    numbers.appendChild(total);
+    numbers.appendChild(slash);
+    numbers.appendChild(value);
+    personalExp.appendChild(levelLabel);
+    personalExp.appendChild(track);
+    personalExp.appendChild(numbers);
 
     var actions = document.createElement('div');
     actions.className = 'settings-personal-actions';
-    actions.appendChild(makeSettingsPersonalAction('', '用户切换', function () { openSettingsPersonalPanel(openAccountPanel); }));
-    actions.appendChild(makeSettingsPersonalAction('', '称号', function () { openSettingsPersonalPanel(openTitlePanel); }));
-    actions.appendChild(makeSettingsPersonalAction('', '设置', function () { openSettingsPersonalPanel(function () { openSettingsPanel('interface'); }); }));
+    actions.appendChild(personalExp);
+    actions.appendChild(makeSettingsPersonalAction('', '用户切换', function () { openOuterAccountPage(); }));
+    actions.appendChild(makeSettingsPersonalAction('', '称号', function () { openOuterPersonalSubpage(section, 'titles'); }));
+    actions.appendChild(makeSettingsPersonalAction('', '设置', function () { openOuterPersonalSubpage(section, 'settings'); }));
     actions.appendChild(makeSettingsPersonalAction('', 'GITHUB REPOSITORY', function () {
       window.open('https://github.com/JianZhaNoSwine/FGEXPIG-Official-Website', '_blank', 'noopener,noreferrer');
     }));
     personalCard.body.appendChild(actions);
+    var personalSubpage = document.createElement('div');
+    personalSubpage.className = 'settings-personal-subpage';
+    personalSubpage.hidden = true;
+    personalCard.body.appendChild(personalSubpage);
 
     section.appendChild(rankCard.card);
     section.appendChild(personalCard.card);
     section._outerSettingsView = 'rank';
     section.classList.add('outer-settings-view-rank');
-    section._settingsPersonal = { badge: badge, total: total, fill: fill, value: value };
+    section._settingsPersonal = { row: personalExp, level: levelLabel, total: total, fill: fill, value: value };
+    section._settingsPersonalActions = actions;
+    section._settingsPersonalSubpage = personalSubpage;
+    section._outerSettingsPersonalSubpage = '';
     settingsPersonalViews.push(section._settingsPersonal);
     syncSettingsPersonalExp();
 
@@ -4216,8 +4319,17 @@
 
   function setSettingsOuterView(section, view, animate) {
     if (!section || !section._settingsBuilt) return;
+    if (section._outerSettingsPersonalSubpage) {
+      section._outerSettingsPersonalSubpage = '';
+      if (section._settingsPersonalSubpage) {
+        section._settingsPersonalSubpage.hidden = true;
+        section._settingsPersonalSubpage.innerHTML = '';
+      }
+      if (section._settingsPersonalActions) section._settingsPersonalActions.hidden = false;
+    }
     var next = view === 'personal' ? 'personal' : 'rank';
     section._outerSettingsView = next;
+    resetOuterPageScroll(section);
     section.classList.toggle('outer-settings-view-rank', next === 'rank');
     section.classList.toggle('outer-settings-view-personal', next === 'personal');
     if (next === 'rank') {
@@ -4250,7 +4362,9 @@
         mode: 'home',
         items: [['home', '首页'], ['achv', '实绩']],
         active: section._outerHomeView === 'achv' ? 'achv' : 'home',
-        showLeft: false,
+        showLeft: !!section.querySelector('.home-right-column.portrait-detail-secondary'),
+        leftLabel: '返回详情',
+        onLeft: function () { if (typeof section._homeDetailBack === 'function') section._homeDetailBack(); },
         onSelect: function (view) { setHomeOuterView(section, view, true); }
       });
       return;
@@ -4270,12 +4384,19 @@
     }
     if (sectionKey === 'settings') {
       buildSettingsSection(section);
+      var personalSubpageActive = false;
+      if (section._outerSettingsPersonalSubpage) personalSubpageActive = true;
       showTopActions({
         mode: 'settings',
         items: [['rank', '排名'], ['personal', '个人']],
         active: section._outerSettingsView === 'personal' ? 'personal' : 'rank',
-        showLeft: false,
-        onSelect: function (view) { setSettingsOuterView(section, view, true); }
+        showLeft: personalSubpageActive,
+        leftLabel: '返回个人',
+        onLeft: function () { closeOuterPersonalSubpage(section); },
+        onSelect: function (view) {
+          closeOuterPersonalSubpage(section);
+          setSettingsOuterView(section, view, true);
+        }
       });
       return;
     }
@@ -4286,6 +4407,9 @@
         return;
       }
       var newsRightAction = null;
+      var newsRightAction2 = null;
+      var newsRightIcon2 = '';
+      var newsRightLabel2 = '';
       if (newsView === 'comments' && section._hotspot && curNavLogo) {
         newsRightAction = function () {
           hotspotCommentSortDesc = !hotspotCommentSortDesc;
@@ -4293,6 +4417,21 @@
           renderHotspotComments(curNavLogo, section);
           configureTopActions();
         };
+      }
+      if (newsView === 'comments') {
+        if (section._hotspot) {
+          if (curNavLogo) {
+            var isHeat = hotspotCommentSortMode === 'heat';
+            newsRightAction2 = function () {
+              hotspotCommentSortMode = isHeat ? 'time' : 'heat';
+              updateHotspotCommentSortButton(section);
+              renderHotspotComments(curNavLogo, section);
+              configureTopActions();
+            };
+            newsRightIcon2 = isHeat ? HOTSPOT_COMMENT_HEAT_ICON : HOTSPOT_COMMENT_TIME_ICON;
+            newsRightLabel2 = isHeat ? '切换为时间排序' : '切换为热度排序';
+          }
+        }
       }
       showTopActions({
         mode: 'news',
@@ -4302,6 +4441,10 @@
         rightAction: newsRightAction,
         rightIcon: TOP_ACTION_SORT_ICON,
         rightLabel: '切换评论排序方向',
+        rightAction2: newsRightAction2,
+        rightIcon2: newsRightIcon2,
+        rightLabel2: newsRightLabel2,
+        rightAscending: hotspotCommentSortDesc === false,
         onLeft: function () { setHotspotOuterView(section, 'title', true); },
         onSelect: function (view) { setHotspotOuterView(section, view, true); }
       });
@@ -5699,6 +5842,14 @@
   }
 
   /* ---------- 壁纸：按当前画质目录加载 ---------- */
+  function updateOuterWallpaperLayer(image) {
+    if (image == null) return;
+    var src = image.currentSrc ? image.currentSrc : image.src;
+    if (src == null) return;
+    if (src === '') return;
+    document.documentElement.style.setProperty('--outer-wallpaper-image', 'url("' + src + '")');
+  }
+
   function applyWallpaper(name) {
     var url = wallpaperUrl(name);
     var show = bgFrontIsA ? bgA : bgB;
@@ -5718,6 +5869,7 @@
       show.style.backgroundImage = "url('" + url + "')";
       show.classList.add('show');
       updateLiquidGlassWallpaper(im);
+      updateOuterWallpaperLayer(im);
       hide.classList.remove('show');
       bgFrontIsA = !bgFrontIsA;
     };
@@ -6520,10 +6672,7 @@
         closeStartupOverlay();
       });
       document.addEventListener('keydown', function (event) {
-        var active = document.activeElement;
-        var outerSearchFocused = !!(event.target && event.target.classList && event.target.classList.contains('top-action-search')) ||
-          !!(active && active.classList && active.classList.contains('top-action-search'));
-        if (startupOverlay && startupOverlay.hidden && outerSearchFocused) return;
+        if (startupOverlay && startupOverlay.hidden) return;
         event.preventDefault();
         event.stopPropagation();
         closeStartupOverlay();
@@ -6843,10 +6992,20 @@
     if (root.classList.contains('pause-menu-open') || document.body.classList.contains('startup-lock')) return;
     var tintOn = root.classList.contains('fx-glow');
     var borderOn = root.classList.contains('fx-border') && !borderGlowPaused;
+    var overTopbar = false;
+    if (topbar) {
+      var topbarHitRect = topbar.getBoundingClientRect();
+      var topbarGlowPad = 20;
+      overTopbar = cursorX >= topbarHitRect.left - topbarGlowPad &&
+        cursorX <= topbarHitRect.right + topbarGlowPad &&
+        cursorY >= topbarHitRect.top - topbarGlowPad &&
+        cursorY <= topbarHitRect.bottom + topbarGlowPad;
+    }
+    root.classList.toggle('topbar-glow-suppressed', overTopbar);
     if (!tintOn && !borderOn) return;
     var cache = getCursorTargetCache();
 
-    if (!dockOnly) {
+    if (!dockOnly && !overTopbar) {
       for (var k = 0; k < cache.outer.length; k++) {
         var el = cache.outer[k];
         if (!el || (+(el.style.opacity || '1')) < 0.05) continue;
@@ -6945,6 +7104,7 @@
     cursorGlowTrackUntil = 0;
     cursorGlowTrackMode = 'full';
     if (cursorGlowEl) cursorGlowEl.classList.remove('is-visible');
+    document.documentElement.classList.remove('topbar-glow-suppressed');
     clearCursorNearTargets();
   }
 
@@ -8484,7 +8644,10 @@
     applyAudioSettings(true);
   });
 
-  userMenuBtn.addEventListener('click', function () { openSidebar('left'); });
+  userMenuBtn.addEventListener('click', function () {
+    if (document.documentElement.classList.contains('outer-screen-layout')) return;
+    openSidebar('left');
+  });
 
   // 顶栏文字快捷入口：用户名 → 切换账号；称号 → 切换称号；音乐名 → 设置页的音频
   // 记下来源为首页，这些二级页按“返回”时直接回首页
@@ -11436,6 +11599,10 @@
     if (!chart || !rows || !rows.length) return;
     var previousSvg = chart.querySelector('.pause-leaderboard-svg');
     if (previousSvg) previousSvg.remove();
+    var isSettingsRankSlot = false;
+    if (chart.closest) {
+      if (chart.closest('.settings-rank-slot')) isSettingsRankSlot = true;
+    }
     var previousScrollTop = chart.scrollTop || 0;
 
     var measuredHeight = chart.clientHeight || pauseLeaderboardAvailableHeight(chart) || 140;
@@ -11443,12 +11610,14 @@
     var width = Math.max(180, Math.floor(chart.clientWidth || 0));
     var requiredSvgWidth = width;
     var margin = { left: 34, right: 16, top: 12, bottom: 38 };
+    if (isSettingsRankSlot) margin.bottom = 24;
     var plotWidth = Math.max(1, width - margin.left - margin.right);
     var rowStep = 28;
     var barHeight = 18;
     var axisY = margin.top + rows.length * rowStep;
     var contentHeight = axisY + margin.bottom;
     var svgHeight = Math.max(visibleHeight, contentHeight);
+    if (isSettingsRankSlot) svgHeight = contentHeight;
     var maximumValue = Math.max.apply(null, rows.map(function (row) {
       return Math.max(0, Number(row.value) || 0);
     })) || 0;
@@ -12121,6 +12290,9 @@
       achvBody.innerHTML = '';
       achvBody.appendChild(node);
       achvBackBtn.hidden = !showBack;
+      if (showBack) enterOuterSecondary(container, true);
+      else if (container._outerSecondaryActive === true) leaveOuterSecondary(container);
+      else resetOuterPageScroll(container);
       if (achvScroll) achvScroll.scrollTop = 0;
       animateCardBody(achvBody, 0);
       initLineMarquees(achvBody);
@@ -12355,6 +12527,9 @@
         updateReviewNavigation();
         if (reviewScroll) reviewScroll.scrollTop = 0;
         syncMergedSecondaryView(mergedDetailOnly, reviewShowingDetail);
+        if (showBack) enterOuterSecondary(container, true);
+        else if (container._outerSecondaryActive === true) leaveOuterSecondary(container);
+        else resetOuterPageScroll(container);
         animateCardBody(reviewBody, 0);
         initLineMarquees(reviewBody);
         invalidateCursorTargetCache();
@@ -12708,6 +12883,10 @@
       detailBackBtn.hidden = !showBack;
       if (detailScroll) detailScroll.scrollTop = scrollTop || 0;
       syncMergedSecondaryView(!!showBack, mergedReviewOnly);
+      if (showBack) enterOuterSecondary(container, true);
+      else if (container._outerSecondaryActive === true) leaveOuterSecondary(container);
+      else resetOuterPageScroll(container);
+      configureTopActions();
       animateCardBody(detailBody, 0);
       initLineMarquees(detailBody);
       invalidateCursorTargetCache();
@@ -12716,6 +12895,8 @@
     function showDetailOverview() {
       setDetailView(makeDetailOverview(), false, detailOverviewScrollTop);
     }
+
+    container._homeDetailBack = showDetailOverview;
 
     function showShopVersion(version) {
       if (detailScroll) detailOverviewScrollTop = detailScroll.scrollTop;
@@ -12995,4 +13176,34 @@
   });
 
   init();
+  window.__outerSettingsBridge = {
+    renderTitleList: renderTitleList,
+    titleListEl: titleListEl,
+    applyThemeSettings: applyThemeSettings,
+    applyFont: applyFont,
+    getImageQualityLevel: function () { return imageQualityLevel; },
+    setImageQuality: setImageQuality,
+    qualityLabel: qualityLabel,
+    getPerformanceChecked: function () { return performanceModeInput ? performanceModeInput.checked : false; },
+    setPerformanceChecked: function (checked) {
+      if (performanceModeInput) {
+        performanceModeInput.checked = checked;
+        applyThemeFromControls(true);
+      }
+    },
+    showSponsor: function (src) {
+      if (sponsorOverlay) {
+        if (sponsorImage) sponsorImage.src = src;
+        sponsorOverlay.hidden = false;
+      }
+    },
+    enterSecondary: enterOuterSecondary,
+    leaveSecondary: leaveOuterSecondary,
+    refreshTopActions: configureTopActions,
+    performLogin: performLogin,
+    logoutInlineAccount: logoutInlineAccount,
+    currentAccountRecord: currentAccountRecord,
+    getUser: function () { return user; }
+  };
+
 })();

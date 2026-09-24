@@ -3360,6 +3360,15 @@ html.fx-glow .dock-item {
 }
 html.fx-border .section-card.cursor-near::after,
 html.fx-border .dock-item.cursor-near::after { opacity: 0.96; }
+/* 头像悬停时不允许沉浸光效落在下方内容卡片上，覆盖 JS 换帧前的瞬时状态。 */
+html.fx-border.topbar-glow-suppressed .page-section.active .section-card.cursor-near::after,
+html.fx-border:has(#topbar:hover) .page-section.active .section-card.cursor-near::after {
+  opacity: 0 !important;
+}
+html.fx-border.topbar-glow-suppressed .page-section.active :is(.review-item, .home-achv, .achv-summary, .achv-group-row).cursor-near-soft::after,
+html.fx-border:has(#topbar:hover) .page-section.active :is(.review-item, .home-achv, .achv-summary, .achv-group-row).cursor-near-soft::after {
+  opacity: 0 !important;
+}
 
 /* 中间卡片内部条目：更细、更弱的二级染色与描边光 */
 .review-item,
@@ -3869,12 +3878,7 @@ html.performance-mode .dock-item::after {
   border-color: rgba(255, 255, 255, 0.15);
   background: rgba(255, 255, 255, 0.06);
 }
-.resource-day-schedule-item.is-upcoming,
-.resource-day-schedule-item.is-upcoming:hover {
-  background: rgba(var(--accent-pink-rgb), 0.16);
-  border-color: rgba(var(--accent-pink-rgb), 0.68);
-  box-shadow: inset 0 0 0 1px rgba(var(--accent-pink-rgb), 0.12);
-}
+
 .resource-day-schedule-item:active {
   transform: none;
 }
@@ -4985,8 +4989,8 @@ html.inner-screen-layout .inner-activity-picker.open {
   display: grid;
   place-items: center;
   background: rgba(0, 0, 0, 0.82);
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
 .inner-activity-picker-panel {
   position: relative;
@@ -5667,18 +5671,7 @@ html.outer-screen-layout .page-section[data-section="home"].outer-home-view-home
 html.outer-screen-layout .page-section[data-section="home"].outer-home-view-achv .home-achv-card { display: flex !important; }
 
 /* 外屏模式隐藏小游戏入口与浮层 */
-html.outer-screen-layout .resource-day-schedule-item.is-upcoming {
-  border-color: rgba(var(--accent-pink-rgb), 0.72) !important;
-  background:
-    linear-gradient(rgba(var(--accent-pink-rgb), 0.22), rgba(var(--accent-pink-rgb), 0.22)),
-    linear-gradient(rgba(8, 9, 14, var(--glass-darken, 0.175)), rgba(8, 9, 14, var(--glass-darken, 0.175))),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05) 42%, rgba(255, 255, 255, 0.13)),
-    rgba(255, 255, 255, 0.08) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.42),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 0 22px rgba(var(--accent-pink-rgb), 0.16) !important;
-}
+
 html.outer-screen-layout .resource-preview-grid { margin-top: 0 !important; }
 html.outer-screen-layout .resource-browse-summary,
 html.outer-screen-layout .resource-game-entry,
@@ -5782,3 +5775,68 @@ html.outer-screen-layout .settings-personal-actions {
   gap: 10px;
 }
 html.outer-screen-layout .settings-personal-action { margin: 0; }
+
+/* 外屏：所有内容卡片统一使用底栏液态玻璃，不绘制额外边框、阴影或染色。 */
+html.outer-screen-layout .home-detail-logo-card,html.outer-screen-layout .home-info-card,html.outer-screen-layout .shop-version-card,html.outer-screen-layout .shop-library-owner-group,html.outer-screen-layout .review-overview,html.outer-screen-layout .review-overview-head,html.outer-screen-layout .review-score-panel,html.outer-screen-layout .review-item,html.outer-screen-layout .review-detail,html.outer-screen-layout .achv-summary,html.outer-screen-layout .achv-group-row,html.outer-screen-layout .home-achv,html.outer-screen-layout .home-achv.r-iridescent,html.outer-screen-layout .resource-calendar,html.outer-screen-layout .hotspot-post-item,html.outer-screen-layout .hotspot-comment,html.outer-screen-layout .hotspot-reply-box,html.outer-screen-layout .settings-rank-slot,html.outer-screen-layout .settings-personal-exp,html.outer-screen-layout .settings-personal-action{border:1px solid rgba(255,255,255,0.22)!important;background:rgba(8,9,14,var(--glass-darken,0.175))!important;box-shadow:none!important;-webkit-backdrop-filter:var(--outer-glass-blur)!important;backdrop-filter:var(--outer-glass-blur)!important;}
+/* 外屏恢复页面上下边界遮罩；卡片 backdrop-filter 采样内容区壁纸层，不改变卡片背景。 */
+html.outer-screen-layout .resource-day-schedule-item.is-upcoming{border:1px solid rgba(255,255,255,0.22)!important;background:rgba(8,9,14,var(--glass-darken,0.175))!important;box-shadow:none!important;-webkit-backdrop-filter:var(--outer-glass-blur)!important;backdrop-filter:var(--outer-glass-blur)!important;}
+html.outer-screen-layout .review-overview.review-flat-summary{border:0!important;background:transparent!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;}
+html.outer-screen-layout .shop-detail{border:1px solid rgba(255,255,255,0.22)!important;border-radius:18px!important;background:rgba(8,9,14,var(--glass-darken,0.175))!important;box-shadow:none!important;-webkit-backdrop-filter:var(--outer-glass-blur)!important;backdrop-filter:var(--outer-glass-blur)!important;padding:10px!important;}
+html.outer-screen-layout .shop-detail-list{gap:10px!important;}
+html.outer-screen-layout .shop-library-owner-group{border:0!important;background:transparent!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;}
+html.outer-screen-layout .page-section[data-section="home"].outer-home-view-home .home-right-column.portrait-detail-secondary .home-review-card,html.outer-screen-layout .page-section[data-section="home"].outer-home-view-home .home-right-column.portrait-review-secondary .home-detail-card{display:none!important;}
+/* 外屏内容区壁纸采样层：供卡片 backdrop-filter 采样，不改变卡片自身背景。 */
+html.outer-screen-layout .page-section{background-image:var(--outer-wallpaper-image,none);background-size:cover;background-position:center;background-attachment:fixed;background-repeat:no-repeat;}
+/* 外屏成就等级染色：只叠加染色，不改卡片底色、模糊、边框和圆角。 */
+html.outer-screen-layout .home-achv{background-image:linear-gradient(rgba(var(--achv-rgb),0.20),rgba(var(--achv-rgb),0.20))!important;}
+html.outer-screen-layout .home-achv.r-iridescent{background-image:linear-gradient(100deg,rgba(255,145,200,0.20),rgba(120,180,255,0.20),rgba(120,230,220,0.20),rgba(255,222,140,0.20),rgba(185,150,255,0.20))!important;}
+html.outer-screen-layout .resource-day-schedule-item.is-upcoming{background-color:rgba(153,71,113,0.34)!important;}
+/* 外屏热点：帖子内容与整组评论各使用一张卡片，单条评论不再单独成卡。 */
+html.outer-screen-layout .hotspot-content-card> .section-card-body,html.outer-screen-layout .hotspot-comments-card> .section-card-body{border:1px solid rgba(255,255,255,0.22)!important;border-radius:18px!important;background:rgba(8,9,14,var(--glass-darken,0.175))!important;box-shadow:none!important;-webkit-backdrop-filter:var(--outer-glass-blur)!important;backdrop-filter:var(--outer-glass-blur)!important;padding:10px!important;}
+html.outer-screen-layout .hotspot-comment,html.outer-screen-layout .hotspot-reply-box{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;}
+/* 外屏热点评论：两个排序按钮迁入操作栏右侧。 */
+html.outer-screen-layout .top-action-button.top-action-right-secondary{right:52px;}
+html.outer-screen-layout .top-action-right.is-ascending svg{transform:rotate(180deg);}
+html.outer-screen-layout .top-actions:has(#topActionRightSecondary:not([hidden])) .top-action-nav{max-width:calc(100% - 140px);}
+html.outer-screen-layout .hotspot-comment-sort{display:none!important;}
+/* 外屏评论标题栏无内容，隐藏后让评论卡片与内容卡片顶部对齐。 */
+html.outer-screen-layout .hotspot-comments-card> .section-card-title{display:none!important;margin:0!important;}
+/* 外屏设置-排名：卡片高度随内容，标题置顶居中，缩短X轴下方留白。 */
+html.outer-screen-layout .settings-rank-slot{height:auto!important;min-height:0!important;}
+html.outer-screen-layout .settings-rank-slot .pause-ad-title{order:1;margin-top:0;margin-bottom:6px;padding-top:0;}
+html.outer-screen-layout .settings-rank-slot .pause-leaderboard{order:2;flex:0 0 auto;overflow-x:auto!important;overflow-y:hidden!important;}
+/* 外屏设置-排名：禁用卡片内部滚动，统一由页面滚动。 */
+html.outer-screen-layout .settings-rank-card,html.outer-screen-layout .settings-rank-card> .section-card-body,html.outer-screen-layout .settings-rank-slot,html.outer-screen-layout .settings-rank-slot .pause-leaderboard{overflow:visible!important;}
+/* 外屏设置-个人：经验条融入设置列表，直接复用暂停页经验条结构。 */
+html.outer-screen-layout .settings-personal-exp{display:flex!important;flex-direction:row!important;align-items:center!important;gap:8px!important;padding:12px 14px!important;margin:0!important;}
+html.outer-screen-layout .settings-personal-exp-level{flex:0 0 auto;color:#fff;font-size:14px;line-height:1;white-space:nowrap;}
+html.outer-screen-layout .settings-personal-exp .sidebar-exp-track{flex:0 0 50%!important;width:50%!important;height:8px!important;}
+html.outer-screen-layout .settings-personal-exp-numbers{flex:1 1 auto;min-width:0;color:#fff;font-size:14px;line-height:1;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
+html.outer-screen-layout .settings-personal-exp-numbers> *{color:#fff;font-size:14px;line-height:1;}
+html.outer-screen-layout .settings-personal-exp-slash{color:var(--text-secondary);}
+
+/* 外屏设置-个人二级页与用户切换页 */
+.settings-personal-subpage { width: 100%; }
+.settings-personal-subpage .title-list { display: flex; flex-direction: column; gap: 12px; }
+.settings-outer-title-card { display: flex; align-items: center; justify-content: flex-start; min-height: 44px; cursor: default !important; }
+.settings-outer-title-card .title-badge { width: 100%; }
+.settings-outer-control-list { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+html.outer-screen-layout .settings-outer-title-card, html.outer-screen-layout .settings-outer-setting-card { width: 100% !important; min-height: 44px; border: 1px solid rgba(255,255,255,0.22) !important; border-radius: 18px !important; background: rgba(8,9,14,var(--glass-darken,0.175)) !important; box-shadow: none !important; -webkit-backdrop-filter: var(--outer-glass-blur) !important; backdrop-filter: var(--outer-glass-blur) !important; color: #fff !important; padding: 12px 14px !important; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; }
+html.outer-screen-layout .settings-outer-setting-card .settings-card-label { flex: 1; }
+html.outer-screen-layout .settings-outer-setting-card .settings-card-control { display: flex; align-items: center; gap: 8px; }
+.settings-outer-account-page { position: fixed; inset: 0; z-index: 500; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(0,0,0,0.55); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.settings-outer-account-page[hidden] { display: none !important; }
+.settings-outer-account-logout { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 16px); left: 18px; border: 0; background: transparent; color: #fff; font: inherit; font-size: 14px; cursor: pointer; }
+.settings-outer-account-card { width: min(360px, 100%); }
+
+html.outer-account-page-open .topbar,
+html.outer-account-page-open .top-actions,
+html.outer-account-page-open .dock-wrap { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; }
+
+html.outer-screen-layout .settings-personal-actions[hidden],
+html.outer-screen-layout .settings-personal-subpage[hidden] { display: none !important; }
+
+html.outer-screen-layout .settings-outer-setting-card { flex-direction: row !important; align-items: center !important; justify-content: space-between !important; text-align: left !important; }
+
+html.outer-screen-layout .settings-outer-setting-card .settings-native-select { display: block !important; min-width: 104px; height: 30px; padding: 0 8px; border: 1px solid rgba(255,255,255,0.28); border-radius: 8px; background: rgba(255,255,255,0.12); color: #fff; font: inherit; font-size: 14px; }
+html.outer-screen-layout .settings-outer-setting-card .settings-native-select option { background: #1c1c1e; color: #fff; }
