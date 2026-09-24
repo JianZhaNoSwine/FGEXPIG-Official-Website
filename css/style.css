@@ -1405,7 +1405,7 @@ html.ui-hidden .bg-tint {
 }
 .topnav-item.active .topnav-item-content { display: contents; }
 .topnav-item-icon { display: none; }
-.topnav-item-effect {
+.topnav-item.active .topnav-item-effect {
   opacity: 0.34;
   transform: translateX(-50%) scale(1);
   transition-delay: 0.06s;
@@ -3488,41 +3488,28 @@ html.has-card-blur #pages.entering .page.active .page-section.active .home-revie
 html.has-card-blur #pages.entering .page.active .page-section.active .home-detail-card {
   animation-name: section-card-enter-right-blur;
 }
+html.has-card-blur #pages.entering .page.active .page-section.active .section-card {
+  animation: none !important;
+}
+html.has-card-blur .card-content-enter:is(.home-detail-logo-card, .home-info-card, .shop-version-card, .shop-library-owner-group, .review-item, .review-detail, .achv-summary, .achv-group-row, .home-achv, .resource-calendar, .hotspot-post-item, .hotspot-comment, .settings-rank-slot, .settings-personal-exp, .settings-personal-action),
+html.outer-screen-layout .card-content-enter:is(.home-detail-logo-card, .home-info-card, .shop-version-card, .shop-library-owner-group, .review-item, .review-detail, .achv-summary, .achv-group-row, .home-achv, .resource-calendar, .hotspot-post-item, .hotspot-comment, .settings-rank-slot, .settings-personal-exp, .settings-personal-action) {
+  animation: none !important;
+}
+html.has-card-blur .card-content-enter:is(.home-detail-logo-card, .home-info-card, .shop-version-card, .shop-library-owner-group, .review-item, .review-detail, .achv-summary, .achv-group-row, .home-achv, .resource-calendar, .hotspot-post-item, .hotspot-comment, .settings-rank-slot, .settings-personal-exp, .settings-personal-action) > *,
+html.outer-screen-layout .card-content-enter:is(.home-detail-logo-card, .home-info-card, .shop-version-card, .shop-library-owner-group, .review-item, .review-detail, .achv-summary, .achv-group-row, .home-achv, .resource-calendar, .hotspot-post-item, .hotspot-comment, .settings-rank-slot, .settings-personal-exp, .settings-personal-action) > * {
+  animation: card-content-rise var(--card-content-duration) var(--ease-out) var(--content-rise-delay, 0ms) backwards;
+}
 @keyframes section-card-enter-left-blur {
-  from {
-    transform: translate3d(22px, 0, 0) scale(0.96);
-    -webkit-backdrop-filter: blur(var(--card-blur, 0px)) saturate(140%);
-    backdrop-filter: blur(var(--card-blur, 0px)) saturate(140%);
-  }
-  to {
-    transform: translate3d(0, 0, 0) scale(1);
-    -webkit-backdrop-filter: blur(var(--card-blur, 0px)) saturate(140%);
-    backdrop-filter: blur(var(--card-blur, 0px)) saturate(140%);
-  }
+  from { transform: translate3d(22px, 0, 0) scale(0.96); }
+  to { transform: translate3d(0, 0, 0) scale(1); }
 }
 @keyframes section-card-enter-center-blur {
-  from {
-    transform: translate3d(0, 12px, 0) scale(0.96);
-    -webkit-backdrop-filter: blur(var(--card-blur, 0px)) saturate(140%);
-    backdrop-filter: blur(var(--card-blur, 0px)) saturate(140%);
-  }
-  to {
-    transform: translate3d(0, 0, 0) scale(1);
-    -webkit-backdrop-filter: blur(var(--card-blur, 0px)) saturate(140%);
-    backdrop-filter: blur(var(--card-blur, 0px)) saturate(140%);
-  }
+  from { transform: translate3d(0, 12px, 0) scale(0.96); }
+  to { transform: translate3d(0, 0, 0) scale(1); }
 }
 @keyframes section-card-enter-right-blur {
-  from {
-    transform: translate3d(-22px, 0, 0) scale(0.96);
-    -webkit-backdrop-filter: blur(var(--card-blur, 0px)) saturate(140%);
-    backdrop-filter: blur(var(--card-blur, 0px)) saturate(140%);
-  }
-  to {
-    transform: translate3d(0, 0, 0) scale(1);
-    -webkit-backdrop-filter: blur(var(--card-blur, 0px)) saturate(140%);
-    backdrop-filter: blur(var(--card-blur, 0px)) saturate(140%);
-  }
+  from { transform: translate3d(-22px, 0, 0) scale(0.96); }
+  to { transform: translate3d(0, 0, 0) scale(1); }
 }
 @keyframes topbar-enter {
   from { opacity: 0; transform: translateY(-32px); }
@@ -3751,6 +3738,20 @@ html.performance-mode .dock-item::after {
   cursor: zoom-out;
 }
 .resource-image-overlay.is-tall { align-items: flex-start; }
+.resource-image-overlay-stack {
+  display: block;
+  margin: 0;
+  padding: 0;
+  font-size: 0;
+  line-height: 0;
+  transform-origin: center center;
+  will-change: transform;
+}
+.resource-image-overlay-stack .resource-image-overlay-img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
 .resource-image-overlay-img {
   display: block;
   margin: 0;
@@ -3881,6 +3882,11 @@ html.performance-mode .dock-item::after {
 
 .resource-day-schedule-item:active {
   transform: none;
+}
+html:not(.outer-screen-layout) .resource-day-schedule-item.is-upcoming {
+  background: rgba(255, 114, 182, 0.16) !important;
+  border-color: rgba(255, 114, 182, 0.68) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 114, 182, 0.12) !important;
 }
 
 /* ===== 独立全屏小游戏 ===== */
@@ -4797,7 +4803,7 @@ html.inner-screen-layout .topnav.dragging .topnav-thumb {
 }
 html.inner-screen-layout .topnav-item-content { display: contents; }
 .topnav-item-icon { display: none; }
-.topnav-item-effect {
+html.inner-screen-layout .topnav-item-effect {
   display: none;
 }
 html.inner-screen-layout .topnav-item {
@@ -5131,7 +5137,7 @@ html.outer-screen-layout .outer-activity-button {
   position: absolute;
   left: 50%;
   top: 50%;
-  display: flex;
+  display: none !important;
   align-items: center;
   justify-content: center;
   width: min(164px, 44vw);
@@ -5156,25 +5162,20 @@ html.outer-screen-layout .page {
   top: calc(env(safe-area-inset-top, 0px) + 10px);
   bottom: calc(max(env(safe-area-inset-bottom, 0px), 28px) + 27px);
 }
+html.outer-screen-layout .page,
+html.outer-screen-layout .page-section {
+  transition: none !important;
+}
 html.outer-screen-layout .page-section {
   left: 50%;
   width: 100%;
   height: 100%;
-  padding: 132px 16px 40px;
+  padding: 80px 16px 54px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
   gap: 16px;
-  --outer-content-fade-height: 80px;
-  -webkit-mask-image:
-    linear-gradient(to bottom, #000 calc(100% - var(--outer-content-fade-height)), transparent 100%),
-    linear-gradient(to right, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
-  -webkit-mask-composite: source-in;
-  mask-image:
-    linear-gradient(to bottom, #000 calc(100% - var(--outer-content-fade-height)), transparent 100%),
-    linear-gradient(to right, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
-  mask-composite: intersect;
   grid-template-columns: none;
   grid-template-rows: none;
   overflow-x: hidden;
@@ -5182,6 +5183,30 @@ html.outer-screen-layout .page-section {
   scrollbar-width: none;
 }
 html.outer-screen-layout .page-section::-webkit-scrollbar { width: 0; height: 0; }
+
+html.outer-screen-layout body::after {
+  content: '' !important;
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  height: calc(max(env(safe-area-inset-bottom, 0px), 28px) + 54px + 50px) !important;
+  z-index: 14 !important;
+  pointer-events: none !important;
+  background-image: linear-gradient(to top, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0.08) 52%, transparent 100%), var(--outer-wallpaper-image, none) !important;
+  background-size: 100% 100%, cover !important;
+  background-position: center, center !important;
+  background-attachment: scroll, fixed !important;
+  background-repeat: no-repeat, no-repeat !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  filter: blur(20px) saturate(160%) brightness(1.05) !important;
+  transform: scale(1.06) !important;
+  transform-origin: bottom center !important;
+  -webkit-mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.92) 48%, rgba(0, 0, 0, 0.5) 72%, transparent 100%) !important;
+  mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.92) 48%, rgba(0, 0, 0, 0.5) 72%, transparent 100%) !important;
+}
+
 html.outer-screen-layout .section-card {
   width: 100%;
   flex: 0 0 auto;
@@ -5251,51 +5276,50 @@ html.outer-screen-layout .topnav-glass-backdrop {
   backdrop-filter: var(--outer-glass-blur);
   z-index: 28;
 }
-/* 顶栏下方操作栏：左侧圆形返回、中央文字分页、右侧情境按钮 */
+/* 顶栏中央操作栏：左侧返回、中央分页、右侧情境按钮。 */
 html.outer-screen-layout .top-actions {
-  position: fixed;
-  --top-actions-space-start: calc(env(safe-area-inset-top, 0px) + 76px);
-  --top-actions-space-end: calc(env(safe-area-inset-top, 0px) + 142px);
-  top: calc((var(--top-actions-space-start) + var(--top-actions-space-end)) / 2 - 26px);
-  left: var(--topbar-left-edge, 16px);
-  right: var(--topbar-right-edge, 16px);
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 8px 0;
-  transform: translateX(var(--topbar-left-shift, 0px));
-  z-index: 39;
+  gap: 0;
+  padding: 0;
+  transform: none;
+  z-index: 2;
   pointer-events: none;
 }
 html.outer-screen-layout .top-actions[hidden] { display: none !important; }
 html.outer-screen-layout .top-action-button,
 html.outer-screen-layout .top-action-nav.no-anim .top-action-thumb { transition: none; }
-html.outer-screen-layout .top-action-nav.pressing .top-action-thumb { --top-action-thumb-scale: 1.321; }
+html.outer-screen-layout .top-action-nav.pressing .top-action-thumb { --top-action-thumb-scale: 1; }
 html.outer-screen-layout .top-action-nav {
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background:
-    linear-gradient(rgba(8, 9, 14, var(--glass-darken, 0.175)), rgba(8, 9, 14, var(--glass-darken, 0.175))),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05) 42%, rgba(255, 255, 255, 0.13)),
-    rgba(255, 255, 255, 0.08);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.42),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.08),
-    0 10px 28px rgba(25, 18, 22, 0.18);
-  -webkit-backdrop-filter: var(--outer-glass-blur);
-  backdrop-filter: var(--outer-glass-blur);
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
   pointer-events: auto;
+}
+html.outer-screen-layout .top-action-liquid-glass,
+html.outer-screen-layout .top-action-liquid-glass.is-ready,
+html.outer-screen-layout .top-action-glass-backdrop {
+  display: none !important;
+}
+html.outer-screen-layout .top-action-nav::before,
+html.outer-screen-layout .top-action-nav::after {
+  display: none !important;
 }
 html.outer-screen-layout .top-action-button.top-action-left {
   position: absolute;
   top: 50%;
-  left: 6px;
+  left: calc(var(--topbar-left-edge, 16px) + var(--topbar-left-shift, 0px) + var(--avatar-circle-size) + 16px);
   transform: translateY(-50%);
 }
 html.outer-screen-layout .top-action-button.top-action-right {
   position: absolute;
   top: 50%;
-  right: 6px;
+  right: calc(var(--topbar-right-edge, 16px) + var(--topbar-right-shift, 0px) + var(--avatar-circle-size) + 16px);
   transform: translateY(-50%);
 }
 html.outer-screen-layout .top-action-button {
@@ -5304,22 +5328,14 @@ html.outer-screen-layout .top-action-button {
   width: var(--avatar-circle-size);
   height: var(--avatar-circle-size);
   padding: 0;
+  border: 0;
   border-radius: 50%;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   color: #fff;
   cursor: pointer;
-}
-html.outer-screen-layout .top-action-button {
-  border: 1px solid rgba(255, 255, 255, 0.26);
-  background:
-    linear-gradient(rgba(8, 9, 14, var(--glass-darken, 0.175)), rgba(8, 9, 14, var(--glass-darken, 0.175))),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.08) 52%, rgba(255, 255, 255, 0.14)),
-    rgba(255, 255, 255, 0.1);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.55),
-    inset 0 -6px 12px rgba(255, 255, 255, 0.04),
-    0 6px 16px rgba(22, 16, 20, 0.14);
-  -webkit-backdrop-filter: var(--outer-glass-blur);
-  backdrop-filter: var(--outer-glass-blur);
 }
 html.outer-screen-layout .top-action-button { pointer-events: auto; }
 html.outer-screen-layout .top-action-button[hidden] { display: none !important; }
@@ -5329,43 +5345,87 @@ html.outer-screen-layout .top-action-button svg {
   height: 23px;
   margin: auto;
 }
+html.outer-screen-layout .hotspot-comment-sort-combined {
+  position: relative;
+  display: block;
+  width: 23px;
+  height: 23px;
+  margin: auto;
+}
+html.outer-screen-layout .hotspot-comment-sort-base,
+html.outer-screen-layout .hotspot-comment-sort-arrow {
+  position: absolute;
+  display: block;
+}
+html.outer-screen-layout .hotspot-comment-sort-base {
+  inset: 0;
+  color: #fff;
+}
+html.outer-screen-layout .hotspot-comment-sort-base svg {
+  width: 23px;
+  height: 23px;
+  margin: 0;
+}
+html.outer-screen-layout .hotspot-comment-sort-arrow {
+  right: -4px;
+  bottom: -4px;
+  width: 10px;
+  height: 10px;
+  color: var(--accent-pink);
+}
+html.outer-screen-layout .hotspot-comment-sort-arrow svg {
+  width: 10px;
+  height: 10px;
+  margin: 0;
+}
 html.outer-screen-layout .top-action-button:active { transform: translateY(-50%) scale(0.94); }
 html.outer-screen-layout .top-action-nav {
-  position: relative;
-  top: auto;
+  position: absolute;
+  top: 50%;
+  left: 50%;
   bottom: auto;
-  left: auto;
-  transform: none;
+  transform: translate(-50%, -50%);
   flex: 0 1 auto;
   width: max-content;
-  max-width: calc(100% - 92px);
+  max-width: calc(100% - 152px);
   min-width: 0;
-  height: 36px;
-  padding: 4px;
+  height: 40px;
+  padding: 0 2px;
 }
 html.outer-screen-layout .top-action-thumb {
   position: absolute;
-  top: 4px;
+  top: auto;
+  bottom: 5px;
   left: 0;
-  height: 28px;
+  height: 3px;
   width: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent-pink) !important;
+  box-shadow: 0 0 8px rgba(var(--accent-pink-rgb), 0.72) !important;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   pointer-events: none;
   transform-origin: center;
   transition: transform 0.38s cubic-bezier(0.33, 1.3, 0.35, 1), width 0.38s cubic-bezier(0.33, 1.3, 0.35, 1);
   z-index: 0;
 }
+html.outer-screen-layout .top-action-thumb::before {
+  display: none !important;
+}
 html.outer-screen-layout .top-action-item {
   position: relative;
   z-index: 1;
   flex: 0 0 auto;
-  height: 28px;
+  height: 36px;
   min-width: 0;
   margin: 0;
-  padding: 0 22px;
+  padding: 0 12px;
   border: 0;
-  border-radius: 999px;
+  border-radius: 0;
   background: transparent;
-  color: rgba(255, 255, 255, 0.92);
+  color: #fff;
   font-family: inherit;
   font-size: var(--text-large);
   font-weight: 650;
@@ -5375,7 +5435,14 @@ html.outer-screen-layout .top-action-item {
   text-overflow: ellipsis;
   cursor: pointer;
 }
-html.outer-screen-layout .top-action-item.is-active { color: #fff; text-shadow: 0 0 8px rgba(var(--accent-pink-rgb), 0.42); }
+html.outer-screen-layout .top-action-item.is-active { color: var(--accent-pink); text-shadow: none; }
+html.outer-screen-layout .top-action-item,
+html.outer-screen-layout .top-action-item.is-active,
+html.outer-screen-layout .top-action-item:active,
+html.outer-screen-layout .top-action-item .topnav-item-label {
+  transform: none !important;
+  top: auto !important;
+}
 html.outer-screen-layout .top-action-nav.nav-thumb-animating .top-action-thumb,
 html.outer-screen-layout .top-action-nav.dragging .top-action-thumb { transition: none; }
 html.outer-screen-layout .top-action-search-nav::before,
@@ -5386,18 +5453,13 @@ html.outer-screen-layout .top-action-search-nav {
   height: 36px;
   padding: 0 10px 0 12px;
   box-sizing: border-box;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 999px;
-  background:
-    linear-gradient(rgba(8, 9, 14, var(--glass-darken, 0.175)), rgba(8, 9, 14, var(--glass-darken, 0.175))),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05) 42%, rgba(255, 255, 255, 0.13)),
-    rgba(255, 255, 255, 0.08);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.42),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.08),
-    0 10px 28px rgba(25, 18, 22, 0.18);
-  -webkit-backdrop-filter: var(--outer-glass-blur);
-  backdrop-filter: var(--outer-glass-blur);
+  border: 0 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.86) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 html.outer-screen-layout .top-action-search {
   position: relative;
@@ -5430,9 +5492,9 @@ html.outer-screen-layout .top-action-search-icon {
   position: absolute;
   z-index: 2;
   top: 50%;
-  right: 10px;
-  width: 16px;
-  height: 16px;
+  right: 8px;
+  width: 23px;
+  height: 23px;
   transform: translateY(-50%);
   color: rgba(255, 255, 255, 0.9);
   pointer-events: none;
@@ -5532,249 +5594,22 @@ html.outer-screen-layout .home-achv-list,
 html.outer-screen-layout .achv-group-list,
 html.outer-screen-layout .settings-rank-list,
 html.outer-screen-layout .settings-personal-actions {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 12px !important;
-  width: 100% !important;
-  min-width: 0 !important;
-  overflow: visible !important;
-}
-html.outer-screen-layout .hotspot-title-card > .section-card-body { overflow: visible !important; }
-html.outer-screen-layout .home-detail > *,
-html.outer-screen-layout .review-view > *,
-html.outer-screen-layout .achv-view > *,
-html.outer-screen-layout .resource-schedule-view > *,
-html.outer-screen-layout .hotspot-post-list > *,
-html.outer-screen-layout .hotspot-comment-list > *,
-html.outer-screen-layout .settings-rank-list > *,
-html.outer-screen-layout .settings-personal-actions > * {
-  width: 100% !important;
-  min-width: 0 !important;
-}
-/* 所有真正承载内容的卡片统一为底栏大胶囊同款液态玻璃，只改为卡片圆角 */
-html.outer-screen-layout .home-detail-logo-card,
-html.outer-screen-layout .home-info-card,
-html.outer-screen-layout .shop-version-card,
-html.outer-screen-layout .shop-library-owner-group,
-html.outer-screen-layout .review-overview,
-html.outer-screen-layout .review-item,
-html.outer-screen-layout .review-detail,
-html.outer-screen-layout .achv-summary,
-html.outer-screen-layout .achv-group-row,
-html.outer-screen-layout .home-achv,
-html.outer-screen-layout .resource-calendar,
-html.outer-screen-layout .hotspot-post-item,
-html.outer-screen-layout .hotspot-comment,
-html.outer-screen-layout .settings-rank-slot,
-html.outer-screen-layout .settings-personal-exp,
-html.outer-screen-layout .settings-personal-action {
-  width: 100% !important;
-  border: 1px solid rgba(255, 255, 255, 0.22) !important;
-  border-radius: 18px !important;
-  background:
-    linear-gradient(rgba(8, 9, 14, var(--glass-darken, 0.175)), rgba(8, 9, 14, var(--glass-darken, 0.175))),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05) 42%, rgba(255, 255, 255, 0.13)),
-    rgba(255, 255, 255, 0.08) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.42),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.08) !important;
-  -webkit-backdrop-filter: var(--outer-glass-blur) !important;
-  backdrop-filter: var(--outer-glass-blur) !important;
-}
-html.outer-screen-layout .home-detail-logo-card {
-  height: calc(2 * var(--achv-item-h) + var(--subcard-gap)) !important;
-}
-html.outer-screen-layout .home-info-card {
-  height: calc(3 * var(--achv-item-h) + 2 * var(--subcard-gap)) !important;
-  box-shadow: none !important;
-}
-html.outer-screen-layout .home-info-card .shop-owned-bar { margin-top: auto !important; }
-html.outer-screen-layout .home-info-grid {
-  display: grid !important;
-  grid-template-columns: auto minmax(0, 1fr) !important;
-  column-gap: 14px !important;
-  row-gap: 0 !important;
-  width: 100% !important;
-  min-width: 0 !important;
-}
-html.outer-screen-layout .home-info-grid > dt,
-html.outer-screen-layout .home-info-grid > dd {
-  grid-column: auto !important;
-  grid-row: auto !important;
-}
-html.outer-screen-layout .home-info-grid dt,
-html.outer-screen-layout .home-info-grid dd,
-html.outer-screen-layout .home-info-grid dt *,
-html.outer-screen-layout .home-info-grid dd * {
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-  text-shadow: none !important;
-  filter: none !important;
-  mix-blend-mode: normal !important;
-  outline: 0 !important;
-  -webkit-text-stroke: 0 !important;
-  text-decoration: none !important;
-  -webkit-text-decoration: none !important;
-}
-html.outer-screen-layout .home-info-grid dt::before,
-html.outer-screen-layout .home-info-grid dt::after,
-html.outer-screen-layout .home-info-grid dd::before,
-html.outer-screen-layout .home-info-grid dd::after { display: none !important; }
-html.outer-screen-layout .home-achv {
-  border-color: rgba(var(--achv-rgb), 0.62) !important;
-  background:
-    linear-gradient(rgba(var(--achv-rgb), 0.20), rgba(var(--achv-rgb), 0.20)),
-    linear-gradient(rgba(8, 9, 14, var(--glass-darken, 0.175)), rgba(8, 9, 14, var(--glass-darken, 0.175))),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05) 42%, rgba(255, 255, 255, 0.13)),
-    rgba(255, 255, 255, 0.08) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.42),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 0 22px rgba(var(--achv-rgb), 0.12) !important;
-}
-html.outer-screen-layout .home-achv.r-iridescent {
-  background:
-    linear-gradient(100deg, rgba(255, 145, 200, 0.20), rgba(120, 180, 255, 0.20), rgba(120, 230, 220, 0.20), rgba(255, 222, 140, 0.20), rgba(185, 150, 255, 0.20)),
-    linear-gradient(rgba(8, 9, 14, var(--glass-darken, 0.175)), rgba(8, 9, 14, var(--glass-darken, 0.175))),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05) 42%, rgba(255, 255, 255, 0.13)),
-    rgba(255, 255, 255, 0.08) !important;
-}
-html.outer-screen-layout .section-card-body :where(
-  .home-info-card,
-  .home-detail-logo-card,
-  .home-achv,
-  .shop-version-card,
-  .review-overview,
-  .review-item,
-  .achv-summary,
-  .achv-group-row,
-  .hotspot-post-item,
-  .hotspot-comment,
-  .resource-calendar
-) { outline: 0 !important; }
-html.outer-screen-layout .review-overview-bar {
-  width: calc(50% + 59px) !important;
-  max-width: calc(50% + 59px) !important;
-}
-html.outer-screen-layout .hotspot-comment { padding: 10px 12px !important; }
-html.outer-screen-layout .settings-personal-action { color: #fff !important; }
-
-/* 商店：首页（详情 + 测评） / 实绩 */
-html.outer-screen-layout .home-right-column,
-html.outer-screen-layout .home-right-column-body { display: contents; }
-html.outer-screen-layout .home-detail-card { order: 1; display: none !important; }
-html.outer-screen-layout .home-review-card { order: 2; display: none !important; }
-html.outer-screen-layout .home-achv-card { order: 3; display: none !important; }
-html.outer-screen-layout .page-section[data-section="home"].outer-home-view-home .home-detail-card,
-html.outer-screen-layout .page-section[data-section="home"].outer-home-view-home .home-review-card { display: flex !important; }
-html.outer-screen-layout .page-section[data-section="home"].outer-home-view-achv .home-achv-card { display: flex !important; }
-
-/* 外屏模式隐藏小游戏入口与浮层 */
-
-html.outer-screen-layout .resource-preview-grid { margin-top: 0 !important; }
-html.outer-screen-layout .resource-browse-summary,
-html.outer-screen-layout .resource-game-entry,
-html.outer-screen-layout .minigame-overlay {
-  display: none !important;
-}
-/* 资源：目录 → 观赏二级页 */
-html.outer-screen-layout .files-portrait-page-btn { display: none !important; }
-html.outer-screen-layout .files-schedule-card { display: none !important; }
-html.outer-screen-layout .files-browse-card,
-html.outer-screen-layout .files-viewer-card { display: none !important; }
-html.outer-screen-layout .files-section.outer-show-browse .files-browse-card { display: flex !important; }
-html.outer-screen-layout .files-section.outer-show-schedule .files-browse-card,
-html.outer-screen-layout .files-section.outer-show-schedule .files-viewer-card { display: none !important; }
-html.outer-screen-layout .files-section.outer-show-schedule .files-schedule-card { display: flex !important; }
-html.outer-screen-layout .files-section.outer-show-viewer .files-browse-card { display: none !important; }
-html.outer-screen-layout .files-section.outer-show-viewer .files-viewer-card {
-  display: flex !important;
-  flex: 1 1 auto;
-  height: 100%;
-  min-height: 0;
-}
-html.outer-screen-layout .files-viewer-card > .section-card-body {
-  position: relative;
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: hidden;
-}
-
-/* 热点：帖子列表 → 内容 / 评论二级页 */
-html.outer-screen-layout .hotspot-search-wrap { display: none !important; }
-html.outer-screen-layout .hotspot-title-card { display: flex; }
-html.outer-screen-layout .hotspot-section:not(.outer-show-secondary) .hotspot-content-card,
-html.outer-screen-layout .hotspot-section:not(.outer-show-secondary) .hotspot-comments-card { display: none !important; }
-html.outer-screen-layout .hotspot-section.outer-show-secondary .hotspot-title-card { display: none !important; }
-html.outer-screen-layout .hotspot-section.outer-show-secondary:not(.portrait-show-comments) .hotspot-content-card { display: flex !important; }
-html.outer-screen-layout .hotspot-section.outer-show-secondary.portrait-show-comments .hotspot-comments-card { display: flex !important; }
-
-.outer-secondary-back { display: none !important; }
-html.outer-screen-layout .outer-secondary-back { display: none !important; }
-html.outer-screen-layout .hotspot-portrait-tabs { display: none !important; }
-html.outer-screen-layout .hotspot-content-card-title > .hotspot-card-title-label,
-html.outer-screen-layout .hotspot-comments-card-title > .hotspot-card-title-label { display: inline; }
-
-/* 设置：排名 / 个人 */
-html.outer-screen-layout .settings-rank-card,
-html.outer-screen-layout .settings-personal-card { display: none !important; }
-html.outer-screen-layout .settings-section.outer-settings-view-rank .settings-rank-card,
-html.outer-screen-layout .settings-section.outer-settings-view-personal .settings-personal-card { display: flex !important; }
-html.outer-screen-layout .settings-rank-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-html.outer-screen-layout .settings-rank-slot {
-  flex: 0 0 auto;
-  height: clamp(150px, 24vh, 230px);
-}
-html.outer-screen-layout .settings-personal-exp {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 4px 0 18px;
 }
-html.outer-screen-layout .settings-personal-level-badge {
-  align-self: center;
-  color: #fff;
-  font-size: var(--text-display);
-  font-weight: 700;
-  line-height: 1;
+html.outer-screen-layout .settings-personal-action {
+  justify-content: flex-start !important;
+  gap: 8px !important;
+  height: var(--achv-item-h) !important;
+  min-height: var(--achv-item-h) !important;
+  margin: 0;
+  padding: 8px 9px !important;
+  box-sizing: border-box;
+  text-align: left !important;
 }
-html.outer-screen-layout .settings-personal-level-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-html.outer-screen-layout .settings-personal-exp-total,
-html.outer-screen-layout .settings-personal-exp-value {
-  flex: none;
-  color: #fff;
-  font-size: var(--text-small);
-  font-variant-numeric: tabular-nums;
-}
-html.outer-screen-layout .settings-personal-exp-track {
-  flex: 1 1 auto;
-  height: 6px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.2);
-}
-html.outer-screen-layout .settings-personal-exp-fill {
-  width: 0;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #ff91c8, #78b4ff, #78e6dc);
-  transition: width 0.3s linear;
-}
-html.outer-screen-layout .settings-personal-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-html.outer-screen-layout .settings-personal-action { margin: 0; }
+html.outer-screen-layout .settings-personal-action.is-fixed { pointer-events: none; cursor: default; }
+html.outer-screen-layout .settings-personal-status-value { margin-left: 0; color: rgba(255, 255, 255, 0.7); }
 
 /* 外屏：所有内容卡片统一使用底栏液态玻璃，不绘制额外边框、阴影或染色。 */
 html.outer-screen-layout .home-detail-logo-card,html.outer-screen-layout .home-info-card,html.outer-screen-layout .shop-version-card,html.outer-screen-layout .shop-library-owner-group,html.outer-screen-layout .review-overview,html.outer-screen-layout .review-overview-head,html.outer-screen-layout .review-score-panel,html.outer-screen-layout .review-item,html.outer-screen-layout .review-detail,html.outer-screen-layout .achv-summary,html.outer-screen-layout .achv-group-row,html.outer-screen-layout .home-achv,html.outer-screen-layout .home-achv.r-iridescent,html.outer-screen-layout .resource-calendar,html.outer-screen-layout .hotspot-post-item,html.outer-screen-layout .hotspot-comment,html.outer-screen-layout .hotspot-reply-box,html.outer-screen-layout .settings-rank-slot,html.outer-screen-layout .settings-personal-exp,html.outer-screen-layout .settings-personal-action{border:1px solid rgba(255,255,255,0.22)!important;background:rgba(8,9,14,var(--glass-darken,0.175))!important;box-shadow:none!important;-webkit-backdrop-filter:var(--outer-glass-blur)!important;backdrop-filter:var(--outer-glass-blur)!important;}
@@ -5785,17 +5620,25 @@ html.outer-screen-layout .shop-detail{border:1px solid rgba(255,255,255,0.22)!im
 html.outer-screen-layout .shop-detail-list{gap:10px!important;}
 html.outer-screen-layout .shop-library-owner-group{border:0!important;background:transparent!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;}
 html.outer-screen-layout .page-section[data-section="home"].outer-home-view-home .home-right-column.portrait-detail-secondary .home-review-card,html.outer-screen-layout .page-section[data-section="home"].outer-home-view-home .home-right-column.portrait-review-secondary .home-detail-card{display:none!important;}
-/* 外屏内容区壁纸采样层：供卡片 backdrop-filter 采样，不改变卡片自身背景。 */
-html.outer-screen-layout .page-section{background-image:var(--outer-wallpaper-image,none);background-size:cover;background-position:center;background-attachment:fixed;background-repeat:no-repeat;}
+
 /* 外屏成就等级染色：只叠加染色，不改卡片底色、模糊、边框和圆角。 */
 html.outer-screen-layout .home-achv{background-image:linear-gradient(rgba(var(--achv-rgb),0.20),rgba(var(--achv-rgb),0.20))!important;}
 html.outer-screen-layout .home-achv.r-iridescent{background-image:linear-gradient(100deg,rgba(255,145,200,0.20),rgba(120,180,255,0.20),rgba(120,230,220,0.20),rgba(255,222,140,0.20),rgba(185,150,255,0.20))!important;}
-html.outer-screen-layout .resource-day-schedule-item.is-upcoming{background-color:rgba(153,71,113,0.34)!important;}
+html.outer-screen-layout .resource-day-schedule-item.is-upcoming .hotspot-post-title,
+html.outer-screen-layout .resource-day-schedule-item.is-upcoming .hotspot-post-time,
+html.outer-screen-layout .resource-day-schedule-item.is-upcoming .hotspot-post-count {
+  color: var(--accent-pink) !important;
+}
+
 /* 外屏热点：帖子内容与整组评论各使用一张卡片，单条评论不再单独成卡。 */
 html.outer-screen-layout .hotspot-content-card> .section-card-body,html.outer-screen-layout .hotspot-comments-card> .section-card-body{border:1px solid rgba(255,255,255,0.22)!important;border-radius:18px!important;background:rgba(8,9,14,var(--glass-darken,0.175))!important;box-shadow:none!important;-webkit-backdrop-filter:var(--outer-glass-blur)!important;backdrop-filter:var(--outer-glass-blur)!important;padding:10px!important;}
-html.outer-screen-layout .hotspot-comment,html.outer-screen-layout .hotspot-reply-box{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;}
+html.outer-screen-layout .hotspot-comment{padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;}
+html.outer-screen-layout .hotspot-comment-list,
+html.outer-screen-layout .hotspot-comment-detail-list{gap:12px!important;}
+
+html.outer-screen-layout .hotspot-reply-box{margin:4px 0 0!important;padding:8px 9px!important;border:1px solid rgba(255,255,255,0.78)!important;border-radius:12px!important;outline:0!important;background:transparent!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;}
 /* 外屏热点评论：两个排序按钮迁入操作栏右侧。 */
-html.outer-screen-layout .top-action-button.top-action-right-secondary{right:52px;}
+html.outer-screen-layout .top-action-button.top-action-right-secondary{right:calc(var(--topbar-right-edge, 16px) + var(--topbar-right-shift, 0px) + var(--avatar-circle-size) + 16px + var(--avatar-circle-size) + 8px)!important;}
 html.outer-screen-layout .top-action-right.is-ascending svg{transform:rotate(180deg);}
 html.outer-screen-layout .top-actions:has(#topActionRightSecondary:not([hidden])) .top-action-nav{max-width:calc(100% - 140px);}
 html.outer-screen-layout .hotspot-comment-sort{display:none!important;}
@@ -5803,7 +5646,7 @@ html.outer-screen-layout .hotspot-comment-sort{display:none!important;}
 html.outer-screen-layout .hotspot-comments-card> .section-card-title{display:none!important;margin:0!important;}
 /* 外屏设置-排名：卡片高度随内容，标题置顶居中，缩短X轴下方留白。 */
 html.outer-screen-layout .settings-rank-slot{height:auto!important;min-height:0!important;}
-html.outer-screen-layout .settings-rank-slot .pause-ad-title{order:1;margin-top:0;margin-bottom:6px;padding-top:0;}
+html.outer-screen-layout .settings-rank-slot .pause-ad-title{order:1;margin-top:0;margin-bottom:6px;padding-top:0;color:#fff!important;-webkit-text-stroke:0!important;transform:translateY(6px);}
 html.outer-screen-layout .settings-rank-slot .pause-leaderboard{order:2;flex:0 0 auto;overflow-x:auto!important;overflow-y:hidden!important;}
 /* 外屏设置-排名：禁用卡片内部滚动，统一由页面滚动。 */
 html.outer-screen-layout .settings-rank-card,html.outer-screen-layout .settings-rank-card> .section-card-body,html.outer-screen-layout .settings-rank-slot,html.outer-screen-layout .settings-rank-slot .pause-leaderboard{overflow:visible!important;}
@@ -5817,17 +5660,47 @@ html.outer-screen-layout .settings-personal-exp-slash{color:var(--text-secondary
 
 /* 外屏设置-个人二级页与用户切换页 */
 .settings-personal-subpage { width: 100%; }
-.settings-personal-subpage .title-list { display: flex; flex-direction: column; gap: 12px; }
+.settings-personal-subpage .title-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 0 !important;
+  align-items: stretch !important;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+.settings-personal-subpage .title-list::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
 .settings-outer-title-card { display: flex; align-items: center; justify-content: flex-start; min-height: 44px; cursor: default !important; }
 .settings-outer-title-card .title-badge { width: 100%; }
 .settings-outer-control-list { display: flex; flex-direction: column; gap: 12px; width: 100%; }
-html.outer-screen-layout .settings-outer-title-card, html.outer-screen-layout .settings-outer-setting-card { width: 100% !important; min-height: 44px; border: 1px solid rgba(255,255,255,0.22) !important; border-radius: 18px !important; background: rgba(8,9,14,var(--glass-darken,0.175)) !important; box-shadow: none !important; -webkit-backdrop-filter: var(--outer-glass-blur) !important; backdrop-filter: var(--outer-glass-blur) !important; color: #fff !important; padding: 12px 14px !important; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; }
+html.outer-screen-layout .settings-outer-title-card, html.outer-screen-layout .settings-outer-setting-card { width: 100% !important; min-height: var(--achv-item-h) !important; height: var(--achv-item-h) !important; border: 1px solid rgba(255,255,255,0.22) !important; border-radius: 18px !important; background: rgba(8,9,14,var(--glass-darken,0.175)) !important; box-shadow: none !important; -webkit-backdrop-filter: var(--outer-glass-blur) !important; backdrop-filter: var(--outer-glass-blur) !important; color: #fff !important; padding: 8px 9px !important; display: flex; align-items: center; justify-content: flex-start !important; gap: 8px; box-sizing: border-box; text-align: left !important; font-size: 14px; }
 html.outer-screen-layout .settings-outer-setting-card .settings-card-label { flex: 1; }
 html.outer-screen-layout .settings-outer-setting-card .settings-card-control { display: flex; align-items: center; gap: 8px; }
-.settings-outer-account-page { position: fixed; inset: 0; z-index: 500; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(0,0,0,0.55); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.settings-outer-account-page { position: fixed; inset: 0; z-index: 500; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(0,0,0,0.82); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 .settings-outer-account-page[hidden] { display: none !important; }
 .settings-outer-account-logout { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 16px); left: 18px; border: 0; background: transparent; color: #fff; font: inherit; font-size: 14px; cursor: pointer; }
 .settings-outer-account-card { width: min(360px, 100%); }
+.settings-outer-account-card.is-entering {
+  animation: settings-outer-login-rise 0.46s var(--ease-out) both;
+}
+.settings-title-enter {
+  animation: settings-title-rise 0.42s var(--ease-out) both;
+}
+@keyframes settings-outer-login-rise {
+  from { opacity: 0; transform: translateY(28px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes settings-title-rise {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 html.outer-account-page-open .topbar,
 html.outer-account-page-open .top-actions,
@@ -5840,3 +5713,284 @@ html.outer-screen-layout .settings-outer-setting-card { flex-direction: row !imp
 
 html.outer-screen-layout .settings-outer-setting-card .settings-native-select { display: block !important; min-width: 104px; height: 30px; padding: 0 8px; border: 1px solid rgba(255,255,255,0.28); border-radius: 8px; background: rgba(255,255,255,0.12); color: #fff; font: inherit; font-size: 14px; }
 html.outer-screen-layout .settings-outer-setting-card .settings-native-select option { background: #1c1c1e; color: #fff; }
+
+/* 外屏排行榜卡片优化 */
+html.outer-screen-layout .settings-rank-slot {
+  height:auto!important; min-height:0!important; padding:8px 9px 6px!important; border-radius:18px!important;
+  background: linear-gradient(rgba(8,9,14,var(--glass-darken,0.175)),rgba(8,9,14,var(--glass-darken,0.175))), linear-gradient(145deg,rgba(255,255,255,0.18),rgba(255,255,255,0.05) 42%,rgba(255,255,255,0.13)), rgba(255,255,255,0.08)!important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.42), inset 0 -1px 0 rgba(255,255,255,0.08)!important;
+}
+html.outer-screen-layout .settings-rank-slot .pause-ad-title { order:1; margin:0 0 2px!important; padding:0!important; color:#fff!important; -webkit-text-stroke:0!important; font-size:var(--text-large); line-height:1.2; text-align:center; transform:none!important; }
+html.outer-screen-layout .settings-rank-slot .pause-leaderboard { order:2; flex:0 0 auto; overflow:visible!important; }
+html.outer-screen-layout .settings-rank-slot .pause-leaderboard-svg { width:100%!important; height:auto!important; }
+html.outer-screen-layout .settings-rank-card,html.outer-screen-layout .settings-rank-card > .section-card-body,html.outer-screen-layout .settings-rank-slot,html.outer-screen-layout .settings-rank-slot .pause-leaderboard { overflow:visible!important; }
+
+/* 外屏设置与称号项尺寸统一 */
+html.outer-screen-layout .hotspot-post-item,html.outer-screen-layout .settings-personal-action,html.outer-screen-layout .settings-outer-title-card,html.outer-screen-layout .settings-outer-setting-card{width:100%!important;height:var(--achv-item-h)!important;min-height:var(--achv-item-h)!important;box-sizing:border-box!important;padding:8px 9px!important;border-radius:18px!important;text-align:left!important;}
+
+/* 修复重建后的设置分页显示与排行榜自适应高度 */
+html.outer-screen-layout .settings-rank-card,
+html.outer-screen-layout .settings-personal-card { display: none !important; }
+html.outer-screen-layout .settings-section.outer-settings-view-rank .settings-rank-card,
+html.outer-screen-layout .settings-section.outer-settings-view-personal .settings-personal-card { display: flex !important; }
+html.outer-screen-layout .settings-rank-slot { flex: 0 0 auto !important; }
+html.outer-screen-layout .settings-rank-slot .pause-leaderboard { flex: 0 0 auto !important; min-height: 0 !important; }
+html.outer-screen-layout .settings-rank-slot .pause-leaderboard-svg { display: block !important; min-height: 1px; }
+
+/* 设置页与称号页沿用“卡片本体不动、内容上浮”的防突然模糊动画 */
+html.has-card-blur .card-content-enter:is(.settings-personal-action, .settings-outer-title-card, .settings-outer-setting-card, .settings-rank-slot),
+html.outer-screen-layout .card-content-enter:is(.settings-personal-action, .settings-outer-title-card, .settings-outer-setting-card, .settings-rank-slot) { animation: none !important; }
+html.has-card-blur .card-content-enter:is(.settings-personal-action, .settings-outer-title-card, .settings-outer-setting-card, .settings-rank-slot) > *,
+html.outer-screen-layout .card-content-enter:is(.settings-personal-action, .settings-outer-title-card, .settings-outer-setting-card, .settings-rank-slot) > * { animation: card-content-rise var(--card-content-duration) var(--ease-out) var(--content-rise-delay, 0ms) backwards; }
+
+/* ===== 外屏一级/二级分页显示恢复 ===== */
+html.outer-screen-layout .home-right-column,
+html.outer-screen-layout .home-right-column-body { display: contents !important; }
+html.outer-screen-layout .home-detail-card { order: 1; display: none !important; }
+html.outer-screen-layout .home-review-card { order: 2; display: none !important; }
+html.outer-screen-layout .home-achv-card { order: 3; display: none !important; }
+html.outer-screen-layout .page-section[data-section="home"].outer-home-view-home .home-detail-card,
+html.outer-screen-layout .page-section[data-section="home"].outer-home-view-home .home-review-card { display: flex !important; }
+html.outer-screen-layout .page-section[data-section="home"].outer-home-view-achv .home-achv-card { display: flex !important; }
+
+html.outer-screen-layout .files-schedule-card { display: none !important; }
+html.outer-screen-layout .files-browse-card,
+html.outer-screen-layout .files-viewer-card { display: none !important; }
+html.outer-screen-layout .files-section.outer-show-browse .files-browse-card { display: flex !important; }
+html.outer-screen-layout .files-section.outer-show-schedule .files-schedule-card { display: flex !important; }
+html.outer-screen-layout .files-section.outer-show-viewer .files-viewer-card { display: flex !important; flex: 1 1 auto; height: 100%; min-height: 0; }
+html.outer-screen-layout .files-viewer-card > .section-card-body { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; }
+
+html.outer-screen-layout .hotspot-search-wrap { display: none !important; }
+html.outer-screen-layout .hotspot-title-card { display: flex !important; }
+html.outer-screen-layout .hotspot-section:not(.outer-show-secondary) .hotspot-content-card,
+html.outer-screen-layout .hotspot-section:not(.outer-show-secondary) .hotspot-comments-card { display: none !important; }
+html.outer-screen-layout .hotspot-section.outer-show-secondary .hotspot-title-card { display: none !important; }
+html.outer-screen-layout .hotspot-section.outer-show-secondary:not(.portrait-show-comments) .hotspot-content-card { display: flex !important; }
+html.outer-screen-layout .hotspot-section.outer-show-secondary.portrait-show-comments .hotspot-comments-card { display: flex !important; }
+html.outer-screen-layout .hotspot-content-card-title > .hotspot-card-title-label,
+html.outer-screen-layout .hotspot-comments-card-title > .hotspot-card-title-label { display: inline !important; }
+/*
+*/
+
+/* ===== 外屏最后一批布局修正 ===== */
+html.outer-screen-layout .resource-game-entry,
+html.outer-screen-layout .minigame-overlay { display: none !important; }
+
+html.outer-screen-layout .page-section { overflow-y: auto !important; -webkit-overflow-scrolling: touch; }
+html.outer-screen-layout .files-schedule-card > .section-card-body,
+html.outer-screen-layout .hotspot-title-card > .section-card-body { overflow: visible !important; }
+html.outer-screen-layout .resource-day-schedule,
+html.outer-screen-layout .hotspot-post-list {
+  flex: 0 0 auto !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  touch-action: pan-y;
+}
+
+html.outer-screen-layout .settings-personal-action,
+html.outer-screen-layout .settings-personal-action span,
+html.outer-screen-layout .settings-personal-status-value { color: #fff !important; }
+
+html.outer-screen-layout .home-info-card { display: flex !important; flex-direction: column !important; }
+html.outer-screen-layout .home-info-grid {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) !important;
+  column-gap: 14px !important;
+  row-gap: 0 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+html.outer-screen-layout .home-info-grid dt,
+html.outer-screen-layout .home-info-grid dd {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+html.outer-screen-layout .home-info-grid dd { color: #fff !important; }
+
+/* 外屏内容区卡片圆角统一为资源项目卡片圆角 */
+html.outer-screen-layout .home-detail-logo-card,
+html.outer-screen-layout .home-info-card,
+html.outer-screen-layout .shop-version-card,
+html.outer-screen-layout .shop-library-owner-group,
+html.outer-screen-layout .review-overview,
+html.outer-screen-layout .review-overview-head,
+html.outer-screen-layout .review-score-panel,
+html.outer-screen-layout .review-item,
+html.outer-screen-layout .review-detail,
+html.outer-screen-layout .achv-summary,
+html.outer-screen-layout .achv-group-row,
+html.outer-screen-layout .home-achv,
+html.outer-screen-layout .resource-calendar,
+html.outer-screen-layout .resource-day-schedule-item,
+html.outer-screen-layout .hotspot-post-item,
+html.outer-screen-layout .hotspot-content-card > .section-card-body,
+html.outer-screen-layout .hotspot-comments-card > .section-card-body,
+html.outer-screen-layout .settings-rank-slot,
+html.outer-screen-layout .settings-personal-exp,
+html.outer-screen-layout .settings-personal-action,
+html.outer-screen-layout .settings-outer-title-card,
+html.outer-screen-layout .settings-outer-setting-card { border-radius: 18px !important; }
+
+html.outer-screen-layout .home-info-grid > * {
+  grid-column: auto !important;
+  grid-row: auto !important;
+}
+
+html.outer-screen-layout .home-info-card {
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+}
+html.outer-screen-layout .home-info-card .shop-owned-bar {
+  flex: 0 0 auto !important;
+  margin-top: 10px !important;
+}
+
+/* 外屏小游戏占位与底部遮罩最终还原 */
+html.outer-screen-layout .resource-browse-summary,
+html.outer-screen-layout .resource-game-entry,
+html.outer-screen-layout .minigame-overlay { display: none !important; }
+
+html.outer-screen-layout body::after {
+  --outer-bottom-fade-height: calc(max(env(safe-area-inset-bottom, 0px), 28px) + 54px + 50px);
+  --outer-bottom-fade-near: calc(max(env(safe-area-inset-bottom, 0px), 28px) + 50px);
+  --outer-bottom-fade-mid: calc(max(env(safe-area-inset-bottom, 0px), 28px) + 75px);
+  content: '' !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 14 !important;
+  pointer-events: none !important;
+  background-image: linear-gradient(to top, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0.08) 52%, transparent 100%), var(--outer-wallpaper-blur-image, none) !important;
+  background-size: 100% var(--outer-bottom-fade-height), cover !important;
+  background-position: center bottom, center center !important;
+  background-attachment: scroll, scroll !important;
+  background-repeat: no-repeat, no-repeat !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  filter: none !important;
+  transform: none !important;
+  -webkit-mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.92) var(--outer-bottom-fade-near), rgba(0, 0, 0, 0.5) var(--outer-bottom-fade-mid), transparent var(--outer-bottom-fade-height), transparent 100%) !important;
+  mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.92) var(--outer-bottom-fade-near), rgba(0, 0, 0, 0.5) var(--outer-bottom-fade-mid), transparent var(--outer-bottom-fade-height), transparent 100%) !important;
+}
+
+html.outer-screen-layout .home-info-card {
+  height: calc(3 * var(--achv-item-h) + 2 * var(--subcard-gap)) !important;
+  min-height: calc(3 * var(--achv-item-h) + 2 * var(--subcard-gap)) !important;
+  max-height: none !important;
+}
+html.outer-screen-layout .home-info-card .shop-owned-bar { margin-top: auto !important; }
+
+html.outer-screen-layout .home-detail-logo-card {
+  height: calc(2 * var(--achv-item-h) + var(--subcard-gap) + 2px) !important;
+  min-height: calc(2 * var(--achv-item-h) + var(--subcard-gap) + 2px) !important;
+}
+html.outer-screen-layout .shop-version-card {
+  height: calc(var(--purchase-card-h) + 2px) !important;
+  min-height: calc(var(--purchase-card-h) + 2px) !important;
+}
+
+/* 底部遮罩固定在底部，不再覆盖顶部 */
+html.outer-screen-layout body::after {
+  top: auto !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  inset: auto 0 0 0 !important;
+  height: calc(max(env(safe-area-inset-bottom, 0px), 28px) + 54px + 50px) !important;
+  background-image: linear-gradient(to top, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0.08) 52%, transparent 100%), var(--outer-wallpaper-blur-image, none) !important;
+  background-size: 100% 100%, cover !important;
+  background-position: center, center bottom !important;
+  background-attachment: scroll, fixed !important;
+  background-repeat: no-repeat, no-repeat !important;
+  filter: none !important;
+  transform: none !important;
+  -webkit-mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.92) 48%, rgba(0, 0, 0, 0.5) 72%, transparent 100%) !important;
+  mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.92) 48%, rgba(0, 0, 0, 0.5) 72%, transparent 100%) !important;
+}
+
+html.outer-screen-layout .home-detail-logo-card {
+  height: calc(2 * var(--achv-item-h) + var(--subcard-gap)) !important;
+  min-height: calc(2 * var(--achv-item-h) + var(--subcard-gap)) !important;
+}
+
+html.outer-screen-layout {
+  --outer-row-gap: 12px;
+}
+html.outer-screen-layout .home-detail,
+html.outer-screen-layout .shop-version-list {
+  gap: var(--outer-row-gap) !important;
+}
+html.outer-screen-layout .home-detail-logo-card {
+  height: calc(2 * var(--achv-item-h) + var(--outer-row-gap)) !important;
+  min-height: calc(2 * var(--achv-item-h) + var(--outer-row-gap)) !important;
+}
+html.outer-screen-layout .home-info-card {
+  height: calc(3 * var(--achv-item-h) + 2 * var(--outer-row-gap)) !important;
+  min-height: calc(3 * var(--achv-item-h) + 2 * var(--outer-row-gap)) !important;
+}
+html.outer-screen-layout .shop-version-card {
+  height: calc((3 * var(--achv-item-h) + var(--outer-row-gap)) / 2) !important;
+  min-height: calc((3 * var(--achv-item-h) + var(--outer-row-gap)) / 2) !important;
+}
+
+html.outer-screen-layout .resource-preview-grid {
+  margin-top: 0 !important;
+}
+
+html.outer-screen-layout .resource-calendar {
+  height: calc(4 * var(--achv-item-h) + 3 * var(--outer-row-gap)) !important;
+  min-height: calc(4 * var(--achv-item-h) + 3 * var(--outer-row-gap)) !important;
+  box-sizing: border-box !important;
+}
+
+html:not(.outer-screen-layout) .outer-secondary-back {
+  display: none !important;
+}
+html:not(.outer-screen-layout) .hotspot-comments-card .achv-title-back:not(.outer-secondary-back) {
+  pointer-events: auto !important;
+  z-index: 8 !important;
+}
+
+/* 非外屏恢复原有卡片与页面动画，仅外屏保留防突然模糊优化 */
+html:not(.outer-screen-layout) .page {
+  transition: opacity 0.55s var(--ease-out) !important;
+}
+html:not(.outer-screen-layout) .page-section {
+  transition: opacity 0.45s var(--ease-out) !important;
+}
+html:not(.outer-screen-layout) #pages.entering .page.active .page-section.active > .section-card:nth-child(1) {
+  animation: section-card-enter-left 0.58s var(--ease-out) 0.10s both !important;
+}
+html:not(.outer-screen-layout) #pages.entering .page.active .page-section.active > .section-card:nth-child(2) {
+  animation: section-card-enter-center 0.58s var(--ease-out) 0.04s both !important;
+}
+html:not(.outer-screen-layout) #pages.entering .page.active .page-section.active > .section-card:nth-child(3) {
+  animation: section-card-enter-right 0.58s var(--ease-out) 0.10s both !important;
+}
+html:not(.outer-screen-layout) #pages.entering .page.active .page-section.active .home-review-card {
+  animation: section-card-enter-center 0.58s var(--ease-out) 0.04s both !important;
+}
+html:not(.outer-screen-layout) #pages.entering .page.active .page-section.active .home-detail-card {
+  animation: section-card-enter-right 0.58s var(--ease-out) 0.10s both !important;
+}
+html:not(.outer-screen-layout) #pages.entering .page.active .page-section.active .hotspot-comments-card {
+  animation: section-card-enter-center 0.58s var(--ease-out) 0.04s both !important;
+}
+html:not(.outer-screen-layout) #pages.entering .page.active .page-section.active .files-schedule-card {
+  animation: section-card-enter-left 0.58s var(--ease-out) 0.10s both !important;
+}
+html:not(.outer-screen-layout) .card-content-enter:is(.home-detail-logo-card, .home-info-card, .shop-version-card, .shop-library-owner-group, .review-item, .review-detail, .achv-summary, .achv-group-row, .home-achv, .resource-calendar, .hotspot-post-item, .hotspot-comment, .settings-rank-slot, .settings-personal-exp, .settings-personal-action, .settings-outer-title-card, .settings-outer-setting-card) {
+  animation: card-content-rise var(--card-content-duration) var(--ease-out) var(--content-rise-delay, 0ms) backwards !important;
+}
+html:not(.outer-screen-layout) .card-content-enter:is(.home-detail-logo-card, .home-info-card, .shop-version-card, .shop-library-owner-group, .review-item, .review-detail, .achv-summary, .achv-group-row, .home-achv, .resource-calendar, .hotspot-post-item, .hotspot-comment, .settings-rank-slot, .settings-personal-exp, .settings-personal-action, .settings-outer-title-card, .settings-outer-setting-card) > * {
+  animation: none !important;
+}
+
+html:not(.outer-screen-layout) .bg-layer {
+  transition: opacity 0.65s ease-in-out !important;
+  will-change: opacity;
+}

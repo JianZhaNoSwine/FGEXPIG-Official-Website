@@ -14,7 +14,7 @@
 <link rel="icon" href="favicon.ico?v=7" type="image/x-icon">
 <link rel="shortcut icon" href="favicon.ico?v=7">
 <link rel="apple-touch-icon" href="favicon.ico?v=7">
-<link rel="stylesheet" href="css/style.css?v=20260924dj">
+<link rel="stylesheet" href="css/style.css?v=20260924gs">
 </head>
 <body>
 
@@ -55,7 +55,14 @@
   <!-- 中部导航 -->
   <nav class="topnav" id="topnav"></nav>
 
-  <!-- 外屏模式：顶部居中活动 logo -->
+  <!-- 外屏模式：顶栏中央分页操作栏 -->
+  <div class="top-actions" id="topActions" hidden>
+    <button class="top-action-button top-action-left" id="topActionLeft" type="button" aria-label="返回"></button>
+    <nav class="topnav top-action-nav" id="topActionNav" aria-label="页面分页"></nav>
+    <button class="top-action-button top-action-right" id="topActionRight" type="button" aria-label="页面操作"></button>
+  </div>
+
+  <!-- 外屏模式：活动 logo 入口（外屏不再显示） -->
   <button class="outer-activity-button" id="outerActivityButton" type="button" aria-label="选择活动">
     <img id="outerActivityButtonImg" alt="" draggable="false">
   </button>
@@ -76,12 +83,6 @@
   </div>
 </header>
 
-<!-- 顶栏下方操作栏：圆形返回键 · 页面分页 · 情境按钮 -->
-<div class="top-actions" id="topActions" hidden>
-  <button class="top-action-button top-action-left" id="topActionLeft" type="button" aria-label="返回"></button>
-  <nav class="topnav top-action-nav" id="topActionNav" aria-label="页面分页"></nav>
-  <button class="top-action-button top-action-right" id="topActionRight" type="button" aria-label="页面操作"></button>
-</div>
 
 <!-- 底部 logo 刻度槽 -->
 <div class="dock-wrap">
@@ -102,9 +103,9 @@
 
 <!-- 全屏暂停菜单 -->
 <section class="pause-menu" id="pauseMenu" aria-hidden="true">
-  <div class="pause-site-value" role="img" aria-label="4,442,446,481；￥165.27 CNY">
-    <span class="pause-site-value-item is-visits" aria-hidden="true">4,442,446,481</span>
-    <span class="pause-site-value-item is-value" aria-hidden="true">￥165.27 CNY</span>
+  <div class="pause-site-value" role="img" aria-label="5,020,931,694；￥184.27 CNY">
+    <span class="pause-site-value-item is-visits" aria-hidden="true">5,020,931,694</span>
+    <span class="pause-site-value-item is-value" aria-hidden="true">￥184.27 CNY</span>
   </div>
   <div class="sidebar-inner pause-menu-inner">
     <div class="sidebar-panel" id="panelMenu">
@@ -414,7 +415,7 @@
 <script src="js/emoji-manifest.js"></script>
 <script src="js/emoji-trim-data.js"></script>
 <script src="js/emoji-trim.js"></script>
-<script src="js/outer-settings-pages.js?v=20260924dj"></script>
-<script src="js/main.js?v=20260924dj"></script>
+<script src="js/outer-settings-pages.js?v=20260924gs"></script>
+<script src="js/main.js?v=20260924gs"></script>
 </body>
 </html>

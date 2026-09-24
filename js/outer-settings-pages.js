@@ -15,6 +15,7 @@
       items[i].removeAttribute('aria-disabled');
     }
     host.appendChild(clone);
+    if (b.animateCardBody) b.animateCardBody(host, 0);
   }
   function bindPerformanceRow(row, b) {
     var toggle = row.querySelector('.theme-toggle'); var value = row.querySelector('.theme-value');
@@ -63,6 +64,7 @@
       }
     }
     host.appendChild(list);
+    if (b.animateCardBody) b.animateCardBody(host, 0);
   }
   function render(section, view) { if (view === 'titles') buildTitles(section); else buildSettings(section); }
   window.openOuterPersonalSubpage = function (section, view) {
@@ -104,5 +106,12 @@
     accountUser.value = account && account.user ? account.user : (currentUser && currentUser.isAdmin ? 'admin' : '');
     accountPage.hidden = false;
     document.documentElement.classList.add('outer-account-page-open');
+    var loginCard = accountPage.querySelector('.settings-outer-account-card');
+    if (loginCard) {
+      loginCard.classList.remove('is-entering');
+      void loginCard.offsetWidth;
+      loginCard.classList.add('is-entering');
+      setTimeout(function () { loginCard.classList.remove('is-entering'); }, 520);
+    }
   };
 })();
