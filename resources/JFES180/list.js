@@ -2,6 +2,11 @@
   "lists": {
     "JFES180": [
       {
+        "file": "11dlc1x.png",
+        "title": "残奥会比赛日项目介绍",
+        "category": "宣传文件"
+      },
+      {
         "file": "10dlc2.png",
         "title": "马拉松规则",
         "category": "宣传文件"
