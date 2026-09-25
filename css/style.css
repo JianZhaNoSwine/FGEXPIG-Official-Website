@@ -1,22 +1,26 @@
 /* ===== 字体 ===== */
 @font-face {
   font-family: 'SarasaGothic';
-  src: url('../fonts/等距更纱黑体(默认).subset.woff') format('woff');
+  src: url('../fonts/等距更纱黑体(默认).woff') format('woff'),
+       url('../fonts/等距更纱黑体(默认).ttf') format('truetype');
   font-display: swap;
 }
 @font-face {
   font-family: 'FgexpigKaiti';
-  src: url('../fonts/楷体.subset.woff') format('woff');
+  src: url('../fonts/楷体.woff') format('woff'),
+       url('../fonts/楷体.ttf') format('truetype');
   font-display: swap;
 }
 @font-face {
   font-family: 'FgexpigMengyaBear';
-  src: url('../fonts/萌芽熊体.subset.woff') format('woff');
+  src: url('../fonts/萌芽熊体.woff') format('woff'),
+       url('../fonts/萌芽熊体.ttf') format('truetype');
   font-display: swap;
 }
 @font-face {
   font-family: 'FgexpigShanhaiSummer';
-  src: url('../fonts/山海仲夏夜物语.subset.woff') format('woff');
+  src: url('../fonts/山海仲夏夜物语.woff') format('woff'),
+       url('../fonts/山海仲夏夜物语.ttf') format('truetype');
   font-display: swap;
 }
 

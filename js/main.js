@@ -12619,6 +12619,8 @@
       hotspotLeaderboardStatsReady = true;
       rebuildHotspotAggregatedStats();
       releaseHotspotDataExcept(LOGOS[state.index]);
+      // 汇总热点经验后同步底部经验条与个人页，避免只更新榜单卡片。
+      refreshUserExperience();
       schedulePauseLeaderboardRender();
       return true;
     });

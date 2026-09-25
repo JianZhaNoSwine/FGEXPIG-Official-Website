@@ -5961,6 +5961,378 @@
           }
         ],
         "commentCount": 0
+      },
+      {
+        "id": "hotspot-29",
+        "title": "DLC残奥会今日上线",
+        "time": "2026/09/25/17:00",
+        "content": "已预订，极限/高难，《残奥会 X-Treme Paralympig》即将开始！",
+        "comments": [
+          {
+            "name": "炸鸡",
+            "text": "谁预订了高难",
+            "replies": [
+              {
+                "name": "企鹅",
+                "text": "笑死我了",
+                "replies": []
+              },
+              {
+                "name": "企鹅",
+                "text": "\\咕噜噜宇宙被逼",
+                "replies": []
+              },
+              {
+                "name": "掉线",
+                "text": "是啊 根本没人同意😡",
+                "replies": []
+              }
+            ]
+          },
+          {
+            "name": "炸鸡",
+            "text": "\\躺平的兔子生气",
+            "replies": []
+          },
+          {
+            "name": "炸鸡",
+            "text": "藕怎么不鸡豆",
+            "replies": []
+          },
+          {
+            "name": "炸鸡",
+            "text": "何意味",
+            "replies": []
+          },
+          {
+            "name": "炸鸡",
+            "text": "\\企鹅找人弄你",
+            "replies": []
+          },
+          {
+            "name": "炸鸡",
+            "text": "\\企鹅找人弄你",
+            "replies": []
+          },
+          {
+            "name": "炸鸡",
+            "text": "\\企鹅找人弄你",
+            "replies": []
+          },
+          {
+            "name": "炸鸡",
+            "text": "\\旋转烤乳猪",
+            "replies": [
+              {
+                "name": "咖啡豆",
+                "text": "笑鼠我了哈哈哈哈哈哈哈哈哈哈",
+                "replies": []
+              }
+            ]
+          },
+          {
+            "name": "咖啡豆",
+            "text": "\\我天高雅啊",
+            "replies": []
+          },
+          {
+            "name": "Tori",
+            "text": "有活着的可能性吗",
+            "replies": []
+          },
+          {
+            "name": "企鹅",
+            "text": "\\我天高雅啊",
+            "replies": []
+          },
+          {
+            "name": "企鹅",
+            "text": "升级版这种东西不要啊",
+            "replies": []
+          },
+          {
+            "name": "企鹅",
+            "text": "\\跳楼放松下",
+            "replies": []
+          },
+          {
+            "name": "咖啡豆",
+            "text": "我今天出去丸了参加不了了",
+            "replies": [
+              {
+                "name": "掉线",
+                "text": "不要啊 咖啡玩得开心",
+                "replies": []
+              },
+              {
+                "name": "miss",
+                "text": "我来 替咖参军",
+                "replies": []
+              },
+              {
+                "name": "miss",
+                "text": "\\秀珍耶",
+                "replies": [
+                  {
+                    "name": "咖啡豆",
+                    "text": "\\吉伊脱帽致敬",
+                    "replies": []
+                  },
+                  {
+                    "name": "咖啡豆",
+                    "text": "可以",
+                    "replies": []
+                  },
+                  {
+                    "name": "咖啡豆",
+                    "text": "让米斯帮我参加",
+                    "replies": []
+                  },
+                  {
+                    "name": "咖啡豆",
+                    "text": "米斯报名了吧",
+                    "replies": [
+                      {
+                        "name": "miss",
+                        "text": "没报",
+                        "replies": [
+                          {
+                            "name": "掉线",
+                            "text": "笑死我了",
+                            "replies": []
+                          }
+                        ]
+                      },
+                      {
+                        "name": "miss",
+                        "text": "\\诺比小兔第8弹哈哈哈",
+                        "replies": [
+                          {
+                            "name": "咖啡豆",
+                            "text": "那你替我",
+                            "replies": []
+                          },
+                          {
+                            "name": "咖啡豆",
+                            "text": "不知道猪办方同不同意",
+                            "replies": []
+                          },
+                          {
+                            "name": "咖啡豆",
+                            "text": "\\米牙牙",
+                            "replies": [
+                              {
+                                "name": "miss",
+                                "text": "球球你了猪办方",
+                                "replies": []
+                              },
+                              {
+                                "name": "miss",
+                                "text": "\\米牙牙",
+                                "replies": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "炸鸡",
+                "text": "咖啡哈几码~",
+                "replies": []
+              },
+              {
+                "name": "炸鸡",
+                "text": "不要你离开~",
+                "replies": [
+                  {
+                    "name": "咖啡豆",
+                    "text": "\\果咩捏",
+                    "replies": []
+                  },
+                  {
+                    "name": "咖啡豆",
+                    "text": "明天，后天嘛？残奥会不是举行3天",
+                    "replies": [
+                      {
+                        "name": "掉线",
+                        "text": "感觉看猪办方心情",
+                        "replies": []
+                      },
+                      {
+                        "name": "掉线",
+                        "text": "虽然猪办方天天装高冷装神秘耍猪排",
+                        "replies": []
+                      },
+                      {
+                        "name": "掉线",
+                        "text": "但是热心善良的掉线帮你找到了当时的通知",
+                        "replies": []
+                      },
+                      {
+                        "name": "掉线",
+                        "text": "看原本的意思好像是中秋节完成4张😱😱😱😱😱😱😱难道后面还有别的",
+                        "replies": []
+                      },
+                      {
+                        "name": "掉线",
+                        "text": "但马拉松可以提前 怀疑猪办方想速速办完",
+                        "replies": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "咖啡豆",
+                    "text": "明天可以玩",
+                    "replies": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "咖啡豆",
+            "text": "\\两企鹅私密马赛",
+            "replies": []
+          },
+          {
+            "name": "咖啡豆",
+            "text": "\\企鹅豆对不起",
+            "replies": []
+          },
+          {
+            "name": "咖啡豆",
+            "text": "\\中秋快乐",
+            "replies": []
+          },
+          {
+            "name": "咖啡豆",
+            "text": "祝主宰们中秋快乐🎑",
+            "replies": [
+              {
+                "name": "miss",
+                "text": "玩的开心咖啡🐷",
+                "replies": []
+              },
+              {
+                "name": "miss",
+                "text": "\\比比芙芙08飞吻",
+                "replies": []
+              },
+              {
+                "name": "炸鸡",
+                "text": "藕不是主宰 藕是创始人",
+                "replies": [
+                  {
+                    "name": "咖啡豆",
+                    "text": "\\牛受牛牛一拜",
+                    "replies": []
+                  },
+                  {
+                    "name": "咖啡豆",
+                    "text": "是噢",
+                    "replies": []
+                  },
+                  {
+                    "name": "掉线",
+                    "text": "是藕你就乖乖躺下被吃",
+                    "replies": []
+                  }
+                ]
+              },
+              {
+                "name": "炸鸡",
+                "text": "\\微信创意表情笑死我了",
+                "replies": []
+              }
+            ]
+          },
+          {
+            "name": "掉线",
+            "text": "谁又惹他了",
+            "replies": []
+          },
+          {
+            "name": "掉线",
+            "text": "意思是除了色雾其他关死了就是死了😱😱😱😱😱😱😱不能重生了😱😱😱😱😱😱",
+            "replies": []
+          },
+          {
+            "name": "掉线",
+            "text": "简直没有猪性",
+            "replies": []
+          },
+          {
+            "name": "掉线",
+            "text": "谁同意了",
+            "replies": []
+          },
+          {
+            "name": "掉线",
+            "text": "擅自考验",
+            "replies": []
+          },
+          {
+            "name": "掉线",
+            "text": "小短腿做不到这些😱😱😱😱😱😱😱",
+            "replies": []
+          },
+          {
+            "name": "掉线",
+            "text": "中秋这种和平的节日高难真的对吗 一点不符合节日调性",
+            "replies": []
+          },
+          {
+            "name": "咖啡豆",
+            "text": "大家记得穿小的一点的鞋，或者不穿鞋",
+            "replies": [
+              {
+                "name": "掉线",
+                "text": "穿狼爪",
+                "replies": [
+                  {
+                    "name": "咖啡豆",
+                    "text": "或者穿躺豆这种",
+                    "replies": []
+                  },
+                  {
+                    "name": "咖啡豆",
+                    "text": "小jio",
+                    "replies": [
+                      {
+                        "name": "掉线",
+                        "text": "笑死了",
+                        "replies": []
+                      },
+                      {
+                        "name": "掉线",
+                        "text": "要不是有截图都看不见躺豆昨日穿搭",
+                        "replies": []
+                      },
+                      {
+                        "name": "掉线",
+                        "text": "我最近就在想要是场地这样岂不是不方便观战",
+                        "replies": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "commentCount": 0
+      },
+      {
+        "id": "hotspot-30",
+        "title": "DLC马拉松今日上线",
+        "time": "2026/09/26/17:00",
+        "content": "已预订，漫长/轻松，《马拉松》即将开始！",
+        "comments": [],
+        "commentCount": 0
       }
     ]
   }
