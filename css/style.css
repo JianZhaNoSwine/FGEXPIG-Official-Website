@@ -5182,6 +5182,10 @@ html.outer-screen-layout .page-section {
   overflow-y: auto;
   scrollbar-width: none;
 }
+/* 商店首页的底部留白会动态测出，其他外屏页面复用同一安全区高度。 */
+html.outer-screen-layout .page-section:not(.outer-home-view-home) {
+  padding-bottom: var(--outer-content-bottom-safe, 54px) !important;
+}
 html.outer-screen-layout .page-section::-webkit-scrollbar { width: 0; height: 0; }
 
 html.outer-screen-layout body::after {
@@ -6363,4 +6367,242 @@ html:not(.outer-screen-layout) #pages.entering .card-scroll-track {
 /* 非外屏模式：中间主卡壳保持不动，只让内部内容切换。 */
 html:not(.outer-screen-layout) #pages.entering .page.active .page-section.active .section-card[data-reusable-card="1"] {
   animation: none !important;
+}
+
+html.exp-data-loading #userExpRing {
+  opacity: 0;
+}
+
+/* 非外屏模式：底栏不参与沉浸光效，只保留特殊指针。 */
+html:not(.outer-screen-layout) .dock-item {
+  --dock-corner-color: #fff;
+  --dock-corner-thickness: 1px;
+  --dock-corner-length: 14px;
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-sizing: border-box;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+html:not(.outer-screen-layout) .dock-item.active {
+  --dock-corner-color: var(--accent-pink);
+  --dock-corner-thickness: 3px;
+  --dock-corner-length: 18px;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 8px 14px;
+}
+html:not(.outer-screen-layout) .dock-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: 0;
+  background-image:
+    linear-gradient(var(--dock-corner-color), var(--dock-corner-color)),
+    linear-gradient(var(--dock-corner-color), var(--dock-corner-color)),
+    linear-gradient(var(--dock-corner-color), var(--dock-corner-color)),
+    linear-gradient(var(--dock-corner-color), var(--dock-corner-color)),
+    linear-gradient(var(--dock-corner-color), var(--dock-corner-color)),
+    linear-gradient(var(--dock-corner-color), var(--dock-corner-color)),
+    linear-gradient(var(--dock-corner-color), var(--dock-corner-color)),
+    linear-gradient(var(--dock-corner-color), var(--dock-corner-color));
+  background-position:
+    left top, left top,
+    right top, right top,
+    left bottom, left bottom,
+    right bottom, right bottom;
+  background-size:
+    var(--dock-corner-length) var(--dock-corner-thickness),
+    var(--dock-corner-thickness) var(--dock-corner-length),
+    var(--dock-corner-length) var(--dock-corner-thickness),
+    var(--dock-corner-thickness) var(--dock-corner-length),
+    var(--dock-corner-length) var(--dock-corner-thickness),
+    var(--dock-corner-thickness) var(--dock-corner-length),
+    var(--dock-corner-length) var(--dock-corner-thickness),
+    var(--dock-corner-thickness) var(--dock-corner-length);
+  background-repeat: no-repeat;
+}
+
+html:not(.outer-screen-layout) .dock-item::before {
+  display: none !important;
+}
+
+html:not(.outer-screen-layout) .dock-selected-frame {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 3;
+  width: calc(var(--card-w) * 1.16);
+  height: calc(var(--card-h) * 1.16);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  border-radius: 0;
+}
+html:not(.outer-screen-layout) .dock-selected-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 0;
+  background-image:
+    linear-gradient(var(--accent-pink), var(--accent-pink)),
+    linear-gradient(var(--accent-pink), var(--accent-pink)),
+    linear-gradient(var(--accent-pink), var(--accent-pink)),
+    linear-gradient(var(--accent-pink), var(--accent-pink)),
+    linear-gradient(var(--accent-pink), var(--accent-pink)),
+    linear-gradient(var(--accent-pink), var(--accent-pink)),
+    linear-gradient(var(--accent-pink), var(--accent-pink)),
+    linear-gradient(var(--accent-pink), var(--accent-pink));
+  background-position:
+    left top, left top,
+    right top, right top,
+    left bottom, left bottom,
+    right bottom, right bottom;
+  background-size:
+    18px 3px, 3px 18px,
+    18px 3px, 3px 18px,
+    18px 3px, 3px 18px,
+    18px 3px, 3px 18px;
+  background-repeat: no-repeat;
+}
+.dock-selected-frame { display: none; }
+html:not(.outer-screen-layout) .dock-item:not(.active)::before {
+  display: none !important;
+}
+html:not(.outer-screen-layout) .dock {
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}
+html:not(.outer-screen-layout):not(.performance-mode) .dock-item {
+  /* 只过渡位移：显示/隐藏必须瞬时完成，避免屏幕外回收换位时出现可见淡入淡出 */
+  transition:
+    transform 0.5s var(--ease-out),
+    background 0s,
+    border-color 0s;
+}
+html:not(.outer-screen-layout) .dock.dragging .dock-item {
+  transition: none !important;
+}
+/* 无缝循环：卡片跨越 ±N/2（此时已在可视区外）时直接瞬移，避免横穿整屏的假动画 */
+html:not(.outer-screen-layout) .dock-item.dock-jump {
+  transition: none !important;
+}
+/* 滚轮连续驱动：位移逐帧计算，需关闭过渡 */
+html:not(.outer-screen-layout) .dock.is-wheel-scrolling .dock-item {
+  transition: none !important;
+}
+html:not(.outer-screen-layout) .dock-item img {
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.48)) drop-shadow(0 5px 9px rgba(0, 0, 0, 0.28));
+}
+html:not(.outer-screen-layout) .dock-item::after {
+  opacity: 0 !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+/* 资源浏览卡片：精选五角星开关 */
+.files-featured-toggle {
+  position: absolute;
+  right: -9px;
+  top: 50%;
+  z-index: 4;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+.files-featured-toggle[hidden] { display: none !important; }
+.files-featured-toggle svg { display: block; width: 21px; height: 21px; overflow: visible; }
+.files-featured-toggle svg path { fill: none; stroke: currentColor; }
+.files-featured-toggle.is-selected { color: var(--accent-pink); }
+.files-featured-toggle.is-selected svg path { fill: currentColor; stroke: currentColor; }
+.files-featured-toggle:active { transform: translateY(-50%) scale(0.92); }
+html.portrait-layout:not(.outer-screen-layout) .files-browse-card .files-featured-toggle {
+  right: 28px;
+}
+
+/* 外屏精选星标使用顶栏右侧标准按钮。 */
+html.outer-screen-layout .top-action-button.is-featured {
+  color: var(--accent-pink);
+}
+html.outer-screen-layout .top-action-button.is-featured svg path {
+  fill: currentColor;
+  stroke: currentColor;
+}
+/* 访客隐私保护：仅访客隐藏经验/称号/排行榜，并保留登录入口。 */
+html.guest-user .tb-avatar-ring,
+html.guest-user .tb-avatar-level,
+html.guest-user #navTitleSwitch,
+html.guest-user .pause-menu-ads,
+html.guest-user .bottom-exp-hud,
+html.guest-user .files-featured-toggle {
+  display: none !important;
+}
+html.guest-user.outer-screen-layout .settings-rank-card {
+  display: none !important;
+}
+html.guest-user.outer-screen-layout .settings-personal-card {
+  display: flex !important;
+}
+html.guest-user.outer-screen-layout .settings-title-action {
+  display: none !important;
+}
+html.guest-user .shop-owned-bar {
+  cursor: default;
+}
+html.guest-user .shop-owned-bar.is-guest-disabled {
+  opacity: 1;
+}
+
+.hotspot-comments-card.is-guest-protected > .section-card-body {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--achv-item-h);
+}
+.guest-comment-notice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  text-align: center;
+}
+.guest-comment-notice-line {
+  color: var(--text-primary);
+  font: inherit;
+  font-size: var(--text-large);
+  line-height: var(--hotspot-line-height);
+  white-space: nowrap;
+}
+.guest-comment-login {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--accent-pink);
+  font: inherit;
+  line-height: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.guest-comment-login:hover,
+.guest-comment-login:focus-visible {
+  color: var(--accent-pink);
+  outline: none;
 }

@@ -84,13 +84,17 @@
     if (section._settingsPersonalActions) section._settingsPersonalActions.hidden = false;
     if (b != null) { b.leaveSecondary(section); b.refreshTopActions(); }
   };
-  var accountPage = null, accountUser = null, accountPass = null, accountError = null;
+  var accountPage = null, accountUser = null, accountPass = null, accountError = null, accountLogout = null;
   function hideAccountPage() { if (accountPage == null) return; accountPage.hidden = true; document.documentElement.classList.remove('outer-account-page-open'); }
   function buildAccountPage() {
     var b = bridge(); if (b == null) return;
     accountPage = document.createElement('section'); accountPage.className = 'settings-outer-account-page'; accountPage.hidden = true;
     var logout = document.getElementById('accountLogoutTop').cloneNode(true); logout.removeAttribute('id'); logout.className = 'settings-outer-account-logout';
-    logout.addEventListener('click', function () { b.logoutInlineAccount(); hideAccountPage(); });
+    accountLogout = logout;
+    logout.addEventListener('click', function () {
+      if (logout.getAttribute('data-guest-return') === '1') { hideAccountPage(); return; }
+      b.logoutInlineAccount(); hideAccountPage();
+    });
     var form = document.getElementById('accountLoginForm').cloneNode(true); clearIds(form); form.className = 'account-login-card settings-outer-account-card';
     var inputs = form.querySelectorAll('.login-input'); accountUser = inputs[0]; accountPass = inputs[1]; accountError = form.querySelector('.login-error');
     var cancel = form.querySelector('.login-cancel'); if (cancel) cancel.addEventListener('click', function () { hideAccountPage(); });
@@ -102,6 +106,11 @@
   window.openOuterAccountPage = function () {
     var b = bridge(); if (b == null) return; buildAccountPage();
     var account = b.currentAccountRecord(); var currentUser = b.getUser();
+    var guestReturn = !!currentUser && !currentUser.isAdmin && String(currentUser.name || '').trim() === '访客用户';
+    if (accountLogout) {
+      accountLogout.textContent = guestReturn ? '返回' : '退出登录';
+      accountLogout.setAttribute('data-guest-return', guestReturn ? '1' : '0');
+    }
     accountError.textContent = ''; accountPass.value = '';
     accountUser.value = account && account.user ? account.user : (currentUser && currentUser.isAdmin ? 'admin' : '');
     accountPage.hidden = false;

@@ -327,5 +327,74 @@
         "category": "开发文件"
       }
     ]
+  },
+  "featuredLists": {
+    "JFES130": [
+      {
+        "file": "cj150.png",
+        "title": "正赛总成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj160.png",
+        "title": "猪需要背背成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj111.png",
+        "title": "跳远成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj110.png",
+        "title": "跨栏成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj109.png",
+        "title": "游泳成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj108.png",
+        "title": "篮球成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj107.png",
+        "title": "棒球成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj106.png",
+        "title": "高尔夫成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj105.png",
+        "title": "拳击成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj104.png",
+        "title": "攀岩成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj103.png",
+        "title": "平衡木成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj102.png",
+        "title": "震荡球成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj101.png",
+        "title": "1000m成绩",
+        "category": "成绩文件"
+      }
+    ]
   }
 };

@@ -302,5 +302,79 @@
         "category": "宣传文件"
       }
     ]
+  },
+  "featuredLists": {
+    "JFES180": [
+      {
+        "file": "cj250.png",
+        "title": "正赛总成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj270.png",
+        "title": "马拉松成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj260.png",
+        "title": "残奥会成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj211.png",
+        "title": "平衡搏击成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj210.png",
+        "title": "风力跳远成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj209.png",
+        "title": "二维跨栏成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj208.png",
+        "title": "低重力游泳成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj207.png",
+        "title": "躲避球成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj206.png",
+        "title": "动态高尔夫成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj205.png",
+        "title": "雪橇车成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj204.png",
+        "title": "滑雪成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj203.png",
+        "title": "冰球成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj202.png",
+        "title": "蜂窝三项成绩",
+        "category": "成绩文件"
+      },
+      {
+        "file": "cj201.png",
+        "title": "800m成绩",
+        "category": "成绩文件"
+      }
+    ]
   }
 };

@@ -15,7 +15,7 @@
     'JFES140', 'JFES150', 'JFES160', 'JFES170',
     'JFES175', 'JFES180', 'JFES190', 'JFES200', 'JZP1200'
   ];
-  // 中心两侧各显示的槽位数
+  // 外屏/内屏兼容路径的可见窗口；非外屏改由中间卡片组的实际边界计算。
   var SIDE_SLOTS = 3;
 
   // 站点名：网页标题默认值，并作为各活动页标题的后缀（便于搜索引擎分别收录各活动）
@@ -194,7 +194,9 @@
   var postPh = [];  // 结尾后的占位空框（不可选中）
   var logoUnavailable = {}; // logo URL -> 已知不存在
   var dockSig = '';   // 已构建底栏的活动列表签名，避免重复重建
-  var EDGE_PAD = 3;   // 首尾各补的空框数量
+  var dockCenterBase = 0; // 循环底栏虚拟中心基准（N 的整数倍，槽位编号可正可负）
+  var fastDockMotion = false; // 滚轮连续滑动中：跳过每帧几何重测量与光效刷新，避免卡顿
+  var EDGE_PAD = 12;  // 首尾占位容量；外屏仍只显示原来的 3 格
 
   var imageExistsCache = {};
   var imageExistsPending = {};
@@ -288,10 +290,12 @@
     return LOGOS.indexOf(hashId) >= 0 ? hashId : '';
   }
 
-  function buildDockItem(name, i) {
+  function buildDockItem(name, i, slot) {
     var el = document.createElement('div');
     el.className = 'dock-item is-empty';
     el.dataset.id = name;
+    el.dataset.activityIndex = String(i);
+    el._dockSlot = slot;
     var resolvedLogoUrl = logoUrl(name);
     if (!logoUnavailable[resolvedLogoUrl]) {
       var img = document.createElement('img');
@@ -346,10 +350,15 @@
     prePh = [];
     postPh = [];
     for (var p = 0; p < EDGE_PAD; p++) prePh.push(makePlaceholder());
-    LOGOS.forEach(function (name, i) {
-      items.push(buildDockItem(name, i));
-    });
+    // 堆栈式无缝循环卡片池：铺四份活动列表（4N 张卡片）；
+    // 卡片从一侧离开屏幕后立即被回收到另一侧屏幕之外进入，换位永远发生在视口以外。
+    for (var copy = 0; copy < 4; copy++) {
+      LOGOS.forEach(function (name, i) {
+        items.push(buildDockItem(name, i, items.length));
+      });
+    }
     for (var q = 0; q < EDGE_PAD; q++) postPh.push(makePlaceholder());
+    dockCenterBase = 0;
 
     stagePageMode = !shouldUseOuterScreenLayout();
     if (stagePageMode) {
@@ -622,9 +631,27 @@
   }
   // 统一取槽位元素：j<0 为开头占位，j>=活动数 为结尾占位
   function slotElAt(j) {
-    if (j < 0) return prePh[-1 - j];
-    if (j >= items.length) return postPh[j - items.length];
-    return items[j];
+    if (j < 0) return prePh[-1 - j] || null;
+    if (j < items.length) return items[j] || null;
+    return postPh[j - items.length] || null;
+  }
+
+  // 非外屏（正屏/宽屏）底栏是否首尾无缝循环
+  function dockLoopEnabled() {
+    if (LOGOS.length < 3) return false;
+    var root = document.documentElement;
+    return !root.classList.contains('outer-screen-layout') && !root.classList.contains('inner-screen-layout');
+  }
+
+  // 取卡片布局左边（忽略 transform 动画），用于底栏蒙版对齐卡片真实边界。
+  function layoutLeftWithin(element, ancestor) {
+    var x = 0;
+    var node = element;
+    while (node && node !== ancestor) {
+      x += node.offsetLeft || 0;
+      node = node.offsetParent;
+    }
+    return x;
   }
 
   // 核心数据变化后同步底栏：列表不变则跳过；变化则重建并保持当前选中（找不到则落到最后一个）
@@ -668,6 +695,7 @@
     try { history.replaceState(null, '', '#' + cur); } catch (e) {}
     buildNav(cur);
     fillHomeSection(cur);
+    render();
     refreshPlayerMedia();
     applyMusic(cur);
     applyWallpaper(cur);
@@ -827,6 +855,7 @@
     document.documentElement.classList.toggle('inner-screen-layout', nextInnerScreen);
     document.documentElement.classList.toggle('portrait-layout', nextPortrait);
     document.documentElement.classList.toggle('outer-screen-layout', nextOuterScreen);
+    if (!nextOuterScreen) document.documentElement.style.removeProperty('--outer-content-bottom-safe');
     syncNonOuterCardBlurLayers();
     if (outerModeChanged && curNavLogo) buildNav(curNavLogo);
     if (!nextOuterScreen) {
@@ -855,12 +884,106 @@
 
   function render() {
     updateResponsiveLayoutMode();
-    readSlotSize();
-    var cardW = items[0].offsetWidth || slotSize;
-    var gap = slotSize - cardW;
-    if (!(gap > 0)) gap = 10;
+    if (!items.length) return;
 
-    var c = state.index + state.offset; // 虚拟中心（拖拽中带小数）
+    var cardW, gap;
+    if (fastDockMotion && dock._motionMetrics) {
+      // 连续滑动中版式不变：复用缓存尺寸，避免每帧强制布局造成卡顿。
+      cardW = dock._motionMetrics.cardW;
+      gap = dock._motionMetrics.gap;
+      slotSize = dock._motionMetrics.slotSize;
+    } else {
+      readSlotSize();
+      cardW = items[0].offsetWidth || slotSize;
+      gap = slotSize - cardW;
+      if (!(gap > 0)) gap = 10;
+      dock._motionMetrics = { cardW: cardW, gap: gap, slotSize: slotSize };
+    }
+
+    var rootElement = document.documentElement;
+    var outerDockMode = rootElement.classList.contains('outer-screen-layout');
+    var innerDockMode = rootElement.classList.contains('inner-screen-layout');
+    // 非外屏、非内屏才显示底栏：让槽位填到中间 3/2 卡片组的实际左右边界。
+    var useDockEdgeLayout = !outerDockMode && !innerDockMode;
+    var groupHalfWidth = 0;
+    var groupCenterOffset = 0;
+    var edgeFadeWidth = Math.max(18, Math.min(32, slotSize * 0.24));
+
+    if (useDockEdgeLayout && fastDockMotion) {
+      // 连续滑动中版式不变，直接用缓存值，避免每帧强制布局导致卡顿。
+      groupHalfWidth = dock._cachedGroupHalf || 0;
+      groupCenterOffset = dock._cachedGroupOffset || 0;
+    } else if (useDockEdgeLayout) {
+      var activeSection = pagesWrap ? pagesWrap.querySelector('.page.active .page-section.active') : null;
+      if (!activeSection && stagePageMode && stagePage) activeSection = stagePage.querySelector('.page-section');
+      if (!activeSection && pagesWrap) activeSection = pagesWrap.querySelector('.page-section');
+      if (activeSection) {
+        var sectionRect = activeSection.getBoundingClientRect();
+        var sectionStyle = getComputedStyle(activeSection);
+        var leftInset = parseFloat(sectionStyle.paddingLeft) || 0;
+        var rightInset = parseFloat(sectionStyle.paddingRight) || 0;
+        // 边界取中间卡片组「最左卡片的左边界 / 最右卡片的右边界」。
+        var groupLeft = sectionRect.left + leftInset;
+        var groupRight = sectionRect.right - rightInset;
+        var visibleCards = activeSection.querySelectorAll('.section-card');
+        var cardLeft = Infinity;
+        var cardRight = -Infinity;
+        for (var cardIndex = 0; cardIndex < visibleCards.length; cardIndex++) {
+          var cardEl = visibleCards[cardIndex];
+          var cardDisplay = getComputedStyle(cardEl).display;
+          if (cardDisplay === 'contents' || cardEl.offsetWidth < 1 || cardEl.offsetHeight < 1) continue;
+          var cardLayoutLeft = sectionRect.left + layoutLeftWithin(cardEl, activeSection);
+          var cardLayoutRight = cardLayoutLeft + cardEl.offsetWidth;
+          cardLeft = Math.min(cardLeft, cardLayoutLeft);
+          cardRight = Math.max(cardRight, cardLayoutRight);
+        }
+        if (isFinite(cardLeft) && isFinite(cardRight) && cardRight > cardLeft) {
+          groupLeft = cardLeft;
+          groupRight = cardRight;
+        }
+        var groupWidth = Math.max(0, groupRight - groupLeft);
+        if (groupWidth > 1) {
+          groupHalfWidth = groupWidth * 0.5;
+          groupCenterOffset = (groupLeft + groupRight) * 0.5 -
+            ((document.documentElement.clientWidth || window.innerWidth) * 0.5);
+          // 卡片边界外全透明，渐变只向边界内收，避免 logo 越过边界线仍然可见。
+          var dockMaskWidth = groupWidth + edgeFadeWidth * 2;
+          var leftBoundary = edgeFadeWidth;
+          var rightBoundary = edgeFadeWidth + groupWidth;
+          var leftOpaque = leftBoundary + edgeFadeWidth;
+          var rightOpaque = rightBoundary - edgeFadeWidth;
+          var dockMask = 'linear-gradient(90deg, transparent 0px, transparent ' +
+            leftBoundary.toFixed(2) + 'px, #000 ' +
+            leftOpaque.toFixed(2) + 'px, #000 ' +
+            rightOpaque.toFixed(2) + 'px, transparent ' +
+            rightBoundary.toFixed(2) + 'px, transparent ' +
+            dockMaskWidth.toFixed(2) + 'px)';
+          dock._cachedGroupHalf = groupHalfWidth;
+          dock._cachedGroupOffset = groupCenterOffset;
+          if (
+            Math.abs((dock._dockEdgeWidth || 0) - dockMaskWidth) > 0.5 ||
+            Math.abs((dock._dockEdgeBand || 0) - edgeFadeWidth) > 0.25
+          ) {
+            dock.style.width = dockMaskWidth.toFixed(2) + 'px';
+            dock.style.webkitMaskImage = dockMask;
+            dock.style.maskImage = dockMask;
+            dock._dockEdgeWidth = dockMaskWidth;
+            dock._dockEdgeBand = edgeFadeWidth;
+          }
+        }
+      }
+    }
+
+    if ((!useDockEdgeLayout || !groupHalfWidth) && dock._dockEdgeWidth) {
+      dock.style.width = '';
+      dock.style.webkitMaskImage = '';
+      dock.style.maskImage = '';
+      dock._dockEdgeWidth = 0;
+      dock._dockEdgeBand = 0;
+    }
+
+    var loopMode = dockLoopEnabled();
+    var c = state.index + state.offset + dockCenterBase; // 虚拟中心（含整圈基准，保证 select 后画面不跳）
     var n = Math.floor(c + 1e-9);       // 虚拟中心左侧卡片下标
     var f = c - n;                      // 小数部分
 
@@ -883,39 +1006,114 @@
       return x;
     }
 
-    for (var j = -EDGE_PAD; j < items.length + EDGE_PAD; j++) {
-      var el = slotElAt(j);
-      var isPh = j < 0 || j >= items.length;
+    function applyDockSlot(el, j, isPh) {
+      if (!el) return;
       var d = j - c; // 相对虚拟中心的距离（带小数）
       var abs = Math.abs(d);
-
       var scl = sAt(j);
       var x = cardX(j);
-
-      // 透明度：窗口内（左右各 3 个）始终全不透明；
-      // 出界后在约 1 个槽位距离内逐渐淡出，形成截断消失效果而非瞬间消失
       var op;
-      if (abs <= SIDE_SLOTS) {
+      var itemOverlapsGroup = true;
+
+      if (useDockEdgeLayout && groupHalfWidth > 0) {
+        // 非外屏不再整张 logo 淡出或模糊；部分在边界外的内容由 dock 水平蒙版裁成渐变。
         op = 1;
+        var itemHalfWidth = cardW * scl * 0.5;
+        var centeredX = x - groupCenterOffset;
+        itemOverlapsGroup = centeredX + itemHalfWidth > -groupHalfWidth &&
+          centeredX - itemHalfWidth < groupHalfWidth;
       } else {
-        op = Math.max(0, (SIDE_SLOTS + 1 - abs));
+        // 外屏/内屏沿用原有按虚拟槽位数量淡出的逻辑。
+        if (abs <= SIDE_SLOTS) {
+          op = 1;
+        } else {
+          op = Math.max(0, (SIDE_SLOTS + 1 - abs));
+        }
       }
 
       el.style.transform =
         'translate(-50%,-50%) translateX(' + x.toFixed(2) + 'px) scale(' + scl.toFixed(3) + ')';
       el.style.opacity = op.toFixed(3);
+      if (el.style.filter) el.style.filter = '';
       el.style.zIndex = String(100 - Math.round(abs * 10));
       // 占位框仅供显示：永不接收指针事件，不能被选中
-      el.style.pointerEvents = (!isPh && op > 0.02) ? 'auto' : 'none';
+      el.style.pointerEvents = (!isPh && op > 0.02 && itemOverlapsGroup) ? 'auto' : 'none';
 
-      if (!isPh && j === state.index && Math.abs(state.offset) < 0.5) {
-        el.classList.add('active');
-      } else {
-        el.classList.remove('active');
+      var isActive;
+      if (loopMode) isActive = !isPh && abs < 0.5;
+      else isActive = !isPh && j === state.index && Math.abs(state.offset) < 0.5;
+      el.classList.toggle('active', isActive);
+      el._dockHidden = false;
+    }
+
+    function hideDockSlot(el) {
+      if (!el || el._dockHidden) return;
+      el._dockHidden = true;
+      el.classList.remove('active');
+      el.style.opacity = '0';
+      el.style.pointerEvents = 'none';
+    }
+
+    if (loopMode && LOGOS.length) {
+      // 无缝循环：每张卡片有固定虚拟槽位，跟随条带一起移动；
+      // 只有跑到 ±1.5 圈（远在可视区外）的卡片才回收到另一侧，
+      // 可视区内的卡片永远保持原槽位连续平移，不会重排或重置位置。
+      var recycleEls = null;
+      var recycleHalf = items.length / 2;
+      // 显示范围以屏幕为准：屏幕外的卡片直接隐藏（opacity 无过渡，瞬时），
+      // 因此回收换位必定发生在屏幕之外，不可能出现任何可见的移动/排序动画。
+      var viewportHalfPx = (document.documentElement.clientWidth || window.innerWidth) * 0.5;
+      var windowHalf = Math.max(SIDE_SLOTS + 2, (viewportHalfPx + cardW * 2) / Math.max(1, cardW));
+      // 回收（±1 圈瞬移）必须随时进行，否则可视区会缺卡；
+      // 但回收点在最外圈（远在视口之外），且该卡片这一帧用 !important 关闭过渡，
+      // 下一帧末才恢复，因此回收永远是“视口外的瞬时换位”，不会产生任何排序动画。
+      for (var li = 0; li < items.length; li++) {
+        var loopEl = items[li];
+        if (!loopEl) continue;
+        var slot = typeof loopEl._dockSlot === 'number' ? loopEl._dockSlot : li;
+        var distance = slot - c;
+        if (distance > recycleHalf || distance < -recycleHalf) {
+          slot = distance > recycleHalf ? slot - items.length : slot + items.length;
+          distance = slot - c;
+          loopEl.style.setProperty('transition', 'none', 'important');
+          if (!recycleEls) recycleEls = [];
+          recycleEls.push(loopEl);
+        }
+        loopEl._dockSlot = slot;
+        // 始终更新位置：任何卡片都不会带着过期坐标再次出现，因此不存在位移动画。
+        applyDockSlot(loopEl, slot, false);
+        if (Math.abs(distance) > windowHalf) {
+          loopEl._dockFar = true;
+          loopEl.classList.remove('active');
+          loopEl.style.opacity = '0';
+          loopEl.style.pointerEvents = 'none';
+        } else {
+          loopEl._dockFar = false;
+        }
+      }
+      if (recycleEls) {
+        requestAnimationFrame(function (list) {
+          return function () {
+            requestAnimationFrame(function () {
+              for (var ri = 0; ri < list.length; ri++) list[ri].style.removeProperty('transition');
+            });
+          };
+        }(recycleEls));
+      }
+      for (var ph = 0; ph < prePh.length; ph++) hideDockSlot(prePh[ph]);
+      for (var ph2 = 0; ph2 < postPh.length; ph2++) hideDockSlot(postPh[ph2]);
+    } else {
+      for (var j = -EDGE_PAD; j < LOGOS.length + EDGE_PAD; j++) {
+        applyDockSlot(slotElAt(j), j, j < 0 || j >= LOGOS.length);
       }
     }
     syncCenterCardWidth();
-    scheduleCursorGlowUpdate(600, true);
+    if (!fastDockMotion) {
+      // 底栏卡片位置已变化，光效目标缓存必须同步失效，避免切换到旧卡片坐标。
+      if (!dock.classList.contains('dragging')) invalidateCursorTargetCache();
+      scheduleCursorGlowUpdate(900, true);
+    }
+    if (Math.abs(state.offset) < 0.001) scheduleOuterContentBottomSafe();
   }
 
   /* ---------- 选择某个 logo ---------- */
@@ -1995,6 +2193,9 @@
     var shell = reusableCardShellPool[key];
     if (!shell) {
       var card = document.createElement('div');
+      // attachManualScroll 需要沿 DOM 找到 .section-card；复用壳首次创建时
+      // 必须在挂载滚动条前先设置类名，否则滚动指示条会被静默跳过。
+      card.className = 'section-card';
       var title = options.includeTitle === false ? null : document.createElement('div');
       var body = document.createElement('div');
       if (title) {
@@ -2608,8 +2809,46 @@
     configureTopActions();
   }
 
+  function makeGuestCommentNotice() {
+    var notice = document.createElement('div');
+    notice.className = 'guest-comment-notice';
+    var line = document.createElement('span');
+    line.className = 'guest-comment-notice-line';
+    line.appendChild(document.createTextNode('请 '));
+    var login = document.createElement('button');
+    login.type = 'button';
+    login.className = 'guest-comment-login';
+    login.textContent = '登录';
+    login.setAttribute('aria-label', '登录后查看所有评论');
+    login.addEventListener('click', function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      openGuestLoginPage();
+    });
+    line.appendChild(login);
+    line.appendChild(document.createTextNode(' 后查看所有评论'));
+    notice.appendChild(line);
+    return notice;
+  }
+
   function renderHotspotComments(id, section, keepScrollTop) {
     if (!section || !section._hotspot) return;
+    if (isGuestUser()) {
+      section._hotspot.commentsView = 'overview';
+      section._hotspot.activeComment = null;
+      section._hotspot.commentsOverviewScrollTop = 0;
+      section._hotspot.commentsCard.classList.add('is-guest-protected');
+      if (section._hotspot.commentsBackBtn) section._hotspot.commentsBackBtn.hidden = true;
+      if (section._hotspot.sortBtn) section._hotspot.sortBtn.hidden = true;
+      if (section._hotspot.sortModeBtn) section._hotspot.sortModeBtn.hidden = true;
+      var guestBody = section._hotspot.commentsBody;
+      guestBody.innerHTML = '';
+      guestBody.appendChild(makeGuestCommentNotice());
+      guestBody.scrollTop = 0;
+      animateCardBody(guestBody, 0);
+      return;
+    }
+    section._hotspot.commentsCard.classList.remove('is-guest-protected');
     if (section._hotspot.sortBtn) section._hotspot.sortBtn.hidden = false;
     if (section._hotspot.sortModeBtn) section._hotspot.sortModeBtn.hidden = false;
     if (section._hotspot.commentsView === 'detail' && section._hotspot.activeComment) {
@@ -2739,17 +2978,20 @@
   var resourcePageState = {};
   var RESOURCE_LIST_KEY = 'fgexpig_resource_lists_v1';
   var RESOURCE_LIST_MAGIC = 'FGEXPIG-RESOURCE-LIST-BACKUP';
-  var resourceListStore = { lists: {} };
+  var resourceListStore = { lists: {}, featuredLists: {} };
   var resourceListFetchPromises = {};
 
   function filesPageState(id) {
     if (!resourcePageState[id]) {
       resourcePageState[id] = {
         items: null,
+        featuredItems: null,
         dates: null,
         listPromise: null,
         datePromise: null,
         selectedPicture: null,
+        selectedFeaturedPicture: null,
+        showFeatured: false,
         selectedDate: null
       };
     }
@@ -2781,10 +3023,18 @@
     }).filter(Boolean);
   }
 
-  function parseResourceListTxt(text) {
+  function normalizeResourceListMap(map) {
+    var normalized = {};
+    Object.keys(map || {}).forEach(function (id) {
+      normalized[id] = normalizeResourceListRows(map[id]);
+    });
+    return normalized;
+  }
+
+  function parseResourceListRows(lines) {
     var rows = [];
-    String(text || '').split(/\r?\n/).forEach(function (line) {
-      var raw = line.trim();
+    (lines || []).forEach(function (line) {
+      var raw = String(line || '').trim();
       if (!raw || raw.charAt(0) === '#') return;
       var parts = raw.split(/[，,]/);
       if (parts.length < 2) return;
@@ -2799,8 +3049,37 @@
     return rows;
   }
 
+  function parseResourceListTxt(text) {
+    var groups = [];
+    var current = [];
+    String(text || '').split(/\r?\n/).forEach(function (line) {
+      var raw = line.trim();
+      if (raw.charAt(0) === '#') return;
+      if (!raw) {
+        if (current.length) {
+          groups.push(current);
+          current = [];
+        }
+        return;
+      }
+      current.push(raw);
+    });
+    if (current.length) groups.push(current);
+    var featuredLines = groups.slice(1).reduce(function (all, group) {
+      return all.concat(group);
+    }, []);
+    return {
+      rows: parseResourceListRows(groups[0] || []),
+      featured: parseResourceListRows(featuredLines)
+    };
+  }
+
   function resourceListRowsOf(id) {
     return (resourceListStore.lists || {})[id] || [];
+  }
+
+  function resourceFeaturedRowsOf(id) {
+    return (resourceListStore.featuredLists || {})[id] || [];
   }
 
   function saveResourceLists() {
@@ -2812,10 +3091,10 @@
       var raw = null;
       if (!raw) return false;
       var parsed = JSON.parse(raw);
-      if (!parsed || !parsed.lists) return false;
-      Object.keys(parsed.lists).forEach(function (id) {
-        parsed.lists[id] = normalizeResourceListRows(parsed.lists[id]);
-      });
+      if (!parsed || (!parsed.lists && !parsed.featuredLists && !parsed.featured)) return false;
+      parsed.lists = normalizeResourceListMap(parsed.lists);
+      parsed.featuredLists = normalizeResourceListMap(parsed.featuredLists || parsed.featured);
+      delete parsed.featured;
       resourceListStore = parsed;
       return true;
     } catch (e) {}
@@ -2824,13 +3103,21 @@
 
   function applyResourceListData(id) {
     var rows = resourceListRowsOf(id);
+    var featured = resourceFeaturedRowsOf(id);
     var state = filesPageState(id);
     state.items = rows;
+    state.featuredItems = featured;
+    if (!featured.length) state.showFeatured = false;
     if (!rows.some(function (row) { return row.file === state.selectedPicture; })) {
       state.selectedPicture = rows.length ? rows[0].file : null;
     }
+    if (!featured.some(function (row) { return row.file === state.selectedFeaturedPicture; })) {
+      state.selectedFeaturedPicture = featured.length ? featured[0].file : null;
+    }
     var meta = document.getElementById('resourceListMeta');
-    if (meta) meta.textContent = rows.length ? ('已加载 ' + rows.length + ' 条资源') : '未加载';
+    if (meta) meta.textContent = (rows.length || featured.length)
+      ? ('已加载 ' + rows.length + ' 条资源' + (featured.length ? '，' + featured.length + ' 条精选' : ''))
+      : '未加载';
     var pageIndex = LOGOS.indexOf(id);
     var page = pageIndex >= 0 ? pages[pageIndex] : null;
     var section = page ? page.querySelector('.page-section[data-section="files"]') : null;
@@ -2838,8 +3125,9 @@
   }
 
   function exportResourceList(id) {
-    var data = { lists: {} };
+    var data = { lists: {}, featuredLists: {} };
     data.lists[id] = resourceListRowsOf(id);
+    data.featuredLists[id] = resourceFeaturedRowsOf(id);
     var payload = { magic: RESOURCE_LIST_MAGIC, version: 1, exportedAt: new Date().toISOString(), data: data };
     payload.checksum = checksum(JSON.stringify(data));
     var content =
@@ -2863,6 +3151,7 @@
       var text = String(reader.result || '');
       try {
         var rows;
+        var featured;
         if (/\.js$/i.test(file.name) && text.indexOf(RESOURCE_LIST_MAGIC) >= 0) {
           var match = text.match(/window\.FGEXPIG_RESOURCE_LIST_BACKUP\s*=\s*(\{[\s\S]*\});/);
           if (!match) throw new Error('format');
@@ -2870,15 +3159,23 @@
           if (!payload || payload.magic !== RESOURCE_LIST_MAGIC) throw new Error('magic');
           if (payload.checksum !== checksum(JSON.stringify(payload.data))) throw new Error('checksum');
           rows = normalizeResourceListRows(payload.data && payload.data.lists && payload.data.lists[id]);
+          featured = normalizeResourceListRows(
+            payload.data && (payload.data.featuredLists && payload.data.featuredLists[id] ||
+              payload.data.featured && payload.data.featured[id])
+          );
         } else {
-          rows = parseResourceListTxt(text);
+          var parsed = parseResourceListTxt(text);
+          rows = parsed.rows;
+          featured = parsed.featured;
         }
-        if (!rows.length) throw new Error('empty');
+        if (!rows.length && !featured.length) throw new Error('empty');
         if (!resourceListStore.lists) resourceListStore.lists = {};
+        if (!resourceListStore.featuredLists) resourceListStore.featuredLists = {};
         resourceListStore.lists[id] = rows;
+        resourceListStore.featuredLists[id] = featured;
         saveResourceLists();
         applyResourceListData(id);
-        alert('导入成功：' + id + ' 共 ' + rows.length + ' 条资源');
+        alert('导入成功：' + id + ' 共 ' + rows.length + ' 条资源' + (featured.length ? '，' + featured.length + ' 条精选' : ''));
       } catch (err) {
         alert('导入失败：' + (err.message === 'checksum' ? '校验未通过' : err.message === 'empty' ? '未解析到有效资源' : '文件格式错误'));
       }
@@ -2895,13 +3192,101 @@
     if (state.listPromise) return state.listPromise;
     state.listPromise = fetchResourceList(id).then(function () {
       var rows = resourceListRowsOf(id);
+      var featured = resourceFeaturedRowsOf(id);
       state.items = rows;
+      state.featuredItems = featured;
+      if (!featured.length) state.showFeatured = false;
       if (!rows.some(function (row) { return row.file === state.selectedPicture; })) {
         state.selectedPicture = rows.length ? rows[0].file : null;
+      }
+      if (!featured.some(function (row) { return row.file === state.selectedFeaturedPicture; })) {
+        state.selectedFeaturedPicture = featured.length ? featured[0].file : null;
       }
       return rows;
     });
     return state.listPromise;
+  }
+
+  var RESOURCE_FEATURED_STAR_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.7l2.85 5.78 6.38.93-4.62 4.5 1.09 6.36L12 17.28l-5.7 2.99 1.09-6.36-4.62-4.5 6.38-.93L12 2.7z" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"></path></svg>';
+
+  function resourceRowVisibleToGuest(item) {
+    return !!item && String(item.category || '').trim() === '宣传文件';
+  }
+
+  function guestVisibleResourceRows(rows) {
+    if (!isGuestUser()) return rows || [];
+    return (rows || []).filter(resourceRowVisibleToGuest);
+  }
+
+  function activeResourceItems(id) {
+    var state = filesPageState(id);
+    var rows = state.showFeatured ? (state.featuredItems || []) : (state.items || []);
+    return guestVisibleResourceRows(rows);
+  }
+
+  function activeResourceSelectedFile(id) {
+    var state = filesPageState(id);
+    var selected = state.showFeatured ? state.selectedFeaturedPicture : state.selectedPicture;
+    if (isGuestUser()) {
+      var rows = activeResourceItems(id);
+      if (!rows.some(function (row) { return row.file === selected; })) {
+        selected = rows.length ? rows[0].file : null;
+      }
+    }
+    return selected;
+  }
+
+  function updateResourceFeaturedToggle(id, section) {
+    if (!section || !section._files || !section._files.featuredToggle) return;
+    // 卡片壳会在活动之间复用：始终以当前绑定的活动 ID 为准，避免读到已释放的旧状态。
+    if (section._filesId) id = section._filesId;
+    var state = filesPageState(id);
+    var button = section._files.featuredToggle;
+    if (isGuestUser()) {
+      button.hidden = true;
+      button.classList.remove('is-selected');
+      button.setAttribute('aria-pressed', 'false');
+      button.setAttribute('aria-label', '登录后可查看精选浏览');
+      return;
+    }
+    var hasFeatured = !!(state.featuredItems && state.featuredItems.length);
+    button.hidden = !hasFeatured;
+    button.classList.toggle('is-selected', hasFeatured && state.showFeatured);
+    button.setAttribute('aria-pressed', hasFeatured && state.showFeatured ? 'true' : 'false');
+    button.setAttribute('aria-label', hasFeatured && state.showFeatured ? '退出精选浏览' : '进入精选浏览');
+  }
+
+  function toggleResourceFeatured(id, section) {
+    if (isGuestUser()) return;
+    if (section && section._filesId) id = section._filesId;
+    var state = filesPageState(id);
+    if (!state.featuredItems || !state.featuredItems.length) {
+      state.featuredItems = resourceFeaturedRowsOf(id);
+    }
+    if (!state.featuredItems || !state.featuredItems.length) return;
+    state.showFeatured = !state.showFeatured;
+    if (state.showFeatured && !state.featuredItems.some(function (row) {
+      return row.file === state.selectedFeaturedPicture;
+    })) {
+      state.selectedFeaturedPicture = state.featuredItems[0].file;
+    }
+    renderFilesPage(id, section);
+  }
+
+  function makeResourceFeaturedToggle(id, section) {
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'files-featured-toggle';
+    button.hidden = true;
+    button.setAttribute('aria-pressed', 'false');
+    button.setAttribute('aria-label', '进入精选浏览');
+    button.innerHTML = RESOURCE_FEATURED_STAR_ICON;
+    button.addEventListener('click', function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleResourceFeatured((section && section._filesId) || id, section);
+    });
+    return button;
   }
 
   var SCHEDULE_KEY = 'fgexpig_schedules_v1';
@@ -3080,9 +3465,10 @@
 
   function makeResourcePreviewCard(id, section, item, index) {
     var state = filesPageState(id);
+    var selectedFile = state.showFeatured ? state.selectedFeaturedPicture : state.selectedPicture;
     var card = document.createElement('button');
     card.type = 'button';
-    card.className = 'hotspot-post-item resource-preview-card' + (state.selectedPicture === item.file ? ' is-selected' : '');
+    card.className = 'hotspot-post-item resource-preview-card' + (selectedFile === item.file ? ' is-selected' : '');
     card.setAttribute('aria-label', '选择资源 ' + (item.title || item.file));
     card._resourceFile = item.file;
 
@@ -3512,6 +3898,7 @@
   }
 
   function renderResourceViewer(id, section, selected, animate) {
+    if (selected && isGuestUser() && !resourceRowVisibleToGuest(selected)) selected = null;
     var viewerBody = section._files.viewerBody;
     var oldViewer = viewerBody.querySelector('.resource-viewer');
     if (!selected) {
@@ -3543,6 +3930,7 @@
 
   function openResourceImageOverlay(id, selected) {
     if (!selected) return;
+    if (isGuestUser() && !resourceRowVisibleToGuest(selected)) return;
     var oldOverlay = document.querySelector('.resource-image-overlay');
     if (oldOverlay && oldOverlay.parentNode) oldOverlay.parentNode.removeChild(oldOverlay);
     var overlay = document.createElement('div');
@@ -3696,12 +4084,13 @@
   }
   function selectResourcePicture(id, section, file) {
     var state = filesPageState(id);
-    state.selectedPicture = file;
+    if (state.showFeatured) state.selectedFeaturedPicture = file;
+    else state.selectedPicture = file;
     var cards = section._files.browseBody.querySelectorAll('.resource-preview-card');
     for (var i = 0; i < cards.length; i++) {
       cards[i].classList.toggle('is-selected', cards[i]._resourceFile === file);
     }
-    var selected = (state.items || []).filter(function (item) {
+    var selected = activeResourceItems(id).filter(function (item) {
       return item.file === file;
     })[0] || null;
     var outerViewer = document.documentElement.classList.contains('outer-screen-layout');
@@ -3714,14 +4103,21 @@
 
   function renderFilesPage(id, section) {
     if (!section || !section._files) return;
+    section._filesId = id;
     var state = filesPageState(id);
-    var items = state.items || [];
+    var items = activeResourceItems(id);
+    var selectedFile = activeResourceSelectedFile(id);
     var dates = state.dates || [];
     var browseBody = section._files.browseBody;
     var scheduleBody = section._files.scheduleBody;
 
+    updateResourceFeaturedToggle(id, section);
     browseBody.innerHTML = '';
-    var selected = items.filter(function (item) { return item.file === state.selectedPicture; })[0] || items[0];
+    var selected = items.filter(function (item) { return item.file === selectedFile; })[0] || items[0] || null;
+    // 资源项被访客过滤后，旧的选中文件可能已不可见；将有效选中项同步回状态，
+    // 保证第一个可见项也会显示选中效果，而不是出现列表无选中态。
+    if (state.showFeatured) state.selectedFeaturedPicture = selected ? selected.file : null;
+    else state.selectedPicture = selected ? selected.file : null;
     var gameApi = window.FGEXPIG_MINIGAMES;
     if (gameApi && typeof gameApi.has === 'function' && gameApi.has(id)) {
       browseBody.appendChild(makeResourceGameEntry(id));
@@ -3744,6 +4140,7 @@
     }
 
     renderResourceViewer(id, section, selected);
+    if (document.documentElement.classList.contains('outer-screen-layout')) configureTopActions();
 
     if (scheduleBody._scheduleListCleanup) {
       scheduleBody._scheduleListCleanup();
@@ -3768,6 +4165,8 @@
       section._filesLoading = null;
       section._filesToken = (section._filesToken || 0) + 1;
       if (section._files) {
+        // 切换活动后卡片壳会复用：加载新活动数据期间先隐藏旧的星标，避免误点。
+        if (section._files.featuredToggle) section._files.featuredToggle.hidden = true;
         [section._files.browseBody, section._files.viewerBody, section._files.scheduleBody].forEach(function (body) {
           if (body) body.replaceChildren();
         });
@@ -3792,8 +4191,13 @@
   function setFilesPortraitPage(section, page, animateSwitch) {
     if (!section || !section._files) return;
     var nextPage = page === 'schedule' ? 'schedule' : 'browse';
+    var previousPage = section._files.portraitPage;
     var showingSchedule = nextPage === 'schedule';
     section._files.portraitPage = nextPage;
+    if (previousPage !== nextPage && section._filesId) {
+      filesPageState(section._filesId).showFeatured = false;
+      if (nextPage === 'browse') renderFilesPage(section._filesId, section);
+    }
     if (document.documentElement.classList.contains('outer-screen-layout')) section._outerFilesView = showingSchedule ? 'schedule' : 'browse';
     section.classList.toggle('portrait-show-schedule', showingSchedule);
     var buttons = section.querySelectorAll('.files-portrait-page-btn');
@@ -3831,6 +4235,13 @@
     var browseCard = makeReusableCardShell('files-browse', 'files-browse-card', '浏览', true);
     var viewerCard = makeReusableCenterCard('files', 'files-viewer-card', '观赏');
     var scheduleCard = makeReusableCardShell('files-schedule', 'files-schedule-card', '日程', false);
+    var browseLabel = document.createElement('span');
+    browseLabel.className = 'files-browse-title-label';
+    browseLabel.textContent = '浏览';
+    browseCard.title.textContent = '';
+    browseCard.title.appendChild(browseLabel);
+    var featuredToggle = makeResourceFeaturedToggle(id, section);
+    browseCard.title.appendChild(featuredToggle);
     viewerCard.title.appendChild(makeOuterBackButton(function () {
       setFilesOuterView(section, 'browse', true);
     }, '返回浏览卡片'));
@@ -3843,6 +4254,7 @@
       browseBody: browseCard.body,
       viewerBody: viewerCard.body,
       scheduleBody: scheduleCard.body,
+      featuredToggle: featuredToggle,
       portraitPage: 'browse'
     };
     section._outerFilesView = 'browse';
@@ -3884,8 +4296,8 @@
           c.appendChild(t);
           var b = document.createElement('div');
           b.className = 'section-card-body';
-          attachManualScroll(b);
           c.appendChild(b);
+          attachManualScroll(b);
           div.appendChild(c);
         });
       }
@@ -3921,6 +4333,65 @@
     setOuterPageScroll(section, 0);
   }
 
+  var outerContentBottomSafeFrame = 0;
+
+  function outerSectionLastCardBottom(section) {
+    var cards = section.querySelectorAll('.section-card');
+    var bottom = -Infinity;
+    for (var i = 0; i < cards.length; i++) {
+      var card = cards[i];
+      if (getComputedStyle(card).display === 'contents') continue;
+      var rect = card.getBoundingClientRect();
+      if (rect.width < 1 || rect.height < 1) continue;
+      bottom = Math.max(bottom, rect.bottom);
+    }
+    return bottom;
+  }
+
+  function outerSectionBottomGap(section) {
+    if (!section || section.offsetWidth < 1 || section.offsetHeight < 1) return null;
+    var previousScrollTop = section.scrollTop;
+    var maxScrollTop = Math.max(0, section.scrollHeight - section.clientHeight);
+    if (maxScrollTop > 0) section.scrollTop = maxScrollTop;
+    var lastBottom = outerSectionLastCardBottom(section);
+    if (!isFinite(lastBottom)) {
+      if (maxScrollTop > 0) section.scrollTop = previousScrollTop;
+      return null;
+    }
+    var gap = Math.max(0, section.getBoundingClientRect().bottom - lastBottom);
+    if (maxScrollTop > 0) section.scrollTop = previousScrollTop;
+    return gap;
+  }
+
+  function measureOuterShopBottomSafe() {
+    var page = pages[state.index];
+    if (!page || !page.isConnected) page = pagesWrap ? pagesWrap.querySelector('.page.active') : null;
+    var section = page ? page.querySelector('.page-section[data-section="home"]') : null;
+    if (!section) return null;
+    if (section._outerHomeView && section._outerHomeView !== 'home') return null;
+    return outerSectionBottomGap(section);
+  }
+
+  function syncOuterContentBottomSafe() {
+    var root = document.documentElement;
+    if (!root.classList.contains('outer-screen-layout')) {
+      root.style.removeProperty('--outer-content-bottom-safe');
+      return;
+    }
+    var gap = measureOuterShopBottomSafe();
+    if (gap == null) return;
+    if (gap > 0) root.style.setProperty('--outer-content-bottom-safe', gap.toFixed(2) + 'px');
+    else root.style.removeProperty('--outer-content-bottom-safe');
+  }
+
+  function scheduleOuterContentBottomSafe() {
+    if (!document.documentElement.classList.contains('outer-screen-layout') || outerContentBottomSafeFrame) return;
+    outerContentBottomSafeFrame = requestAnimationFrame(function () {
+      outerContentBottomSafeFrame = 0;
+      syncOuterContentBottomSafe();
+    });
+  }
+
   function enterOuterSecondary(section, resetToTop) {
     if (section == null) return;
     if (document.documentElement.classList.contains('outer-screen-layout') === false) return;
@@ -3948,6 +4419,12 @@
   function showSection(logo, key) {
     var page = pages[LOGOS.indexOf(logo)];
     if (!page) return;
+    var previousActiveSection = page.querySelector('.page-section.active');
+    var previousSectionKey = previousActiveSection ? previousActiveSection.dataset.section : '';
+    if ((previousSectionKey !== key && previousSectionKey === 'files') ||
+        (previousSectionKey !== key && key === 'files')) {
+      filesPageState(logo).showFeatured = false;
+    }
     if (key === 'settings') {
       var settingsSection = page.querySelector('.page-section[data-section="settings"]');
       if (!settingsSection) {
@@ -4009,8 +4486,13 @@
       var activeSettingsSection = page.querySelector('.page-section[data-section="settings"].active');
       if (activeSettingsSection) setSettingsOuterView(activeSettingsSection, activeSettingsSection._outerSettingsView || 'rank', false);
     }
+    if (key === 'files' && previousSectionKey !== 'files') {
+      var activatedFilesSection = page.querySelector('.page-section[data-section="files"].active');
+      if (activatedFilesSection && activatedFilesSection._files) renderFilesPage(logo, activatedFilesSection);
+    }
     resetOuterPageScroll(page.querySelector('.page-section.active'));
     configureTopActions();
+    scheduleOuterContentBottomSafe();
   }
 
   var TOP_ACTION_BACK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" d="M20 12H4M12 4l-8 8 8 8"/></svg>';
@@ -4416,6 +4898,7 @@
       topActionRightSecondary.setAttribute('aria-label', config.rightLabel2 ? config.rightLabel2 : '页面操作');
       topActionRightSecondary.onclick = config.rightAction2 ? config.rightAction2 : function () {};
       topActionRight.classList.toggle('is-ascending', config.rightAscending === true);
+      topActionRight.classList.toggle('is-featured', config.rightActive === true);
       topActionRight.innerHTML = config.rightIcon || '';
       topActionRight.setAttribute('aria-label', config.rightLabel || '页面操作');
       topActionRight.onclick = config.rightAction || function () {};
@@ -4437,6 +4920,7 @@
       topActionRightSecondary.setAttribute('aria-label', config.rightLabel2 ? config.rightLabel2 : '页面操作');
       topActionRightSecondary.onclick = config.rightAction2 ? config.rightAction2 : function () {};
       topActionRight.classList.toggle('is-ascending', config.rightAscending === true);
+    topActionRight.classList.toggle('is-featured', config.rightActive === true);
     topActionRight.innerHTML = config.rightIcon || '';
     topActionRight.setAttribute('aria-label', config.rightLabel || '页面操作');
     topActionRight.onclick = config.rightAction || function () {};
@@ -4498,6 +4982,7 @@
     }
     scheduleSectionCardSnap(section);
     configureTopActions();
+    scheduleOuterContentBottomSafe();
   }
 
   function setFilesOuterView(section, view, animate) {
@@ -4616,7 +5101,9 @@
     var actions = document.createElement('div');
     actions.className = 'settings-personal-actions';
     actions.appendChild(makeSettingsPersonalAction('', '用户切换', function () { openOuterAccountPage(); }));
-    actions.appendChild(makeSettingsPersonalAction('', '称号', function () { openOuterPersonalSubpage(section, 'titles'); }));
+    var titleAction = makeSettingsPersonalAction('', '称号', function () { openOuterPersonalSubpage(section, 'titles'); });
+    titleAction.classList.add('settings-title-action');
+    actions.appendChild(titleAction);
     actions.appendChild(makeSettingsPersonalAction('', '开源', function () {
       window.open('https://github.com/JianZhaNoSwine/FGEXPIG-Official-Website', '_blank', 'noopener,noreferrer');
     }));
@@ -4631,8 +5118,10 @@
 
     section.appendChild(rankCard.card);
     section.appendChild(personalCard.card);
-    section._outerSettingsView = 'rank';
-    section.classList.add('outer-settings-view-rank');
+    var guestOuterSettings = isGuestUser() && document.documentElement.classList.contains('outer-screen-layout');
+    section._outerSettingsView = guestOuterSettings ? 'personal' : 'rank';
+    section.classList.remove('outer-settings-view-rank', 'outer-settings-view-personal');
+    section.classList.add(guestOuterSettings ? 'outer-settings-view-personal' : 'outer-settings-view-rank');
     section._settingsPersonal = null;
     section._settingsPersonalActions = actions;
     section._settingsPersonalSubpage = personalSubpage;
@@ -4656,6 +5145,7 @@
       if (section._settingsPersonalActions) section._settingsPersonalActions.hidden = false;
     }
     var next = view === 'personal' ? 'personal' : 'rank';
+    if (isGuestUser() && document.documentElement.classList.contains('outer-screen-layout')) next = 'personal';
     section._outerSettingsView = next;
     resetOuterPageScroll(section);
     section.classList.toggle('outer-settings-view-rank', next === 'rank');
@@ -4703,13 +5193,27 @@
       return;
     }
     if (sectionKey === 'files') {
-      var filesView = section._outerFilesView || (section.classList.contains('outer-show-viewer') ? 'browse' : section.classList.contains('outer-show-schedule') ? 'schedule' : 'browse');
+      var filesView = section.classList.contains('outer-show-viewer')
+        ? 'viewer'
+        : (section.classList.contains('outer-show-schedule') ? 'schedule' : 'browse');
+      var filesId = curNavLogo || '';
+      var filesState = filesId ? filesPageState(filesId) : null;
+      var featuredRows = filesId ? (filesState.featuredItems || resourceFeaturedRowsOf(filesId)) : [];
+      var canFeature = filesView === 'browse' && featuredRows.length > 0 && !isGuestUser();
+      var featuredActive = canFeature && !!filesState.showFeatured;
       showTopActions({
         mode: 'files',
         items: [['browse', '浏览'], ['schedule', '日程']],
         active: filesView === 'schedule' ? 'schedule' : 'browse',
-        showLeft: section.classList.contains('outer-show-viewer'),
+        showLeft: filesView === 'viewer',
         leftLabel: '回到浏览',
+        rightAction: canFeature ? function () {
+          toggleResourceFeatured(filesId, section);
+          configureTopActions();
+        } : null,
+        rightIcon: RESOURCE_FEATURED_STAR_ICON,
+        rightLabel: featuredActive ? '退出精选浏览' : '进入精选浏览',
+        rightActive: featuredActive,
         onLeft: function () { setFilesOuterView(section, 'browse', true); },
         onSelect: function (view) { setFilesOuterView(section, view, true); }
       });
@@ -4717,6 +5221,13 @@
     }
     if (sectionKey === 'settings') {
       buildSettingsSection(section);
+      if (isGuestUser()) {
+        section._outerSettingsView = 'personal';
+        section.classList.remove('outer-settings-view-rank');
+        section.classList.add('outer-settings-view-personal');
+        hideTopActions();
+        return;
+      }
       var personalSubpageActive = false;
       if (section._outerSettingsPersonalSubpage) personalSubpageActive = true;
       showTopActions({
@@ -4748,7 +5259,7 @@
         newsLeftAction = function () { showHotspotCommentsOverview(curNavLogo, section); };
         newsLeftLabel = '返回评论';
       }
-      if (newsView === 'comments' && section._hotspot && section._hotspot.commentsView !== 'detail' && curNavLogo) {
+      if (newsView === 'comments' && section._hotspot && section._hotspot.commentsView !== 'detail' && curNavLogo && !isGuestUser()) {
         newsRightAction = function () {
           cycleHotspotCommentSort();
           updateHotspotCommentSortButton(section);
@@ -5045,6 +5556,7 @@
     var data = navCache[curNavLogo];
     if (!data) return;
     var previousKey = data.active;
+    if (previousKey !== key) filesPageState(curNavLogo).showFeatured = false;
     activeNavKey = key;
     data.active = key;
     var btns = navItems();
@@ -6144,6 +6656,7 @@
     if (achvStore.achievements) delete achvStore.achievements[id];
     if (scheduleStore.schedules) delete scheduleStore.schedules[id];
     if (resourceListStore.lists) delete resourceListStore.lists[id];
+    if (resourceListStore.featuredLists) delete resourceListStore.featuredLists[id];
     delete resourcePageState[id];
     var keepHotspotWhileLeaderboardLoads = !!allHotspotLeaderboardLoadPromise && !hotspotLeaderboardStatsReady;
     if (!keepHotspotWhileLeaderboardLoads) {
@@ -6174,15 +6687,29 @@
   }
 
   function select(i) {
-    i = Math.max(0, Math.min(LOGOS.length - 1, i));
+    var loopMode = dockLoopEnabled();
+    var activityCount = LOGOS.length;
+    // 活动下标必须是整数：滚轮驱动过程中 offset 是小数，落到这里前统一取整，避免出现 undefined 活动。
+    i = Math.round(Number(i));
+    if (!isFinite(i)) i = state.index;
+    if (loopMode && activityCount) i = ((i % activityCount) + activityCount) % activityCount;
+    else i = Math.max(0, Math.min(activityCount - 1, i));
     if (i === state.index && state.offset === 0) return;
 
     var previousIndex = state.index;
+    if (loopMode && activityCount) {
+      // 目标中心：与该活动同余、离当前渲染中心最近的虚拟槽位（只移动不足半圈）
+      var currentCenter = previousIndex + state.offset + dockCenterBase;
+      var targetCenter = i + activityCount * Math.round((currentCenter - i) / activityCount);
+      dockCenterBase = targetCenter - i;
+    }
     state.index = i;
     state.offset = 0;
 
     var name = LOGOS[i];
     if (previousIndex !== i) {
+      filesPageState(LOGOS[previousIndex]).showFeatured = false;
+      filesPageState(name).showFeatured = false;
       if (pages[previousIndex] !== pages[i]) releaseActivityView(previousIndex);
       else pages[i]._homeRenderToken = (pages[i]._homeRenderToken || 0) + 1;
       releaseActivityData(LOGOS[previousIndex]);
@@ -6503,6 +7030,7 @@
   if (!isFinite(userRingLength) || userRingLength <= 0) userRingLength = RING_C * 0.75;
   function initUserExpRing() {
     if (!userExpRing) return;
+    document.documentElement.classList.add('exp-data-loading');
     userExpRing.style.strokeDasharray = String(userRingLength);
     userExpRing.style.strokeDashoffset = String(userRingLength);
   }
@@ -6661,23 +7189,126 @@
   /* ---------- 顶栏 ---------- */
   var topbar = document.getElementById('topbar');
 
-  /* ---------- 交互 1：滚轮切换 ---------- */
-  var lastWheel = 0;
+  /* ---------- 交互 1：滚轮切换（沿用改循环之前的滚动速度：0.5s 平滑动画 + 停稳后切内容） ---------- */
+  var wheelPreviewDirection = 0;
+  var wheelPreviewDelta = 0;
+  var wheelStopTimer = 0;
+  var wheelCommitTimer = 0;
+  var WHEEL_INPUT_IDLE_MS = 120;    // 输入停止判定
+  var WHEEL_COMMIT_DELAY_MS = 1000; // 0.5s 底栏动画 + 动画结束后 0.5s 再切内容
+
+  function wheelPreviewSteps() {
+    var raw = wheelPreviewDelta / 100;
+    var signed = raw > 0
+      ? Math.max(1, Math.round(raw))
+      : (raw < 0 ? Math.min(-1, Math.round(raw)) : 0);
+    if (dockLoopEnabled()) return signed; // 循环模式：按滚动方向全量累计（可跨圈），不做折算
+    // 非循环模式：首尾边界直接截住。
+    return Math.max(-state.index, Math.min(LOGOS.length - 1 - state.index, signed));
+  }
+
+  function clearWheelPreviewState() {
+    wheelPreviewDirection = 0;
+    wheelPreviewDelta = 0;
+  }
+
+  // 拖动等其它交互打断滚轮时，立刻把滚轮目标落定（中心不变，只把内容切过去）
+  function finishWheelPreviewNow() {
+    if (wheelCommitTimer) { clearTimeout(wheelCommitTimer); wheelCommitTimer = 0; }
+    if (wheelStopTimer) { clearTimeout(wheelStopTimer); wheelStopTimer = 0; }
+    var steps = wheelPreviewSteps();
+    clearWheelPreviewState();
+    if (!steps) { state.offset = 0; render(); return; }
+    state.offset = steps;
+    var target = state.index + steps;
+    if (dockLoopEnabled() && LOGOS.length) target = ((target % LOGOS.length) + LOGOS.length) % LOGOS.length;
+    if (target !== state.index) select(target);
+    else { state.offset = 0; render(); }
+  }
+
+  function commitWheelPreview() {
+    wheelCommitTimer = 0;
+    var steps = wheelPreviewSteps();
+    var target = state.index + steps;
+    clearWheelPreviewState();
+    if (dockLoopEnabled() && LOGOS.length) {
+      target = ((target % LOGOS.length) + LOGOS.length) % LOGOS.length;
+    }
+    if (target === state.index) {
+      state.offset = 0;
+      render();
+      resumeBorderGlow();
+      return;
+    }
+    select(target);
+    scheduleDockGlowResume(900);
+  }
+
+  function settleWheelPreview() {
+    wheelStopTimer = 0;
+    if (wheelCommitTimer) clearTimeout(wheelCommitTimer);
+    wheelCommitTimer = setTimeout(commitWheelPreview, WHEEL_COMMIT_DELAY_MS);
+  }
+
   dock.addEventListener('wheel', function (e) {
     e.preventDefault();
-    resumeBorderGlow();
-    var now = performance.now();
-    if (now - lastWheel < 180) return;
     var d = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
     if (Math.abs(d) < 4) return;
-    lastWheel = now;
-    select(state.index + (d > 0 ? 1 : -1));
+    var direction = d > 0 ? 1 : -1;
+    // 忽略惯性反向小抖动；反向幅度足够大时允许真正改变方向。
+    if (!wheelPreviewDirection) wheelPreviewDirection = direction;
+    if (direction !== wheelPreviewDirection) {
+      if (Math.abs(d) < 80) return;
+      wheelPreviewDirection = direction;
+    }
+    if (wheelCommitTimer) {
+      clearTimeout(wheelCommitTimer);
+      wheelCommitTimer = 0;
+    }
+    wheelPreviewDelta += d;
+    var steps = wheelPreviewSteps();
+    if (steps === 0) {
+      clearWheelPreviewState();
+      state.offset = 0;
+      render();
+      resumeBorderGlow();
+      return;
+    }
+    suspendDockMotionEffects();
+    // 与改循环之前一致：用 0.5s 过渡平滑滑到累计位置，距离越远视觉速度越快
+    state.offset = steps;
+    render();
+    if (wheelStopTimer) clearTimeout(wheelStopTimer);
+    wheelStopTimer = setTimeout(settleWheelPreview, WHEEL_INPUT_IDLE_MS);
   }, { passive: false });
 
   /* ---------- 交互 2：长按拖动（鼠标 / 触摸统一用 Pointer Events） ---------- */
   var drag = null;
   var borderGlowPaused = false;
+  var dockMotionActive = false;
   var borderGlowResumeTimer = 0;
+
+  function syncDockMotionEffects() {
+    var root = document.documentElement;
+    var performanceOn = !!(performanceModeInput && performanceModeInput.checked);
+    var level = Number(fxLevelInput && fxLevelInput.value);
+    if (!isFinite(level)) level = 0;
+    var cursorOn = !performanceOn && level >= 1;
+    var glowOn = !performanceOn && level >= 2 && !dockMotionActive;
+    var borderOn = !performanceOn && level >= 3 && !dockMotionActive;
+    root.dataset.fxCursorDesired = cursorOn ? '1' : '0';
+    root.classList.toggle('fx-glow', glowOn);
+    root.classList.toggle('fx-border', borderOn);
+    syncImmersiveCursorState();
+    if (!glowOn && !borderOn) clearCursorNearTargets();
+  }
+
+  function suspendDockMotionEffects() {
+    if (dockMotionActive) return;
+    dockMotionActive = true;
+    borderGlowPaused = true;
+    syncDockMotionEffects();
+  }
 
   function resumeBorderGlow() {
     if (borderGlowResumeTimer) {
@@ -6686,10 +7317,18 @@
     }
     if (!borderGlowPaused) return;
     borderGlowPaused = false;
+    dockMotionActive = false;
+    syncDockMotionEffects();
     scheduleCursorGlowUpdate(0, false);
   }
 
+  function scheduleDockGlowResume(delay) {
+    if (borderGlowResumeTimer) clearTimeout(borderGlowResumeTimer);
+    borderGlowResumeTimer = setTimeout(resumeBorderGlow, delay || 900);
+  }
+
   dock.addEventListener('pointerdown', function (e) {
+    if (wheelCommitTimer || wheelStopTimer || wheelPreviewDelta) finishWheelPreviewNow();
     if (borderGlowResumeTimer) {
       clearTimeout(borderGlowResumeTimer);
       borderGlowResumeTimer = 0;
@@ -6715,18 +7354,19 @@
 
     if (!drag.moved && Math.abs(dx) > 10) {
       drag.moved = true;
-      borderGlowPaused = true;
       dock.classList.add('dragging');
+      suspendDockMotionEffects();
       updateCursorGlow(false);
     }
     if (!drag.moved) return;
 
     readSlotSize();
     var off = -dx / slotSize; // 向左拖 → 下一个 logo
-    // 两端橡皮筋阻尼
-    if (state.index === 0 && off < 0) off *= 0.35;
-    if (state.index === LOGOS.length - 1 && off > 0) off *= 0.35;
-
+    if (!dockLoopEnabled()) {
+      // 非循环模式保留两端橡皮筋阻尼
+      if (state.index === 0 && off < 0) off *= 0.35;
+      if (state.index === LOGOS.length - 1 && off > 0) off *= 0.35;
+    }
     state.offset = off;
     render();
   });
@@ -6740,17 +7380,18 @@
     dock.classList.remove('pressing', 'dragging');
 
     var moved = drag.moved;
+    var itemIndex = drag.itemIndex;
     if (moved) {
-      var target = state.index + Math.round(state.offset);
-      select(target);
-    } else if (drag.itemIndex >= 0) {
+      // 松手只沿拖动方向补齐到整格，绝不回退
+      var step = state.offset >= 0 ? Math.ceil(state.offset - 1e-6) : Math.floor(state.offset + 1e-6);
+      select(state.index + step);
+    } else if (itemIndex >= 0) {
       // 轻点某张卡片 → 切换到该 logo 页面
-      select(drag.itemIndex);
+      select(itemIndex);
     }
     drag = null;
-    if (moved) {
-      if (borderGlowResumeTimer) clearTimeout(borderGlowResumeTimer);
-      borderGlowResumeTimer = setTimeout(resumeBorderGlow, 520);
+    if (moved || itemIndex >= 0) {
+      scheduleDockGlowResume(900);
     } else {
       resumeBorderGlow();
     }
@@ -6782,6 +7423,11 @@
   var navAccountSwitch = document.getElementById('navAccountSwitch');
   var GUEST_NAME = '访客用户';
   var user = { name: GUEST_NAME, isAdmin: false, media: '', lv: 1, exp: 0, expMax: 271 };
+
+  function isGuestUser() {
+    return !user.isAdmin && String(user.name || '').trim() === GUEST_NAME;
+  }
+
   var sidebarLevelRow = document.getElementById('sidebarLevelRow');
   var sidebarLevelBadge = document.getElementById('sidebarLevelBadge');
   var sidebarExpFill = document.getElementById('sidebarExpFill');
@@ -7143,6 +7789,8 @@
   }
 
   function refreshUserExperience() {
+    if (!hotspotLeaderboardStatsReady) return;
+    document.documentElement.classList.remove('exp-data-loading');
     var totalExp = totalExperienceForUser(user.name);
     var metrics = userLevelMetrics(totalExp);
     user.exp = totalExp;
@@ -7604,14 +8252,45 @@
         target.localH = el.offsetHeight || rect.height;
       }
     });
+    cache.region = null;
+    if (cache.restrictToMainCards) {
+      var left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
+      cache.outer.forEach(function (target) {
+        var rect = target.rect;
+        if (!rect || rect.width < 1 || rect.height < 1) return;
+        left = Math.min(left, rect.left);
+        top = Math.min(top, rect.top);
+        right = Math.max(right, rect.right);
+        bottom = Math.max(bottom, rect.bottom);
+      });
+      if (isFinite(left) && isFinite(top) && isFinite(right) && isFinite(bottom)) {
+        cache.region = { left: left, top: top, right: right, bottom: bottom };
+      }
+    }
   }
 
   function getCursorTargetCache() {
     if (!cursorTargetCache) {
+      var root = document.documentElement;
+      var restrictToMainCards = !root.classList.contains('outer-screen-layout');
+      var outerNodes;
+      var softNodes;
+      if (restrictToMainCards) {
+        outerNodes = Array.prototype.slice.call(document.querySelectorAll('.page-section.active [data-reusable-card="1"]')).filter(function (el) {
+          var rect = el.getBoundingClientRect();
+          return rect.width > 1 && rect.height > 1;
+        }).slice(0, 3);
+        softNodes = [];
+      } else {
+        outerNodes = Array.prototype.slice.call(document.querySelectorAll('.page-section.active .section-card'));
+        softNodes = Array.prototype.slice.call(document.querySelectorAll('.page-section.active .review-item, .page-section.active .home-achv, .page-section.active .achv-summary, .page-section.active .achv-group-row'));
+      }
       cursorTargetCache = {
-        outer: Array.prototype.slice.call(document.querySelectorAll('.page-section.active .section-card')).map(makeCursorTarget),
-        soft: Array.prototype.slice.call(document.querySelectorAll('.page-section.active .review-item, .page-section.active .home-achv, .page-section.active .achv-summary, .page-section.active .achv-group-row')).map(makeCursorTarget),
-        docks: Array.prototype.slice.call(document.querySelectorAll('.dock-item')).map(makeCursorTarget),
+        outer: outerNodes.map(makeCursorTarget),
+        soft: softNodes.map(makeCursorTarget),
+        docks: [],
+        restrictToMainCards: restrictToMainCards,
+        region: null,
         rectsAt: 0
       };
       refreshCursorTargetCacheRects(cursorTargetCache, true);
@@ -7693,7 +8372,12 @@
     root.classList.toggle('topbar-glow-suppressed', overTopbar);
     if (!tintOn && !borderOn) return;
     var cache = getCursorTargetCache();
-    refreshCursorTargetCacheRects(cache, false);
+    // 底栏切换活动时会经历缩放/位移动画，跟踪期间每帧重算底栏坐标。
+    refreshCursorTargetCacheRects(cache, cursorGlowTrackMode === 'dock');
+    if (cache.restrictToMainCards && cache.region) {
+      var region = cache.region;
+      if (cursorX < region.left || cursorX > region.right || cursorY < region.top || cursorY > region.bottom) return;
+    }
 
     if (!dockOnly && !overTopbar) {
       for (var k = 0; k < cache.outer.length; k++) {
@@ -7840,13 +8524,18 @@
   }
 
   function moveActivityBy(delta) {
+    if (!LOGOS.length) return;
     var target = state.index + delta;
-    if (target < 0 || target >= LOGOS.length) return;
+    if (!dockLoopEnabled() && (target < 0 || target >= LOGOS.length)) return;
     select(target);
   }
   function moveActivityBatch(delta) {
     if (!LOGOS.length) return;
     var target = state.index + delta;
+    if (dockLoopEnabled()) {
+      if (target !== state.index) select(target);
+      return;
+    }
     if (target < 0) target = 0;
     else if (target >= LOGOS.length) target = LOGOS.length - 1;
     if (target !== state.index) select(target);
@@ -7937,7 +8626,10 @@
     if (userMenuBtn) {
       var avatarRing = userMenuBtn.querySelector('.tb-avatar-ring');
       var avatarRect = userMenuBtn.getBoundingClientRect();
-      var avatarRingRect = avatarRing ? avatarRing.getBoundingClientRect() : avatarRect;
+      var avatarRingRect = avatarRing ? avatarRing.getBoundingClientRect() : null;
+      // 访客态会隐藏经验环，此时不能拿 0 尺寸的环参与差值计算，否则会把
+      // 已写入的 --topbar-left-shift 再次累加，切换活动时头像会持续右移。
+      if (!avatarRingRect || !avatarRingRect.width || !avatarRingRect.height) avatarRingRect = avatarRect;
       rootStyle.setProperty('--topbar-left-shift', (avatarRect.left - avatarRingRect.left) + 'px');
     }
     if (playerCover) {
@@ -8022,6 +8714,40 @@
     });
   }
 
+  function applyGuestPrivacyState() {
+    var guest = isGuestUser();
+    document.documentElement.classList.toggle('guest-user', guest);
+    if (guest && currentSidebarPanel === 'titles') {
+      resetSidebarPanelCore();
+    }
+    var hotspotSections = document.querySelectorAll('.hotspot-section');
+    for (var i = 0; i < hotspotSections.length; i++) {
+      var section = hotspotSections[i];
+      if (!section._hotspot) continue;
+      renderHotspotComments(section._hotspot.id, section);
+    }
+    if (guest) {
+      Object.keys(resourcePageState).forEach(function (id) {
+        filesPageState(id).showFeatured = false;
+      });
+    }
+    var filesSections = document.querySelectorAll('.files-section');
+    for (var filesIndex = 0; filesIndex < filesSections.length; filesIndex++) {
+      var filesSection = filesSections[filesIndex];
+      if (filesSection._files && filesSection._filesId) renderFilesPage(filesSection._filesId, filesSection);
+    }
+    if (guest && document.documentElement.classList.contains('outer-screen-layout')) {
+      var settingsSections = document.querySelectorAll('.settings-section');
+      for (var settingsIndex = 0; settingsIndex < settingsSections.length; settingsIndex++) {
+        var settingsSection = settingsSections[settingsIndex];
+        settingsSection._outerSettingsView = 'personal';
+        settingsSection.classList.remove('outer-settings-view-rank');
+        settingsSection.classList.add('outer-settings-view-personal');
+      }
+    }
+    configureTopActions();
+  }
+
   function updateUserUI() {
     var nameEl = document.getElementById('userPillName');
     if (nameEl) nameEl.textContent = user.name;
@@ -8041,6 +8767,7 @@
     refreshReviewPersonalScore();
     refreshHomeLibraryBar();
     refreshUserExperience();
+    applyGuestPrivacyState();
 
   }
 
@@ -8593,7 +9320,7 @@
   }
   // 二级页“返回”：从首页进来的直接回首页，从暂停菜单进来的回暂停菜单
   function resetSidebarPanel() {
-    if (sidebarPanelOrigin === 'home') {
+    if (sidebarPanelOrigin === 'home' || sidebarPanelOrigin === 'hotspot') {
       closeSidebars();
       return;
     }
@@ -8817,8 +9544,8 @@
     appliedQualitySignature = nextQualitySignature;
     imageQualityLevel = quality;
     var cursorOn = !performanceOn && level >= 1;
-    var glowOn = !performanceOn && level >= 2;
-    var borderOn = !performanceOn && level >= 3;
+    var glowOn = !performanceOn && level >= 2 && !dockMotionActive;
+    var borderOn = !performanceOn && level >= 3 && !dockMotionActive;
 
     var ratio = dim / 100;
     var root = document.documentElement;
@@ -9185,11 +9912,25 @@
     return null;
   }
 
+  function openGuestLoginPage() {
+    if (document.documentElement.classList.contains('outer-screen-layout') && typeof window.openOuterAccountPage === 'function') {
+      window.openOuterAccountPage();
+      return;
+    }
+    openSidebar('left');
+    sidebarPanelOrigin = 'hotspot';
+    openAccountPanel();
+  }
+
   function openAccountPanel() {
     var account = currentAccountRecord();
     if (accountLoginError) accountLoginError.textContent = '';
     if (accountLoginPass) accountLoginPass.value = '';
     if (accountLoginUser) accountLoginUser.value = account && account.user ? account.user : (user.isAdmin ? 'admin' : '');
+    if (accountLogoutTop) {
+      accountLogoutTop.textContent = isGuestUser() ? '返回' : '退出登录';
+      accountLogoutTop.setAttribute('data-guest-return', isGuestUser() ? '1' : '0');
+    }
     showSidebarPanel('accounts');
   }
 
@@ -10909,6 +11650,11 @@
     var ownedBar = document.createElement('button');
     ownedBar.type = 'button';
     ownedBar.className = 'shop-owned-bar ' + (owned ? 'is-owned' : 'is-unowned');
+    var guest = isGuestUser();
+    ownedBar.disabled = guest;
+    ownedBar.tabIndex = guest ? -1 : 0;
+    ownedBar.setAttribute('aria-disabled', guest ? 'true' : 'false');
+    if (guest) ownedBar.classList.add('is-guest-disabled');
     var ownedText = document.createElement('span');
     ownedText.className = 'shop-owned-text';
     ownedText.textContent = owned
@@ -11722,12 +12468,29 @@
     if (type === 'list') {
       return {
         path: activityPath('list.js'),
-        parse: function (text) { return activityFragment('lists', parseResourceListTxt(text)); },
-        current: function () { return activityFragment('lists', (resourceListStore.lists && resourceListStore.lists[activityId]) || []); },
-        hasData: function (fragment) { return activityRows(fragment, 'lists').length > 0; },
+        parse: function (text) {
+          var parsed = parseResourceListTxt(text);
+          var fragment = activityFragment('lists', parsed.rows, normalizeResourceListRows);
+          fragment.featuredLists = {};
+          fragment.featuredLists[activityId] = normalizeResourceListRows(parsed.featured);
+          return fragment;
+        },
+        current: function () {
+          var fragment = activityFragment('lists', (resourceListStore.lists && resourceListStore.lists[activityId]) || [], normalizeResourceListRows);
+          fragment.featuredLists = {};
+          fragment.featuredLists[activityId] = normalizeResourceListRows(
+            (resourceListStore.featuredLists && resourceListStore.featuredLists[activityId]) || []
+          );
+          return fragment;
+        },
+        hasData: function (fragment) {
+          return activityRows(fragment, 'lists').length > 0 || activityRows(fragment, 'featuredLists').length > 0;
+        },
         merge: function (fragment) {
           if (!resourceListStore.lists) resourceListStore.lists = {};
+          if (!resourceListStore.featuredLists) resourceListStore.featuredLists = {};
           resourceListStore.lists[activityId] = normalizeResourceListRows(activityRows(fragment, 'lists'));
+          resourceListStore.featuredLists[activityId] = normalizeResourceListRows(activityRows(fragment, 'featuredLists'));
           applyResourceListData(activityId);
         }
       };
@@ -11864,7 +12627,7 @@
         function () { achvFileInput.click(); }, function () { exportDataFile('achievements', id); }));
       dmContentEl.appendChild(makeDataCard('日程数据', '日期 · 日程（date.txt 格式）', 'scheduleMeta',
         function () { scheduleFileInput.click(); }, function () { exportDataFile('schedule', id); }));
-      dmContentEl.appendChild(makeDataCard('资源列表数据', '文件名 · 标题 · 分类（list.txt 格式）', 'resourceListMeta',
+      dmContentEl.appendChild(makeDataCard('资源列表数据', '文件名 · 标题 · 分类（空行后的段落为精选列表）', 'resourceListMeta',
         function () { resourceListFileInput.click(); }, function () { exportDataFile('list', id); }));
       dmContentEl.appendChild(makeDataCard('热点数据', '日期时间 · 标题 · 内容 · 缩进评论', 'hotspotMeta',
         function () { hotspotFileInput.click(); }, function () { exportDataFile('news', id); }));
@@ -13015,6 +13778,7 @@
       if (!sec) return;
       renderHomeInto(sec, logo);
       layoutTopbarIdentity();
+      scheduleOuterContentBottomSafe();
     });
   }
 
@@ -13544,6 +14308,7 @@
     }
 
     function showLibraryOwners() {
+      if (isGuestUser()) return;
       var view = makeLibraryOwners();
       if (!view.querySelector('.shop-library-owner-group')) return;
       if (detailScroll) detailOverviewScrollTop = detailScroll.scrollTop;
@@ -13552,7 +14317,7 @@
 
     detailCard.onclick = function (event) {
       var bar = event.target.closest ? event.target.closest('.shop-owned-bar') : null;
-      if (!bar || !detailCard.contains(bar)) return;
+      if (!bar || !detailCard.contains(bar) || isGuestUser()) return;
       rememberMergedOverviewPosition();
       showLibraryOwners();
     };
@@ -13834,6 +14599,8 @@
       applyResourceListData();
       applyHotspotData();
       applyHotspotPoints();
+      // 启动时直接汇总全部热点经验，首屏经验环使用完整数据。
+      return loadAllHotspotDataForLeaderboards();
     });
   }
 
@@ -13999,6 +14766,7 @@
     playInterfaceAnimation(true);
     initData();
     fillHomeSection(LOGOS[initial]);
+    render();
     syncNonOuterCardBlurLayers();
     setTimeout(syncNonOuterCardBlurLayers, 0);
     if (pagesWrap && window.MutationObserver && !pagesWrap._cardBlurLayerObserver) {
@@ -14017,6 +14785,7 @@
     viewportResizeFrame = requestAnimationFrame(function () {
       viewportResizeFrame = 0;
       render();
+      scheduleOuterContentBottomSafe();
       // 窗口变化后项位置可能改变，选中短指示条重新对位
       if (curNavLogo && navCache[curNavLogo]) {
         moveThumb(navCache[curNavLogo].active, false);
