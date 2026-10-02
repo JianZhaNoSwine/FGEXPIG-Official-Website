@@ -6443,6 +6443,13 @@ html:not(.outer-screen-layout) .dock-selected-frame {
   transform: translate(-50%, -50%);
   pointer-events: none;
   border-radius: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.22s ease, visibility 0.22s ease;
+}
+html:not(.outer-screen-layout) .dock-selected-frame.is-visible {
+  opacity: 1;
+  visibility: visible;
 }
 html:not(.outer-screen-layout) .dock-selected-frame::before {
   content: '';

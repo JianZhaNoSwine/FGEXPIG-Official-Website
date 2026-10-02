@@ -2,6 +2,11 @@
   "lists": {
     "JFES150": [
       {
+        "file": "地图.png",
+        "title": "地图",
+        "category": "宣传文件"
+      },
+      {
         "file": "船票1411.png",
         "title": "船票其六",
         "category": "资源文件"
@@ -42,5 +47,8 @@
         "category": "宣传文件"
       }
     ]
+  },
+  "featuredLists": {
+    "JFES150": []
   }
 };

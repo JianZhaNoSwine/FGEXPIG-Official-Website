@@ -34,15 +34,15 @@
     },
     {
       "id": "JFES120",
-      "name": "布鲁克森庄园事件",
-      "englishName": "Brookson Manor Incident",
+      "name": "布鲁克森庄园事件重解版",
+      "englishName": "Brookson Manor Incident Resolve",
       "music": "Respite",
       "held": true,
-      "display": 1,
+      "display": 0,
       "defaultSelected": false,
       "developer": "JianZha Publisher",
       "publisher": "JianZha Publisher",
-      "releaseDate": "2026 年 3 月 13 日",
+      "releaseDate": "2026 年 11 月 27 日",
       "tags": [
         "合作",
         "解谜"
@@ -169,10 +169,25 @@
       "defaultSelected": true,
       "developer": "JianZha Publisher",
       "publisher": "JianZha Publisher",
-      "releaseDate": "2026 年 10 月 16 日",
+      "releaseDate": "2026 年 10 月 10 日",
       "tags": [
         "恶作剧",
         "解谜"
+      ]
+    },
+    {
+      "id": "JFES195",
+      "name": "猪诞狂欢",
+      "englishName": "Pigbirth Party",
+      "music": "次期総理の船路に捧げる即興曲",
+      "held": true,
+      "display": 0,
+      "defaultSelected": false,
+      "developer": "JianZha Publisher",
+      "publisher": "JianZha Publisher",
+      "releaseDate": "2026 年 11 月 6 日",
+      "tags": [
+        "关卡竞赛"
       ]
     },
     {
@@ -180,34 +195,67 @@
       "name": "白日梦",
       "englishName": "Day Dream",
       "music": "夢想曲",
-      "held": false,
+      "held": true,
       "display": 0,
       "defaultSelected": false,
       "developer": "JianZha Publisher",
       "publisher": "JianZha Publisher",
-      "releaseDate": "2026 年 11 月 13 日",
+      "releaseDate": "2026 年 11 月 20 日",
       "tags": [
         "艺术",
         "解压"
       ]
     },
     {
-      "id": "JFES210",
-      "name": "2026糖豆人年度总结",
-      "englishName": "2026 Fall Guys Annual Report",
-      "music": "Grand Theft Auto VI",
+      "id": "JZP1100",
+      "name": "2027糖豆人拜年纪",
+      "englishName": "2027 Fall Guys Chinese New Year Anniversary",
+      "music": "Beneath the Mask (KAIEN Remix)",
       "held": false,
       "display": 0,
       "defaultSelected": false,
       "developer": "JianZha Publisher",
       "publisher": "JianZha Publisher",
-      "releaseDate": "2026 年 12 月 18 日",
+      "releaseDate": "2027 年 2 月 4 日",
       "tags": [
-        "年度总结"
+        "艺术",
+        "解压"
       ]
     },
     {
-      "id": "JZP1100",
+      "id": "JZP1200",
+      "name": "全猪咪的灵魂之绊",
+      "englishName": "Bond hymn of the pigcat",
+      "music": "全ての人の魂の絆",
+      "held": false,
+      "display": 0,
+      "defaultSelected": false,
+      "developer": "JianZha Publisher",
+      "publisher": "JianZha Publisher",
+      "releaseDate": "2026 年 2 月 12 日",
+      "tags": [
+        "高难",
+        "跑酷"
+      ]
+    },
+    {
+      "id": "JZP1300",
+      "name": "煎炸糖果公司",
+      "englishName": "JianZha Town Candy Company",
+      "music": "弱水三千DJ版（梨花飘落在你窗前）",
+      "held": false,
+      "display": 0,
+      "defaultSelected": false,
+      "developer": "JianZha Publisher",
+      "publisher": "JianZha Publisher",
+      "releaseDate": "2026 年 2 月 20 日",
+      "tags": [
+        "合作",
+        "解谜"
+      ]
+    },
+    {
+      "id": "JZP1400",
       "name": "稻羽中央大道商店街",
       "englishName": "Inaba Central Shopping District",
       "music": "I'll Face Myself -Battle-",
@@ -216,14 +264,14 @@
       "defaultSelected": false,
       "developer": "JianZha Publisher",
       "publisher": "JianZha Publisher",
-      "releaseDate": "2027 年 2 月 26 日",
+      "releaseDate": "2026 年 2 月 26 日",
       "tags": [
         "艺术",
         "解压"
       ]
     },
     {
-      "id": "JZP1200",
+      "id": "JZP2000",
       "name": "奥林PIG运动会第三季",
       "englishName": "Olympig Season 3",
       "music": "Encanto",
@@ -233,6 +281,133 @@
       "developer": "JianZha Publisher",
       "publisher": "JianZha Publisher",
       "releaseDate": "2026 年 4 月 2 日",
+      "tags": [
+        "关卡竞赛"
+      ]
+    },
+    {
+      "id": "JZP3100",
+      "name": "高手姿态：猪堡王",
+      "englishName": "Virtuose Posture: Piburger King",
+      "music": "破滅の王",
+      "held": false,
+      "display": 0,
+      "defaultSelected": false,
+      "developer": "JianZha Publisher",
+      "publisher": "JianZha Publisher",
+      "releaseDate": "2026 年 6 月 4 日",
+      "tags": [
+        "艺术",
+        "高难"
+      ]
+    },
+    {
+      "id": "JZP3200",
+      "name": "刺客大师再同步",
+      "englishName": "Master Assassin Resynced",
+      "music": "Ezio's Family (Shadows Version)",
+      "held": false,
+      "display": 0,
+      "defaultSelected": false,
+      "developer": "JianZha Publisher",
+      "publisher": "JianZha Publisher",
+      "releaseDate": "2026 年 6 月 11 日",
+      "tags": [
+        "高难",
+        "跑酷"
+      ]
+    },
+    {
+      "id": "JZP3300",
+      "name": "霍肯重犯监狱事件",
+      "englishName": "Hockenst-Kschriev Recidivist Prison Incident",
+      "music": "Silent Hill Townfall",
+      "held": false,
+      "display": 0,
+      "defaultSelected": false,
+      "developer": "JianZha Publisher",
+      "publisher": "JianZha Publisher",
+      "releaseDate": "2026 年 6 月 18 日",
+      "tags": [
+        "合作",
+        "解谜"
+      ]
+    },
+    {
+      "id": "JZP3400",
+      "name": "UI世界合集",
+      "englishName": "UI World Collection",
+      "music": "No Happy Endings",
+      "held": false,
+      "display": 0,
+      "defaultSelected": false,
+      "developer": "JianZha Publisher",
+      "publisher": "JianZha Publisher",
+      "releaseDate": "2026 年 6 月 25 日",
+      "tags": [
+        "艺术",
+        "解压"
+      ]
+    },
+    {
+      "id": "JZP4100",
+      "name": "糖豆劫",
+      "englishName": "Fall Guys Tribulation",
+      "music": "Heartful Cry (ATLUS Kozuka Remix)",
+      "held": false,
+      "display": 0,
+      "defaultSelected": false,
+      "developer": "JianZha Publisher",
+      "publisher": "JianZha Publisher",
+      "releaseDate": "2026 年 8 月 1 日",
+      "tags": [
+        "高难",
+        "漫长",
+        "跑酷"
+      ]
+    },
+    {
+      "id": "JZP4200",
+      "name": "煎炸药科大学",
+      "englishName": "JianZha Town Pharmaceutical University",
+      "music": "学園の記憶 (P3R ver.)",
+      "held": false,
+      "display": 0,
+      "defaultSelected": false,
+      "developer": "JianZha Publisher",
+      "publisher": "JianZha Publisher",
+      "releaseDate": "2026 年 8 月 27 日",
+      "tags": [
+        "艺术",
+        "解压"
+      ]
+    },
+    {
+      "id": "JZP5100",
+      "name": "奥林PIG运动会第四季",
+      "englishName": "Olympig Season 4",
+      "music": "Grand Theft Auto VI",
+      "held": false,
+      "display": 0,
+      "defaultSelected": false,
+      "developer": "JianZha Publisher",
+      "publisher": "JianZha Publisher",
+      "releaseDate": "2026 年 10 月 1 日",
+      "tags": [
+        "关卡竞赛"
+      ]
+    },
+    {
+      "id": "JZP5200",
+      "name": "煎炸的W",
+      "englishName": "JianZha 10000",
+      "music": "Fall Guys in the House",
+      "held": false,
+      "display": 0,
+      "defaultSelected": false,
+      "developer": "JianZha Publisher",
+      "publisher": "JianZha Publisher",
+      "releaseDate": "2026 年 10 月 30 日",
       "tags": [
         "关卡竞赛"
       ]

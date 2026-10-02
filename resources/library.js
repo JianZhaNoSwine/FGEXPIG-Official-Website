@@ -13,7 +13,7 @@
         },
         {
           "id": "JFES120",
-          "version": "标准版"
+          "version": "传承版"
         },
         {
           "id": "JFES130",
@@ -62,7 +62,7 @@
         },
         {
           "id": "JFES120",
-          "version": "标准版"
+          "version": "传承版"
         },
         {
           "id": "JFES130",
@@ -103,7 +103,7 @@
         },
         {
           "id": "JFES120",
-          "version": "标准版"
+          "version": "传承版"
         },
         {
           "id": "JFES130",
@@ -152,7 +152,7 @@
         },
         {
           "id": "JFES120",
-          "version": "标准版"
+          "version": "传承版"
         },
         {
           "id": "JFES130",
@@ -205,7 +205,7 @@
         },
         {
           "id": "JFES120",
-          "version": "标准版"
+          "version": "传承版"
         },
         {
           "id": "JFES130",
@@ -254,7 +254,7 @@
         },
         {
           "id": "JFES120",
-          "version": "标准版"
+          "version": "传承版"
         },
         {
           "id": "JFES130",
@@ -299,7 +299,7 @@
         },
         {
           "id": "JFES120",
-          "version": "标准版"
+          "version": "传承版"
         },
         {
           "id": "JFES130",
@@ -332,7 +332,7 @@
         },
         {
           "id": "JFES120",
-          "version": "标准版"
+          "version": "传承版"
         },
         {
           "id": "JFES130",
@@ -377,7 +377,7 @@
         },
         {
           "id": "JFES120",
-          "version": "标准版"
+          "version": "传承版"
         },
         {
           "id": "JFES130",
@@ -455,7 +455,7 @@
       "entries": [
         {
           "id": "JFES120",
-          "version": "标准版"
+          "version": "传承版"
         },
         {
           "id": "JFES130",
@@ -476,7 +476,7 @@
         },
         {
           "id": "JFES120",
-          "version": "标准版"
+          "version": "传承版"
         },
         {
           "id": "JFES130",

@@ -2,6 +2,16 @@
   "lists": {
     "JFES110": [
       {
+        "file": "地图.png",
+        "title": "地图",
+        "category": "资源文件"
+      },
+      {
+        "file": "现实.png",
+        "title": "如果在现实",
+        "category": "资源文件"
+      },
+      {
         "file": "3成就.png",
         "title": "成就",
         "category": "宣传文件"
@@ -22,5 +32,8 @@
         "category": "宣传文件"
       }
     ]
+  },
+  "featuredLists": {
+    "JFES110": []
   }
 };

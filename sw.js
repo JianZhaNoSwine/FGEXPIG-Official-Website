@@ -1,5 +1,5 @@
 /* Bounded runtime cache: wallpaper + logo + resources of the active activity only. */
-const CACHE_NAME = 'fgexpig-assets-v34';
+const CACHE_NAME = 'fgexpig-assets-v37';
 let activeActivity = '';
 
 function isWallpaper(path) {

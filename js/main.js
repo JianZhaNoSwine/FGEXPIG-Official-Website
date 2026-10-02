@@ -166,6 +166,28 @@
   /* ---------- DOM ---------- */
   var dock = document.getElementById('dock');
   var track = document.getElementById('dockTrack');
+  var dockSelectedFrame = document.getElementById('dockSelectedFrame');
+  var dockSelectedFrameTimer = 0;
+
+  function hideDockSelectedFrame() {
+    if (dockSelectedFrameTimer) {
+      clearTimeout(dockSelectedFrameTimer);
+      dockSelectedFrameTimer = 0;
+    }
+    if (dockSelectedFrame) dockSelectedFrame.classList.remove('is-visible');
+  }
+
+  function showDockSelectedFrame(duration) {
+    if (!dockSelectedFrame) return;
+    dockSelectedFrame.classList.add('is-visible');
+    if (dockSelectedFrameTimer) clearTimeout(dockSelectedFrameTimer);
+    dockSelectedFrameTimer = setTimeout(hideDockSelectedFrame, Math.max(0, Number(duration) || 3000));
+  }
+
+  function showDockSelectedFrameForHomeEntry() {
+    var section = document.querySelector('.page.active .page-section.active');
+    if (section && section.dataset.section === 'home') showDockSelectedFrame();
+  }
   var pagesWrap = document.getElementById('pages');
   var bgA = document.getElementById('bgA');
   var bgB = document.getElementById('bgB');
@@ -4421,6 +4443,7 @@
     if (!page) return;
     var previousActiveSection = page.querySelector('.page-section.active');
     var previousSectionKey = previousActiveSection ? previousActiveSection.dataset.section : '';
+    if (key === 'home' && previousSectionKey !== 'home') showDockSelectedFrame();
     if ((previousSectionKey !== key && previousSectionKey === 'files') ||
         (previousSectionKey !== key && key === 'files')) {
       filesPageState(logo).showFeatured = false;
@@ -7254,6 +7277,7 @@
     e.preventDefault();
     var d = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
     if (Math.abs(d) < 4) return;
+    showDockSelectedFrame();
     var direction = d > 0 ? 1 : -1;
     // 忽略惯性反向小抖动；反向幅度足够大时允许真正改变方向。
     if (!wheelPreviewDirection) wheelPreviewDirection = direction;
@@ -7359,6 +7383,7 @@
       updateCursorGlow(false);
     }
     if (!drag.moved) return;
+    showDockSelectedFrame();
 
     readSlotSize();
     var off = -dx / slotSize; // 向左拖 → 下一个 logo
@@ -7948,6 +7973,7 @@
       releaseStartupVideoSource();
       syncLiquidGlassRenderer(true);
       startupCloseTimer = 0;
+      showDockSelectedFrameForHomeEntry();
     }, outerSlideOut ? 650 : 500);
   }
 
@@ -14697,6 +14723,7 @@
 
   function playInterfaceAnimation(includeTopbar) {
     clearScrollIndicators(pagesWrap);
+    if (includeTopbar !== false) showDockSelectedFrameForHomeEntry();
     syncNonOuterCardBlurLayers();
     var dockWrap = dock && dock.closest ? dock.closest('.dock-wrap') : null;
     if (document.documentElement.classList.contains('performance-mode')) {

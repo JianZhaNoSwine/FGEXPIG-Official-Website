@@ -2,6 +2,11 @@
   "lists": {
     "JFES175": [
       {
+        "file": "地图.png",
+        "title": "地图",
+        "category": "资源文件"
+      },
+      {
         "file": "5倒数1.png",
         "title": "倒计时1天",
         "category": "宣传文件"
@@ -32,5 +37,8 @@
         "category": "宣传文件"
       }
     ]
+  },
+  "featuredLists": {
+    "JFES175": []
   }
 };
