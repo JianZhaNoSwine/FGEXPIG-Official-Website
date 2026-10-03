@@ -14,7 +14,7 @@
 <link rel="icon" href="favicon.ico?v=7" type="image/x-icon">
 <link rel="shortcut icon" href="favicon.ico?v=7">
 <link rel="apple-touch-icon" href="favicon.ico?v=7">
-<link rel="stylesheet" href="css/style.css?v=20260924gz107">
+<link rel="stylesheet" href="css/style.css?v=20260924gz142">
 </head>
 <body>
 
@@ -48,12 +48,17 @@
       </svg>
       <span class="tb-avatar-level" id="userPillLevel">Lv1</span>
     </button>
+    <img class="tb-inline-key tb-inline-key-back key-icon" data-key-icon-action="pauseBack" alt="" aria-hidden="true" draggable="false">
     <span class="tb-nick" id="userPillName">访客用户</span>
     <span class="tb-ribbon" id="userTitle">⁓探索の主宰新手⁓</span>
   </div>
 
   <!-- 中部导航 -->
   <nav class="topnav" id="topnav"></nav>
+
+  <!-- 顶栏两侧按键提示：直接挂在顶栏上，不参与导航内部布局 -->
+  <img class="topbar-key-icon topbar-key-icon-left key-icon" data-key-icon-action="prevNav" alt="" aria-hidden="true" draggable="false">
+  <img class="topbar-key-icon topbar-key-icon-right key-icon" data-key-icon-action="nextNav" alt="" aria-hidden="true" draggable="false">
 
   <!-- 外屏模式：顶栏中央分页操作栏 -->
   <div class="top-actions" id="topActions" hidden>
@@ -70,6 +75,7 @@
   <!-- 右侧区（从右向左：曲名 / 专辑(外描边圆形进度)） -->
   <div class="tb-right">
     <span class="tb-songname" id="playerName">未播放</span>
+    <img class="tb-inline-key tb-inline-key-settings key-icon" data-key-icon-action="openSettings" alt="" aria-hidden="true" draggable="false">
     <button class="inner-activity-button" id="innerActivityButton" type="button" aria-label="选择活动">
       <img id="innerActivityButtonImg" alt="" draggable="false">
     </button>
@@ -90,9 +96,14 @@
     <div class="dock-track" id="dockTrack"></div>
     <div class="dock-selected-frame" id="dockSelectedFrame" aria-hidden="true"></div>
   </div>
+  <img class="dock-side-key dock-side-key-left key-icon" data-key-icon-action="prevActivity" alt="" aria-hidden="true" draggable="false">
+  <img class="dock-side-key dock-side-key-right key-icon" data-key-icon-action="nextActivity" alt="" aria-hidden="true" draggable="false">
   <div class="ruler" aria-hidden="true"></div>
   <div class="ruler-major" aria-hidden="true"></div>
 </div>
+
+<!-- 左下角按键提示 -->
+<div class="bottom-key-hints" id="bottomKeyHints" aria-hidden="true"></div>
 
 <!-- 内屏活动选择页 -->
 <section class="inner-activity-picker" id="innerActivityPicker" aria-hidden="true">
@@ -104,9 +115,9 @@
 
 <!-- 全屏暂停菜单 -->
 <section class="pause-menu" id="pauseMenu" aria-hidden="true">
-  <div class="pause-site-value" role="img" aria-label="5,875,753,798；￥217.06 CNY">
-    <span class="pause-site-value-item is-visits" aria-hidden="true">5,875,753,798</span>
-    <span class="pause-site-value-item is-value" aria-hidden="true">￥217.06 CNY</span>
+  <div class="pause-site-value" role="img" aria-label="6,149,893,323；￥226.38 CNY">
+    <span class="pause-site-value-item is-visits" aria-hidden="true">6,149,893,323</span>
+    <span class="pause-site-value-item is-value" aria-hidden="true">￥226.38 CNY</span>
   </div>
   <div class="sidebar-inner pause-menu-inner">
     <div class="sidebar-panel" id="panelMenu">
@@ -165,6 +176,7 @@
     <div class="sidebar-panel settings-page" id="panelSettings" hidden>
       <div class="settings-topnav">
         <button class="settings-back" id="settingsBack" type="button">返回</button>
+        <img class="settings-topnav-key settings-topnav-key-left key-icon" data-key-icon-action="prevNav" alt="" aria-hidden="true" draggable="false">
         <nav class="topnav settings-tabs" aria-label="设置分类">
           <div class="topnav-thumb no-anim">
             <div class="topnav-thumb-inner"></div>
@@ -194,6 +206,7 @@
             <span class="topnav-item-label">赞助</span>
           </button>
         </nav>
+        <img class="settings-topnav-key settings-topnav-key-right key-icon" data-key-icon-action="nextNav" alt="" aria-hidden="true" draggable="false">
       </div>
       <div class="settings-layout">
         <div class="settings-left">
@@ -204,6 +217,13 @@
                 <div class="settings-card-control">
                   <span class="theme-value" id="performanceModeVal">关闭</span>
                   <input class="theme-toggle" id="performanceMode" type="checkbox" role="switch" aria-label="性能模式">
+                </div>
+              </div>
+              <div class="theme-control toggle-option cache-boost-control" id="cacheBoostCard" role="button" tabindex="0">
+                <span class="settings-card-label">缓存加速</span>
+                <div class="settings-card-control">
+                  <span class="theme-value" id="cacheBoostVal">关闭</span>
+                  <input class="theme-toggle" id="cacheBoost" type="checkbox" role="switch" aria-label="缓存加速">
                 </div>
               </div>
               <div class="theme-control">
@@ -409,6 +429,21 @@
   </div>
 </div>
 
+<!-- 按键图标统一白描边：基于 alpha 形态膨胀，避免多向阴影造成视觉偏心 -->
+<svg class="key-icon-filter-defs" width="0" height="0" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="key-icon-outline" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feMorphology in="SourceAlpha" operator="dilate" radius="1" result="expanded"></feMorphology>
+      <feFlood flood-color="#fff" result="white"></feFlood>
+      <feComposite in="white" in2="expanded" operator="in" result="outline"></feComposite>
+      <feMerge>
+        <feMergeNode in="outline"></feMergeNode>
+        <feMergeNode in="SourceGraphic"></feMergeNode>
+      </feMerge>
+    </filter>
+  </defs>
+</svg>
+
 <!-- 跟随鼠标的称号主题光球 -->
 <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
 
@@ -416,7 +451,7 @@
 <script src="js/emoji-manifest.js"></script>
 <script src="js/emoji-trim-data.js"></script>
 <script src="js/emoji-trim.js"></script>
-<script src="js/outer-settings-pages.js?v=20260924gz107"></script>
-<script src="js/main.js?v=20260924gz107"></script>
+<script src="js/outer-settings-pages.js?v=20260924gz142"></script>
+<script src="js/main.js?v=20260924gz142"></script>
 </body>
 </html>

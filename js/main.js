@@ -120,12 +120,17 @@
   }
 
   var runtimeCacheActivityId = '';
+  var runtimeCacheBoostEnabled = false;
   var runtimeCacheWorkerReady = null;
 
   function postRuntimeCacheActivity(worker) {
     if (!worker) return;
     try {
-      worker.postMessage({ type: 'fgexpig-cache-activity', activity: runtimeCacheActivityId });
+      worker.postMessage({
+        type: 'fgexpig-cache-activity',
+        activity: runtimeCacheActivityId,
+        boost: runtimeCacheBoostEnabled
+      });
     } catch (err) {}
   }
 
@@ -145,6 +150,20 @@
         runtimeCacheWorkerReady = null;
         return null;
       });
+  }
+
+  // 「缓存加速」开关：开启后 Service Worker 使用新缓存方案（可缓存更多静态资源 + 延迟释放非选中活动）。
+  function setRuntimeCacheBoost(enabled) {
+    enabled = !!enabled;
+    if (runtimeCacheBoostEnabled === enabled) return;
+    runtimeCacheBoostEnabled = enabled;
+    if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
+    postRuntimeCacheActivity(navigator.serviceWorker.controller);
+    if (runtimeCacheWorkerReady) {
+      runtimeCacheWorkerReady.then(function (registration) {
+        if (registration) postRuntimeCacheActivity(registration.active || registration.waiting);
+      });
+    }
   }
 
   function setRuntimeCacheActivity(id) {
@@ -168,6 +187,7 @@
   var track = document.getElementById('dockTrack');
   var dockSelectedFrame = document.getElementById('dockSelectedFrame');
   var dockSelectedFrameTimer = 0;
+  var bottomKeyHintsEl = document.getElementById('bottomKeyHints');
 
   function hideDockSelectedFrame() {
     if (dockSelectedFrameTimer) {
@@ -184,9 +204,227 @@
     dockSelectedFrameTimer = setTimeout(hideDockSelectedFrame, Math.max(0, Number(duration) || 3000));
   }
 
+  var activeGamepadPlatform = 'xbox';
+  var KEY_ICON_ASSET_VERSION = '20261003icons3';
+  var KEY_ICON_MODE_KEY = 'fgexpig_key_icon_mode_v1';
+  var KEY_ICON_MODES = [
+    { id: 'auto', label: '自动识别' },
+    { id: 'xbox', label: 'Xbox' },
+    { id: 'playstation', label: 'PlayStation' },
+    { id: 'pc', label: 'PC' }
+  ];
+
+  function normalizeKeyIconMode(value) {
+    var id = String(value || '').trim();
+    for (var i = 0; i < KEY_ICON_MODES.length; i++) {
+      if (KEY_ICON_MODES[i].id === id) return id;
+    }
+    return 'auto';
+  }
+
+  function loadKeyIconMode() {
+    try { return normalizeKeyIconMode(localStorage.getItem(KEY_ICON_MODE_KEY)); } catch (err) { return 'auto'; }
+  }
+
+  var keyIconModeId = loadKeyIconMode();
+  var KEY_ICON_FILES = {
+    pc: {
+      prevNav: 'q.webp', nextNav: 'e.webp',
+      prevActivity: 'a.webp', nextActivity: 'd.webp',
+      toggleMusic: 'x.webp', rewindMusic: 'z.webp', forwardMusic: 'c.webp',
+      toggleUi: 'tab.webp', openSettings: 'i.webp', pauseBack: 'esc.webp'
+    },
+    xbox: {
+      prevNav: 'lb.webp', nextNav: 'rb.webp',
+      prevActivity: 'lt.webp', nextActivity: 'rt.webp',
+      toggleMusic: 'x.webp', rewindMusic: 'left.webp', forwardMusic: 'right.webp',
+      toggleUi: 'y.webp', openSettings: 'menu.webp', pauseBack: 'view.webp'
+    },
+    ps5: {
+      prevNav: 'l1.webp', nextNav: 'r1.webp',
+      prevActivity: 'l2.webp', nextActivity: 'r2.webp',
+      toggleMusic: 'square.webp', rewindMusic: 'left.webp', forwardMusic: 'right.webp',
+      toggleUi: 'triangle.webp', openSettings: 'options.webp', pauseBack: 'touchpad.webp'
+    }
+  };
+
+  // 设置页“控制”列表中每个按键框展示的图标：PC 跟随当前按键，Xbox/PS 使用固定键位。
+  var PC_KEY_ICON_FILES = {
+    escape: 'esc.webp', esc: 'esc.webp',
+    tab: 'tab.webp',
+    space: 'space.webp',
+    enter: 'enter.webp',
+    delete: 'delete.webp',
+    insert: 'insert.webp',
+    home: 'home.webp',
+    end: 'end.webp',
+    pageup: 'pgup.webp', pagedown: 'pgdn.webp',
+    pgup: 'pgup.webp', pgdn: 'pgdn.webp',
+    arrowup: 'up.webp', arrowdown: 'down.webp',
+    arrowleft: 'left.webp', arrowright: 'right.webp',
+    up: 'up.webp', down: 'down.webp', left: 'left.webp', right: 'right.webp',
+    shift: 'shift.webp',
+    control: 'ctrl.webp', ctrl: 'ctrl.webp',
+    alt: 'alt.webp',
+    '/': 'slash.webp', slash: 'slash.webp',
+    '\\': 'backslash.webp', backslash: 'backslash.webp',
+    '-': '-.webp', '_': '-.webp',
+    '=': '=.webp', '+': '=.webp',
+    ',': ',.webp', '<': ',.webp',
+    '.': '..webp', '>': '..webp',
+    ';': ';.webp', ':': ';.webp',
+    "'": "'.webp", '"': "'" + '.webp',
+    '[': '[.webp', '{': '[.webp',
+    ']': '].webp', '}': '].webp'
+  };
+
+  function pcKeyIconFile(key) {
+    var k = normalizeKeyName(key);
+    if (!k) return '';
+    if (/^[a-z0-9]$/.test(k)) return k + '.webp';
+    return PC_KEY_ICON_FILES[k] || '';
+  }
+
+  function keybindKeyIcon(platform, file) {
+    if (!file) return null;
+    var img = document.createElement('img');
+    img.className = 'key-icon keybind-key-icon';
+    img.src = 'button/' + platform + '/' + file + '?v=' + KEY_ICON_ASSET_VERSION;
+    img.alt = '';
+    img.draggable = false;
+    img.setAttribute('aria-hidden', 'true');
+    img.setAttribute('focusable', 'false');
+    return img;
+  }
+
+  function keyIconPlatform() {
+    if (keyIconModeId === 'xbox') return 'xbox';
+    if (keyIconModeId === 'playstation') return 'ps5';
+    if (keyIconModeId === 'pc') return 'pc';
+    return typeof inputMode !== 'undefined' && inputMode === 'gamepad' ? activeGamepadPlatform : 'pc';
+  }
+
+  function keyIconModeLabel() {
+    for (var i = 0; i < KEY_ICON_MODES.length; i++) {
+      if (KEY_ICON_MODES[i].id === keyIconModeId) return KEY_ICON_MODES[i].label;
+    }
+    return KEY_ICON_MODES[0].label;
+  }
+
+  function setKeyIconMode(id, persist) {
+    keyIconModeId = normalizeKeyIconMode(id);
+    if (persist) {
+      try { localStorage.setItem(KEY_ICON_MODE_KEY, keyIconModeId); } catch (err) {}
+    }
+    syncKeyIcons();
+    renderKeybindList(true);
+  }
+
+  function cycleKeyIconMode(delta) {
+    var index = 0;
+    for (var i = 0; i < KEY_ICON_MODES.length; i++) {
+      if (KEY_ICON_MODES[i].id === keyIconModeId) { index = i; break; }
+    }
+    var count = KEY_ICON_MODES.length;
+    index = ((index + delta) % count + count) % count;
+    setKeyIconMode(KEY_ICON_MODES[index].id, true);
+  }
+
+  function gamepadPlatformFor(pad) {
+    var id = String(pad && pad.id || '').toLowerCase();
+    // DualShock / DualSense use PlayStation glyphs. Nintendo and all other
+    // controllers (including Switch) use the Xbox prompt set by requirement.
+    if (/xbox|microsoft|045e/.test(id)) return 'xbox';
+    if (/054c|dualsense|dualshock|playstation|ps5|ps4|wireless controller/.test(id)) return 'ps5';
+    return 'xbox';
+  }
+
+  function keyIconSource(action) {
+    var platform = keyIconPlatform();
+    var file = KEY_ICON_FILES[platform] && KEY_ICON_FILES[platform][action];
+    // PC 键位允许在设置页改键，图标跟随当前绑定而不是默认键位。
+    if (platform === 'pc' && keybindings && keybindings[action]) {
+      var boundFile = pcKeyIconFile(keybindings[action]);
+      if (boundFile) file = boundFile;
+    }
+    return file ? 'button/' + platform + '/' + file + '?v=' + KEY_ICON_ASSET_VERSION : '';
+  }
+
+  function createKeyIcon(action, className) {
+    var img = document.createElement('img');
+    img.className = 'key-icon' + (className ? ' ' + className : '');
+    img.dataset.keyIconAction = action;
+    img.alt = '';
+    img.draggable = false;
+    img.setAttribute('aria-hidden', 'true');
+    img.setAttribute('focusable', 'false');
+    var src = keyIconSource(action);
+    if (src) img.src = src;
+    else img.hidden = true;
+    return img;
+  }
+
+  function syncKeyIconVisibility() {
+    var section = document.querySelector('.page.active .page-section.active');
+    var sectionKey = section && section.dataset ? section.dataset.section : '';
+    var root = document.documentElement;
+    var pauseOpen = !!(pauseMenu && pauseMenu.classList.contains('open'));
+    // 首页的三个导航栏目（商店 / 资源 / 热点）共用同一套顶栏与底栏按键提示。
+    var mainSectionActive = sectionKey === 'home' || sectionKey === 'files' || sectionKey === 'news';
+    root.classList.toggle('key-icons-home-active', !pauseOpen && mainSectionActive);
+    root.classList.toggle('key-icons-topbar-active', !pauseOpen && mainSectionActive);
+    // 图标重新显示后尺寸才可测量，需要重新校准底栏两侧按键图标的位置。
+    scheduleDockSideIconAlignment();
+  }
+
+  function syncKeyIcons(root) {
+    var scope = root && root.querySelectorAll ? root : document;
+    var icons = scope.querySelectorAll('img[data-key-icon-action]');
+    for (var i = 0; i < icons.length; i++) {
+      var icon = icons[i];
+      var src = keyIconSource(icon.dataset.keyIconAction);
+      if (!src) {
+        icon.hidden = true;
+        icon.removeAttribute('src');
+        continue;
+      }
+      icon.hidden = false;
+      if (icon.getAttribute('src') !== src) {
+        icon.src = src;
+        if (!icon.complete) icon.addEventListener('load', scheduleDockSideIconAlignment, { once: true });
+      }
+    }
+    scheduleDockSideIconAlignment();
+    // 图标切换后浏览器可能还没完成新图布局，稍后再校准一次底栏两侧位置。
+    setTimeout(scheduleDockSideIconAlignment, 120);
+  }
+
   function showDockSelectedFrameForHomeEntry() {
     var section = document.querySelector('.page.active .page-section.active');
     if (section && section.dataset.section === 'home') showDockSelectedFrame();
+  }
+
+  var BOTTOM_KEY_HINTS = [
+    ['toggleMusic', '暂停'],
+    ['rewindMusic', '回退'],
+    ['forwardMusic', '快进'],
+    ['toggleUi', '显示']
+  ];
+
+  function renderBottomKeyHints() {
+    if (!bottomKeyHintsEl) return;
+    bottomKeyHintsEl.innerHTML = '';
+    BOTTOM_KEY_HINTS.forEach(function (entry) {
+      var item = document.createElement('span');
+      item.className = 'bottom-key-hint';
+      item.appendChild(createKeyIcon(entry[0], 'bottom-key-hint-icon'));
+      var label = document.createElement('span');
+      label.className = 'bottom-key-hint-label';
+      label.textContent = entry[1];
+      item.appendChild(label);
+      bottomKeyHintsEl.appendChild(item);
+    });
+    syncKeyIcons();
   }
   var pagesWrap = document.getElementById('pages');
   var bgA = document.getElementById('bgA');
@@ -341,7 +579,10 @@
       bindResponsiveAsset(img, 'logo/' + name + '.png');
     }
     el.addEventListener('click', function () {
-      if (!clickBlocked) select(i);
+      if (!clickBlocked) {
+        showDockSelectedFrame();
+        select(i);
+      }
     });
     track.appendChild(el);
     return el;
@@ -904,6 +1145,52 @@
     requestAnimationFrame(function () { syncLiquidGlassRenderer(true); });
   }
 
+  var dockSideIconAlignFrame = 0;
+
+  function scheduleDockSideIconAlignment() {
+    if (dockSideIconAlignFrame) return;
+    dockSideIconAlignFrame = requestAnimationFrame(function () {
+      dockSideIconAlignFrame = 0;
+      syncDockSideIconAlignment();
+    });
+  }
+
+  function syncDockSideIconAlignment() {
+    if (!dock || !userMenuBtn) return;
+    var wrap = dock.closest ? dock.closest('.dock-wrap') : null;
+    if (!wrap) return;
+    var wrapRect = wrap.getBoundingClientRect();
+    var avatarRect = (userMenuBtn.querySelector('.tb-avatar') || userMenuBtn).getBoundingClientRect();
+    if (!wrapRect.width || !avatarRect.width) return;
+
+    var fallbackSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--key-icon-height')) || 20;
+    var firstHintIcon = bottomKeyHintsEl ? bottomKeyHintsEl.querySelector('.key-icon') : null;
+    var firstHintRect = firstHintIcon ? firstHintIcon.getBoundingClientRect() : null;
+    var firstHintWidth = firstHintRect && firstHintRect.width ? firstHintRect.width : fallbackSize;
+    var avatarCenter = avatarRect.left + avatarRect.width / 2;
+    var firstHintLeft = avatarCenter - firstHintWidth / 2;
+
+    if (bottomKeyHintsEl) bottomKeyHintsEl.style.left = firstHintLeft.toFixed(2) + 'px';
+
+    var leftDockKey = wrap.querySelector('.dock-side-key-left');
+    if (!leftDockKey) return;
+    var leftDockWidth = leftDockKey.getBoundingClientRect().width || fallbackSize;
+    // PC / Xbox 键位图标较窄：与左下角第一个图标居中对齐；
+    // PlayStation 键位图标较宽：保持左对齐，避免左侧溢出。
+    var leftDockCenter;
+    if (keyIconPlatform() === 'ps5') {
+      leftDockCenter = firstHintLeft + leftDockWidth / 2;
+    } else {
+      leftDockCenter = firstHintLeft + firstHintWidth / 2;
+    }
+    // 右图标以视口中心为轴，与左图标严格对称。
+    var viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+    var rightDockCenter = viewportWidth - leftDockCenter;
+
+    wrap.style.setProperty('--dock-key-avatar-x', (leftDockCenter - wrapRect.left).toFixed(2) + 'px');
+    wrap.style.setProperty('--dock-key-music-x', (rightDockCenter - wrapRect.left).toFixed(2) + 'px');
+  }
+
   function render() {
     updateResponsiveLayoutMode();
     if (!items.length) return;
@@ -969,11 +1256,12 @@
           groupCenterOffset = (groupLeft + groupRight) * 0.5 -
             ((document.documentElement.clientWidth || window.innerWidth) * 0.5);
           // 卡片边界外全透明，渐变只向边界内收，避免 logo 越过边界线仍然可见。
-          var dockMaskWidth = groupWidth + edgeFadeWidth * 2;
-          var leftBoundary = edgeFadeWidth;
-          var rightBoundary = edgeFadeWidth + groupWidth;
-          var leftOpaque = leftBoundary + edgeFadeWidth;
-          var rightOpaque = rightBoundary - edgeFadeWidth;
+          var dockSideInset = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dock-side-inset')) || 36;
+          var dockMaskWidth = Math.max(0, groupWidth + edgeFadeWidth * 2 - 2 * dockSideInset);
+          var leftBoundary = Math.min(edgeFadeWidth, dockMaskWidth / 2);
+          var rightBoundary = Math.max(leftBoundary + 1, dockMaskWidth - edgeFadeWidth);
+          var leftOpaque = Math.min(rightBoundary, leftBoundary + edgeFadeWidth);
+          var rightOpaque = Math.max(leftOpaque, rightBoundary - edgeFadeWidth);
           var dockMask = 'linear-gradient(90deg, transparent 0px, transparent ' +
             leftBoundary.toFixed(2) + 'px, #000 ' +
             leftOpaque.toFixed(2) + 'px, #000 ' +
@@ -1136,6 +1424,9 @@
       scheduleCursorGlowUpdate(900, true);
     }
     if (Math.abs(state.offset) < 0.001) scheduleOuterContentBottomSafe();
+    syncKeyIconVisibility();
+    syncDockSideIconAlignment();
+    scheduleDockSideIconAlignment();
   }
 
   /* ---------- 选择某个 logo ---------- */
@@ -4443,7 +4734,6 @@
     if (!page) return;
     var previousActiveSection = page.querySelector('.page-section.active');
     var previousSectionKey = previousActiveSection ? previousActiveSection.dataset.section : '';
-    if (key === 'home' && previousSectionKey !== 'home') showDockSelectedFrame();
     if ((previousSectionKey !== key && previousSectionKey === 'files') ||
         (previousSectionKey !== key && key === 'files')) {
       filesPageState(logo).showFeatured = false;
@@ -4514,6 +4804,7 @@
       if (activatedFilesSection && activatedFilesSection._files) renderFilesPage(logo, activatedFilesSection);
     }
     resetOuterPageScroll(page.querySelector('.page-section.active'));
+    syncKeyIconVisibility();
     configureTopActions();
     scheduleOuterContentBottomSafe();
   }
@@ -7412,6 +7703,7 @@
       select(state.index + step);
     } else if (itemIndex >= 0) {
       // 轻点某张卡片 → 切换到该 logo 页面
+      showDockSelectedFrame();
       select(itemIndex);
     }
     drag = null;
@@ -8671,6 +8963,7 @@
     if (!userTitleEl || !userPillNameEl || !navEl) return;
     var navRect = navEl.getBoundingClientRect();
     if (!navRect.width) return;
+    document.documentElement.style.setProperty('--topnav-half-width', (navRect.width / 2).toFixed(2) + 'px');
     userPillNameEl.classList.remove('is-collision-hidden');
     var nameRect = userPillNameEl.getBoundingClientRect();
     var titleRect = userTitleEl.classList.contains('is-hidden') ? null : userTitleEl.getBoundingClientRect();
@@ -8805,6 +9098,7 @@
     pauseMenu.classList.toggle('open', !!open);
     pauseMenu.setAttribute('aria-hidden', open ? 'false' : 'true');
     document.documentElement.classList.toggle('pause-menu-open', !!open);
+    syncKeyIconVisibility();
     syncImmersiveCursorState();
     if (open) {
       clearCursorNearTargets();
@@ -9172,6 +9466,9 @@
   var performanceModeInput = document.getElementById('performanceMode');
   var performanceModeCard = document.getElementById('performanceModeCard');
   var performanceModeVal = document.getElementById('performanceModeVal');
+  var cacheBoostInput = document.getElementById('cacheBoost');
+  var cacheBoostCard = document.getElementById('cacheBoostCard');
+  var cacheBoostVal = document.getElementById('cacheBoostVal');
   var imageQualityInput = document.getElementById('imageQuality');
   var imageQualityVal = document.getElementById('imageQualityVal');
   var imageQualityPrev = document.getElementById('imageQualityPrev');
@@ -9200,7 +9497,7 @@
     { id: 'rewindMusic', label: '音乐回退', defaultKey: 'z', xbox: '←', playstation: '←', gamepadButton: 14 },
     { id: 'forwardMusic', label: '音乐快进', defaultKey: 'c', xbox: '→', playstation: '→', gamepadButton: 15 },
     { id: 'toggleUi', label: '隐藏/显示HUD', defaultKey: 'tab', xbox: 'Y', playstation: '△', gamepadButton: 3 },
-    { id: 'openSettings', label: '设置页', defaultKey: 'i', xbox: '', playstation: '' }
+    { id: 'openSettings', label: '设置页', defaultKey: 'i', xbox: 'MENU', playstation: 'OPTIONS' }
   ];
   var GAMEPAD_ACTION_BY_BUTTON = {};
   KEYBIND_ACTIONS.forEach(function (action) {
@@ -9407,6 +9704,13 @@
     moveSettingsThumb(currentSettingsTab, true);
   }
 
+  function syncSettingsTopnavKeyPosition() {
+    if (!settingsNav || !settingsNav.parentElement) return;
+    var navRect = settingsNav.getBoundingClientRect();
+    if (!navRect.width) return;
+    settingsNav.parentElement.style.setProperty('--settings-topnav-half-width', (navRect.width / 2).toFixed(2) + 'px');
+  }
+
   function moveSettingsThumb(tabId, animate) {
     if (!settingsNav || !settingsThumb) return;
     var buttons = settingsNav.querySelectorAll('.topnav-item');
@@ -9423,6 +9727,7 @@
       }
       break;
     }
+    syncSettingsTopnavKeyPosition();
   }
 
   function openSettingsPanel(tabId) {
@@ -9565,6 +9870,7 @@
     var dim = 100 - brightness;
 
     var performanceOn = !!(performanceModeInput && performanceModeInput.checked);
+    var cacheBoostOn = !!(cacheBoostInput && cacheBoostInput.checked);
     var nextQualitySignature = qualityCategorySignature();
     var qualityChanged = imageQualityLevel !== quality || appliedQualitySignature !== nextQualitySignature;
     appliedQualitySignature = nextQualitySignature;
@@ -9602,6 +9908,8 @@
     fxLevelInput.disabled = performanceOn;
     if (fxLevelControl) fxLevelControl.classList.toggle('is-disabled', performanceOn);
     if (performanceModeVal) performanceModeVal.textContent = performanceOn ? '开启' : '关闭';
+    if (cacheBoostVal) cacheBoostVal.textContent = cacheBoostOn ? '开启' : '关闭';
+    setRuntimeCacheBoost(cacheBoostOn);
     if (imageQualityInput) imageQualityInput.value = String(imageQualityLevel);
     if (imageQualityVal) imageQualityVal.textContent = qualityLabel(imageQualityLevel);
     syncSettingsRangeFill(wallpaperDimInput);
@@ -9637,6 +9945,7 @@
           blur: blur,
           fxLevel: level,
           performance: performanceOn,
+          cacheBoost: cacheBoostOn,
           imageQuality: imageQualityLevel,
           imageQualityCategories: qualityCategorySnapshot
         }));
@@ -9651,6 +9960,7 @@
       if (raw) saved = JSON.parse(raw);
     } catch (err) {}
     if (performanceModeInput) performanceModeInput.checked = !!(saved && saved.performance);
+    if (cacheBoostInput) cacheBoostInput.checked = !!(saved && saved.cacheBoost);
     var quality = IMAGE_QUALITY_MIN;
     if (saved && Object.prototype.hasOwnProperty.call(saved, 'imageQuality')) {
       quality = saved.imageQuality;
@@ -9789,9 +10099,50 @@
     return true;
   }
 
-  function renderKeybindList() {
+  function renderKeybindList(instantEntry) {
     if (!keybindListEl) return;
+    // 切换按键图标方案 / 改键时的局部重绘不再播放列表入场动画。
+    keybindListEl.classList.toggle('keybind-list-instant', !!instantEntry);
     keybindListEl.innerHTML = '';
+
+    var modeRow = document.createElement('div');
+    modeRow.className = 'theme-control keybind-icon-mode-control';
+    var modeLabel = document.createElement('span');
+    modeLabel.className = 'settings-card-label';
+    modeLabel.textContent = '按键图标';
+    var modeControl = document.createElement('div');
+    modeControl.className = 'settings-card-control keybind-icon-mode-control';
+    var modeValue = document.createElement('span');
+    modeValue.className = 'theme-value keybind-icon-mode-value';
+    modeValue.textContent = keyIconModeLabel();
+    var modeStepper = document.createElement('div');
+    modeStepper.className = 'settings-stepper';
+    var modePrev = document.createElement('button');
+    modePrev.type = 'button';
+    modePrev.className = 'settings-step-btn';
+    modePrev.textContent = '‹';
+    modePrev.setAttribute('aria-label', '上一个按键图标方案');
+    modePrev.onclick = function (event) {
+      event.stopPropagation();
+      cycleKeyIconMode(-1);
+    };
+    var modeNext = document.createElement('button');
+    modeNext.type = 'button';
+    modeNext.className = 'settings-step-btn';
+    modeNext.textContent = '›';
+    modeNext.setAttribute('aria-label', '下一个按键图标方案');
+    modeNext.onclick = function (event) {
+      event.stopPropagation();
+      cycleKeyIconMode(1);
+    };
+    modeStepper.appendChild(modePrev);
+    modeStepper.appendChild(modeNext);
+    modeControl.appendChild(modeValue);
+    modeControl.appendChild(modeStepper);
+    modeRow.appendChild(modeLabel);
+    modeRow.appendChild(modeControl);
+    keybindListEl.appendChild(modeRow);
+
     KEYBIND_ACTIONS.forEach(function (action) {
       var row = document.createElement('div');
       row.className = 'theme-control keybind-control';
@@ -9806,21 +10157,31 @@
       button.setAttribute('data-keybind-action', action.id);
       button.setAttribute('aria-label', '修改' + action.label + '快捷键');
       button.setAttribute('aria-pressed', keyCaptureActionId === action.id ? 'true' : 'false');
-      button.textContent = keyCaptureActionId === action.id ? '请按键…' : keyDisplayName(keybindings[action.id]);
+      if (keyCaptureActionId === action.id) {
+        button.textContent = '请按键…';
+      } else {
+        var keyboardIcon = keybindKeyIcon('pc', pcKeyIconFile(keybindings[action.id]));
+        if (keyboardIcon) button.appendChild(keyboardIcon);
+        else button.textContent = keyDisplayName(keybindings[action.id]);
+      }
       button.addEventListener('click', function () {
         keyCaptureActionId = keyCaptureActionId === action.id ? null : action.id;
-        renderKeybindList();
+        renderKeybindList(true);
       });
 
       var xbox = document.createElement('span');
       xbox.className = 'keybind-button gamepad-keybind' + (action.xbox ? '' : ' is-empty');
-      xbox.textContent = action.xbox;
       xbox.setAttribute('aria-hidden', 'true');
+      var xboxIcon = keybindKeyIcon('xbox', KEY_ICON_FILES.xbox[action.id]);
+      if (xboxIcon) xbox.appendChild(xboxIcon);
+      else xbox.textContent = action.xbox;
 
       var playstation = document.createElement('span');
       playstation.className = 'keybind-button gamepad-keybind' + (action.playstation ? '' : ' is-empty');
-      playstation.textContent = action.playstation;
       playstation.setAttribute('aria-hidden', 'true');
+      var psIcon = keybindKeyIcon('ps5', KEY_ICON_FILES.ps5[action.id]);
+      if (psIcon) playstation.appendChild(psIcon);
+      else playstation.textContent = action.playstation;
 
       row.appendChild(label);
       row.appendChild(button);
@@ -10096,6 +10457,20 @@
       applyThemeFromControls(true);
     });
   }
+  if (cacheBoostInput) cacheBoostInput.addEventListener('change', function () { applyThemeFromControls(true); });
+  if (cacheBoostCard) {
+    cacheBoostCard.addEventListener('click', function (event) {
+      if (event.target === cacheBoostInput) return;
+      cacheBoostInput.checked = !cacheBoostInput.checked;
+      applyThemeFromControls(true);
+    });
+    cacheBoostCard.addEventListener('keydown', function (event) {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      cacheBoostInput.checked = !cacheBoostInput.checked;
+      applyThemeFromControls(true);
+    });
+  }
   if (imageQualityInput) imageQualityInput.addEventListener('change', function () { applyThemeFromControls(true); });
   if (imageQualityPrev) imageQualityPrev.addEventListener('click', function () {
     setImageQuality(Number(imageQualityInput.value) - 1, true);
@@ -10210,13 +10585,26 @@
           break;
         }
       }
+      var capturePressed = normalizeKeyName(event.key);
+      var captureKey = capturePressed === 'escape' && captureAction ? captureAction.defaultKey : event.key;
+      // PC 改键只接受有对应图标的按键：没有图标的按键忽略，继续等待输入（Esc 仍然恢复默认键位）。
+      if (capturePressed !== 'escape' && !pcKeyIconFile(captureKey)) return;
       keyCaptureActionId = null;
-      assignKeybinding(captureId, normalizeKeyName(event.key) === 'escape' && captureAction ? captureAction.defaultKey : event.key);
-      renderKeybindList();
+      assignKeybinding(captureId, captureKey);
+      syncKeyIcons();
+      renderKeybindList(true);
       return;
     }
     if (handleAccountLoginKeydown(event)) return;
     if (pauseMenu && pauseMenu.classList.contains('is-settings-open')) {
+      // 设置页顶栏两侧显示上/下一个导航的按键提示，按下对应按键时切换设置分页。
+      var settingsKey = normalizeKeyName(event.key);
+      if (settingsKey && (settingsKey === normalizeKeyName(keybindings.prevNav) || settingsKey === normalizeKeyName(keybindings.nextNav))) {
+        event.preventDefault();
+        event.stopPropagation();
+        moveSettingsTab(settingsKey === normalizeKeyName(keybindings.prevNav) ? -1 : 1);
+        return;
+      }
       if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
         event.preventDefault();
         moveSettingsSelection(event.key === 'ArrowDown' ? 1 : -1);
@@ -10301,6 +10689,7 @@
     if (mode === 'keyboard' && !root.classList.contains('fx-cursor') && cursorGlowEl) {
       cursorGlowEl.classList.remove('is-visible');
     }
+    syncKeyIcons();
   }
 
   function pauseMenuItems() {
@@ -10722,6 +11111,11 @@
     for (var p = 0; p < pads.length; p++) {
       var pad = pads[p];
       if (!pad) continue;
+      var padPlatform = gamepadPlatformFor(pad);
+      if (padPlatform !== activeGamepadPlatform) {
+        activeGamepadPlatform = padPlatform;
+        syncKeyIcons();
+      }
       var axisX = pad.axes && pad.axes.length ? Number(pad.axes[0]) || 0 : 0;
       var axisY = pad.axes && pad.axes.length > 1 ? Number(pad.axes[1]) || 0 : 0;
       var axisRX = pad.axes && pad.axes.length > 2 ? Number(pad.axes[2]) || 0 : 0;
@@ -10824,6 +11218,13 @@
   }
   function initGamepadControls() {
     if (gamepadPollFrame || !navigator.getGamepads) return;
+    window.addEventListener('gamepadconnected', function (event) {
+      var platform = gamepadPlatformFor(event.gamepad);
+      if (platform !== activeGamepadPlatform) {
+        activeGamepadPlatform = platform;
+        syncKeyIcons();
+      }
+    });
     gamepadPollFrame = requestAnimationFrame(pollGamepads);
   }
 
@@ -14732,6 +15133,7 @@
       pagesWrap.classList.remove('entering');
       topbar.classList.remove('entering');
       if (dockWrap) dockWrap.classList.remove('entering');
+      if (bottomKeyHintsEl) bottomKeyHintsEl.classList.remove('entering');
       syncLiquidGlassRenderer(true);
       return;
     }
@@ -14739,6 +15141,7 @@
     pagesWrap.classList.remove('entering');
     topbar.classList.remove('entering');
     if (dockWrap) dockWrap.classList.remove('entering');
+    if (bottomKeyHintsEl) bottomKeyHintsEl.classList.remove('entering');
     void pagesWrap.offsetWidth;
     pagesWrap.classList.add('entering');
     animateSectionCardContents(pagesWrap.querySelector('.page.active .page-section.active'));
@@ -14746,11 +15149,16 @@
     if (dockWrap && includeTopbar !== false) {
       void dockWrap.offsetWidth;
       dockWrap.classList.add('entering');
+      if (bottomKeyHintsEl) {
+        void bottomKeyHintsEl.offsetWidth;
+        bottomKeyHintsEl.classList.add('entering');
+      }
     }
     interfaceAnimationTimer = setTimeout(function () {
       pagesWrap.classList.remove('entering');
       topbar.classList.remove('entering');
       if (dockWrap) dockWrap.classList.remove('entering');
+      if (bottomKeyHintsEl) bottomKeyHintsEl.classList.remove('entering');
       syncLiquidGlassRenderer(true);
       interfaceAnimationTimer = 0;
     }, 800);
@@ -14763,6 +15171,7 @@
     initAudioSettings();
     initCursorGlow();
     initGamepadControls();
+    renderBottomKeyHints();
     readSlotSize();
 
     // 先用已缓存的核心数据构建；没有缓存时回退到内置列表，后续同步数据时再重建。

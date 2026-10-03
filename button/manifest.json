@@ -1,0 +1,161 @@
+{
+  "format": "webp",
+  "style": "platform-standard-button-glyphs",
+  "note": "PNG sources were converted to lossless WebP and intentionally not retained.",
+  "directories": {
+    "pc": [
+      "'.webp",
+      ",.webp",
+      "-.webp",
+      "..webp",
+      "0.webp",
+      "1.webp",
+      "2.webp",
+      "3.webp",
+      "4.webp",
+      "5.webp",
+      "6.webp",
+      "7.webp",
+      "8.webp",
+      "9.webp",
+      ";.webp",
+      "=.webp",
+      "[.webp",
+      "].webp",
+      "a.webp",
+      "alt.webp",
+      "b.webp",
+      "backslash.webp",
+      "c.webp",
+      "ctrl.webp",
+      "d.webp",
+      "delete.webp",
+      "down.webp",
+      "e.webp",
+      "end.webp",
+      "enter.webp",
+      "esc.webp",
+      "f.webp",
+      "g.webp",
+      "h.webp",
+      "home.webp",
+      "i.webp",
+      "insert.webp",
+      "j.webp",
+      "k.webp",
+      "l.webp",
+      "left.webp",
+      "leftclick.webp",
+      "m.webp",
+      "mouse.webp",
+      "mousewheel.webp",
+      "n.webp",
+      "o.webp",
+      "p.webp",
+      "pgdn.webp",
+      "pgup.webp",
+      "q.webp",
+      "r.webp",
+      "right.webp",
+      "rightclick.webp",
+      "s.webp",
+      "scrolldown.webp",
+      "scrollup.webp",
+      "shift.webp",
+      "slash.webp",
+      "space.webp",
+      "t.webp",
+      "tab.webp",
+      "u.webp",
+      "up.webp",
+      "v.webp",
+      "w.webp",
+      "x.webp",
+      "y.webp",
+      "z.webp"
+    ],
+    "xbox": [
+      "a.webp",
+      "b.webp",
+      "down.webp",
+      "lb.webp",
+      "left.webp",
+      "ls.webp",
+      "lt.webp",
+      "menu.webp",
+      "rb.webp",
+      "right.webp",
+      "rs.webp",
+      "rt.webp",
+      "up.webp",
+      "view.webp",
+      "x.webp",
+      "y.webp"
+    ],
+    "ps5": [
+      "circle.webp",
+      "cross.webp",
+      "down.webp",
+      "l1.webp",
+      "l2.webp",
+      "l3.webp",
+      "left.webp",
+      "options.webp",
+      "r1.webp",
+      "r2.webp",
+      "r3.webp",
+      "right.webp",
+      "square.webp",
+      "touchpad.webp",
+      "triangle.webp",
+      "up.webp"
+    ]
+  },
+  "actions": {
+    "prevNav": {
+      "pc": "q.webp",
+      "xbox": "lb.webp",
+      "ps5": "l1.webp"
+    },
+    "nextNav": {
+      "pc": "e.webp",
+      "xbox": "rb.webp",
+      "ps5": "r1.webp"
+    },
+    "prevActivity": {
+      "pc": "a.webp",
+      "xbox": "lt.webp",
+      "ps5": "l2.webp"
+    },
+    "nextActivity": {
+      "pc": "d.webp",
+      "xbox": "rt.webp",
+      "ps5": "r2.webp"
+    },
+    "toggleMusic": {
+      "pc": "x.webp",
+      "xbox": "x.webp",
+      "ps5": "square.webp"
+    },
+    "rewindMusic": {
+      "pc": "z.webp",
+      "xbox": "left.webp",
+      "ps5": "left.webp"
+    },
+    "forwardMusic": {
+      "pc": "c.webp",
+      "xbox": "right.webp",
+      "ps5": "right.webp"
+    },
+    "toggleUi": {
+      "pc": "tab.webp",
+      "xbox": "y.webp",
+      "ps5": "triangle.webp"
+    },
+    "openSettings": {
+      "pc": "i.webp",
+      "xbox": "menu.webp",
+      "ps5": "options.webp"
+    }
+  }
+}

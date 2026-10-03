@@ -46,6 +46,7 @@
       var rows = box.querySelectorAll('.theme-control');
       for (var i = 0; i < rows.length; i++) {
         var row = rows[i];
+        if (row.classList.contains('cache-boost-control')) { row.remove(); continue; }
         if (row.classList.contains('toggle-option')) bindPerformanceRow(row, b);
         else if (row.querySelector('select')) bindQualityRow(row, b);
         else row.remove();

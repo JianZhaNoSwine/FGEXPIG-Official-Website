@@ -40,6 +40,11 @@
   --wallpaper-dim-bottom: 0.42;
   --card-blur: 0px;
   --avatar-circle-size: 36px;
+  /* 所有平台按键图标的统一高度；比文字略大，并统一保留描边 */
+  --key-icon-height: 20px;
+  --key-icon-outline: 1px;
+  /* 底栏缩放参考：左右合计让出两个头像圆直径 */
+  --dock-side-inset: var(--avatar-circle-size);
   /* logo 圆角矩形卡片：1:2 长方形（宽 = 高 × 2） */
   --card-h: clamp(46px, 7.6vh, 66px);
   --card-w: calc(var(--card-h) * 2);
@@ -1625,6 +1630,10 @@ html.pause-menu-open .tb-avatar-level { display: none; }
   from { opacity: 0; transform: translateX(-50%) translateY(28px); }
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
+@keyframes bottom-key-hints-enter {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 @keyframes pause-exp-enter {
   from { opacity: 0; transform: translateX(-50%) translateY(24px); }
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -2088,6 +2097,16 @@ html.pause-menu-open .account-page input { cursor: text !important; }
   background: transparent;
 }
 .pause-menu .settings-page .settings-step-btn:active { transform: scale(0.94); }
+.pause-menu .settings-page .keybind-icon-mode-control {
+  margin-bottom: 2px;
+}
+.pause-menu .settings-page .keybind-icon-mode-control .settings-card-control {
+  justify-content: space-between;
+}
+.pause-menu .settings-page .keybind-icon-mode-value {
+  min-width: 92px;
+  text-align: left;
+}
 .pause-menu .settings-page .settings-native-select[hidden] { display: none !important; }
 .pause-menu .settings-page .theme-toggle {
   width: 36px;
@@ -2128,7 +2147,8 @@ html.pause-menu-open .account-page input { cursor: text !important; }
 .pause-menu .settings-page .keybind-list { gap: 10px; }
 .pause-menu .settings-page .keybind-control {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) repeat(3, 58px);
+  /* 与上方“按键图标”左右箭头按钮组同宽：36 + 6 + 36 = 78px */
+  grid-template-columns: minmax(0, 1fr) repeat(3, 78px);
   align-items: center;
   gap: 8px;
 }
@@ -2140,8 +2160,8 @@ html.pause-menu-open .account-page input { cursor: text !important; }
   background: rgba(255, 255, 255, 0.14);
 }
 .keybind-button {
-  width: 58px;
-  min-width: 58px;
+  width: 78px;
+  min-width: 78px;
   height: 36px;
   padding: 0 6px;
   border: 1px solid #fff;
@@ -2161,6 +2181,8 @@ html.pause-menu-open .account-page input { cursor: text !important; }
   justify-content: center;
 }
 .gamepad-keybind.is-empty { border-color: transparent; }
+/* 按键框内部图标居中（键盘框为 button，需用 margin 居中） */
+.keybind-button .keybind-key-icon { margin: 0 auto; }
 .keybind-button.is-capturing {
   color: var(--accent-pink);
   background: rgba(255, 255, 255, 0.14);
@@ -2443,6 +2465,10 @@ html.has-card-blur .pause-menu .settings-page .font-item {
   color: var(--text-secondary);
   font-size: var(--text-large);
   text-align: center;
+}
+/* 按键列表局部重绘（切换按键图标 / 改键）时不播放入场动画 */
+.pause-menu.open .pause-menu-inner > .sidebar-panel:not([hidden]) .keybind-list.keybind-list-instant > * {
+  animation: none !important;
 }
 /* 暂停菜单控件按所在侧滑入 */
 .pause-menu.open .pause-menu-inner > .sidebar-panel:not([hidden]) .sidebar-header,
@@ -6612,4 +6638,142 @@ html.guest-user .shop-owned-bar.is-guest-disabled {
 .guest-comment-login:focus-visible {
   color: var(--accent-pink);
   outline: none;
+}
+/* ===== 平台按键提示：图标高度统一为顶栏文字高度 ===== */
+.key-icon-filter-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.key-icon {
+  display: block;
+  height: var(--key-icon-height);
+  width: auto;
+  max-height: var(--key-icon-height);
+  object-fit: contain;
+  pointer-events: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-user-drag: none;
+  /* 基于透明通道生成对称 1px 描边，避免图标视觉偏心。 */
+  filter: url(#key-icon-outline);
+}
+
+/* 顶栏内嵌按键提示：名字左侧（返回/暂停）与曲名右侧（设置），随平台图标切换 */
+.tb-inline-key {
+  display: none;
+  flex: none;
+  height: var(--key-icon-height);
+  width: auto;
+}
+html.key-icons-topbar-active:not(.outer-screen-layout):not(.inner-screen-layout) .tb-inline-key {
+  display: block;
+}
+
+/* 顶栏左右两翼的按键图标：不参与 topnav 内部布局 */
+.topbar-key-icon {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: none;
+  transform: translateY(-50%);
+}
+.topbar-key-icon-left {
+  right: calc(50% + var(--topnav-half-width, 112px) + 14px);
+}
+.topbar-key-icon-right {
+  left: calc(50% + var(--topnav-half-width, 112px) + 14px);
+}
+html.key-icons-topbar-active:not(.outer-screen-layout):not(.inner-screen-layout) .topbar-key-icon {
+  display: block;
+}
+
+/* 设置页自己的顶栏两侧图标 */
+.settings-topnav-key {
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  display: none;
+  transform: translateY(-50%);
+}
+.settings-topnav-key-left {
+  right: calc(50% + var(--settings-topnav-half-width, 240px) + 14px);
+}
+.settings-topnav-key-right {
+  left: calc(50% + var(--settings-topnav-half-width, 240px) + 14px);
+}
+html:not(.outer-screen-layout):not(.inner-screen-layout) .settings-page:not([hidden]) .settings-topnav-key {
+  display: block;
+}
+
+/* 底栏左右两侧的按键图标 */
+.dock-side-key {
+  position: absolute;
+  top: 50%;
+  z-index: 4;
+  display: none;
+  height: var(--key-icon-height);
+  width: auto;
+  transform: translateY(-50%);
+}
+.dock-side-key-left {
+  left: var(--dock-key-avatar-x, 0px);
+  transform: translate(-50%, -50%);
+}
+.dock-side-key-right {
+  left: var(--dock-key-music-x, 100%);
+  transform: translate(-50%, -50%);
+}
+html.key-icons-home-active:not(.outer-screen-layout):not(.inner-screen-layout) .dock-side-key {
+  display: block;
+}
+@media (prefers-reduced-motion: reduce) {
+  .topbar-key-icon,
+  .dock-side-key,
+  .bottom-key-hint .key-icon { transition: none !important; }
+}
+
+/* 左下角按键提示行：与刻度条中心线对齐 */
+.bottom-key-hints.entering {
+  animation: bottom-key-hints-enter 0.58s var(--ease-out) 0.08s both;
+}
+.bottom-key-hints {
+  position: fixed;
+  left: 16px;
+  /* 与 .ruler 的中心线对齐：刻度中心距底 21px，提示行高 20px。 */
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 11px);
+  z-index: 14;
+  display: none;
+  align-items: center;
+  gap: 18px;
+  height: var(--key-icon-height);
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+html.key-icons-home-active:not(.outer-screen-layout):not(.inner-screen-layout) .bottom-key-hints {
+  display: flex;
+}
+.bottom-key-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--key-icon-height);
+  white-space: nowrap;
+}
+.bottom-key-hint .key-icon {
+  height: var(--key-icon-height);
+  max-height: var(--key-icon-height);
+}
+.bottom-key-hint-label {
+  color: var(--text-primary);
+  font-size: var(--text-large);
+  line-height: 1;
+  text-shadow: 0 1px 1px #000, 0 0 4px rgba(0, 0, 0, .92);
+}
+/* 底栏缩短：两侧各让出一个头像圆尺寸，左右图标占用释放出的空间 */
+.dock {
+  width: calc(var(--slot) * 6 + 180px - 2 * var(--dock-side-inset));
 }
