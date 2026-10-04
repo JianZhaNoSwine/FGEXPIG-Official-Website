@@ -42,6 +42,12 @@
   --avatar-circle-size: 36px;
   /* 所有平台按键图标的统一高度；比文字略大，并统一保留描边 */
   --key-icon-height: 20px;
+  /* 暂停菜单 / 用户切换 / 称号 / 设置页的边距：与首页四等边一致（16px）；
+     正屏模式比较特殊，左右值由 JS 在 root 上实时覆盖。 */
+  --pause-margin-top: 16px;
+  --pause-margin-right: 16px;
+  --pause-margin-bottom: 16px;
+  --pause-margin-left: 16px;
   --key-icon-outline: 1px;
   /* 底栏缩放参考：左右合计让出两个头像圆直径 */
   --dock-side-inset: var(--avatar-circle-size);
@@ -171,7 +177,7 @@ html.ui-hidden .bg-tint {
 .page {
   position: absolute;
   top: calc(env(safe-area-inset-top, 0px) + 12px + 52px + 12px);
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 22px + var(--card-h, 80px) + 40px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 22px + var(--bottom-ui-lift, 0px) + var(--card-h, 80px) + 40px);
   left: 0;
   right: 0;
   opacity: 0;
@@ -292,6 +298,16 @@ html.ui-hidden .bg-tint {
   pointer-events: auto;
 }
 .card-scroll-track.is-dragging { opacity: 1; }
+/* 设置页 / 更新日志页的分割线滚动条：不透明白色 + 常驻显示（不随滚动淡出） */
+.card-scroll-track.divider-scroll-track.is-scrollable {
+  opacity: 1;
+  pointer-events: auto;
+}
+.card-scroll-track.divider-scroll-track .card-scroll-thumb,
+.card-scroll-track.divider-scroll-track .card-scroll-thumb:active,
+.card-scroll-track.divider-scroll-track.is-dragging .card-scroll-thumb {
+  background: #fff;
+}
 .card-scroll-thumb {
   position: absolute;
   left: 50%;
@@ -1420,7 +1436,8 @@ html.ui-hidden .bg-tint {
 .dock-wrap {
   position: fixed;
   left: 50%;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
+  /* --bottom-ui-lift 由 JS 计算：让左下角第一个按键图标的左边距 = 下边距 */
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 22px + var(--bottom-ui-lift, 0px));
   transform: translateX(-50%);
   z-index: 10;
 }
@@ -1434,10 +1451,12 @@ html.ui-hidden .bg-tint {
   left: 50%;
   /* dock 内卡片底边距 dock 底边约 20px，dock 底边距视口底 22px，
      视觉空白共约 42px，刻度线居中于此区间 */
-  bottom: -5px;
+  /* 中心固定在 -1px：bottom = -1px - 高度/2 = -6px（白色刻度 10px）；
+     视觉平衡：整条刻度线再下移 2px */
+  bottom: -8px;
   transform: translateX(-50%);
   width: min(260px, 60vw);
-  height: 8px;
+  height: 10px;
   /* 每 11px 一格、1.5px 竖线居中于格内；居中平铺保证正中心恰好有一根刻度 */
   background-image: linear-gradient(
     90deg,
@@ -1469,16 +1488,60 @@ html.ui-hidden .bg-tint {
   );
 }
 
-/* 最中心主刻度：加粗、略加长（独立元素，不被刻度线的遮罩裁剪）；
-   竖向中心与普通刻度对齐，上下各长出 2px */
+/* 暂停菜单左侧白线：整体只有一条线，打开菜单时从上往下平滑显现（不分段） */
+.pause-menu .sidebar-panel#panelMenu .sidebar-list {
+  position: relative;
+}
+.pause-menu .sidebar-panel#panelMenu .sidebar-list::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #fff;
+  pointer-events: none;
+  transform-origin: top center;
+  transform: scaleY(1);
+}
+@keyframes pause-sidebar-line-grow {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+/* 手柄模式：沿用原来的暂停菜单选项选中效果（选中项左侧一条白线） */
+.pause-menu .sidebar-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+}
+html.input-mode-gamepad .pause-menu .sidebar-item:hover::before,
+html.input-mode-gamepad .pause-menu .sidebar-item:focus-visible::before,
+html.input-mode-gamepad .pause-menu .sidebar-item.is-selected::before {
+  opacity: 1;
+}
+/* 只有键鼠模式才是「一条白线常驻」；手柄模式隐藏整列那条线 */
+html.input-mode-gamepad .pause-menu .sidebar-panel#panelMenu .sidebar-list::before {
+  display: none;
+}
+.pause-menu.open .pause-menu-inner > .sidebar-panel#panelMenu:not([hidden]) .sidebar-list::before {
+  animation: pause-sidebar-line-grow 0.55s var(--ease-out) both;
+}
+
+/* 最中心主刻度（粉色）：16px，比白色刻度长；竖向中心仍与普通刻度对齐 */
 .ruler-major {
   position: absolute;
   left: 50%;
-  /* .ruler 中心在 dock 底上方 1px；主刻度高 12px → bottom = -1 - 6 = -7px */
-  bottom: -7px;
+  /* 中心固定在 -1px：bottom = -1px - 高度/2 = -9px；同样下移 2px */
+  bottom: -11px;
   transform: translateX(-50%);
   width: 3px;
-  height: 12px;
+  height: 16px;
   border-radius: 2px;
   background: var(--accent-pink);
   pointer-events: none;
@@ -1667,7 +1730,7 @@ html.pause-menu-open .tb-avatar-level { display: none; }
   transition: transform 0.35s var(--ease-out);
 }
 .pause-menu {
-  --pause-side-padding: clamp(24px, 5vw, 96px);
+  --pause-side-padding: var(--pause-margin-right);
   position: fixed;
   inset: 0;
   z-index: 80;
@@ -1677,9 +1740,9 @@ html.pause-menu-open .tb-avatar-level { display: none; }
   column-gap: clamp(24px, 4vw, 72px);
   align-items: stretch;
   /* 可见内容区最大与首页三卡片组合宽度一致，宽度不足时仍自适应视口 */
-  width: min(100%, calc(var(--home-cards-width) + 2 * var(--pause-side-padding)));
+  width: min(100%, calc(var(--home-cards-width) + var(--pause-margin-left) + var(--pause-margin-right)));
   margin-inline: auto;
-  padding: calc(env(safe-area-inset-top, 0px) + 8vh) var(--pause-side-padding) calc(env(safe-area-inset-bottom, 0px) + 7vh);
+  padding: calc(env(safe-area-inset-top, 0px) + var(--pause-margin-top)) var(--pause-margin-right) calc(env(safe-area-inset-bottom, 0px) + var(--pause-margin-bottom)) var(--pause-margin-left);
   color: #fff;
   background: transparent;
   opacity: 0;
@@ -1694,8 +1757,8 @@ html.pause-menu-open .tb-avatar-level { display: none; }
 }
 .pause-site-value {
   position: absolute;
-  top: calc(env(safe-area-inset-top, 0px) + clamp(16px, 3vh, 32px));
-  right: var(--pause-side-padding);
+  top: calc(env(safe-area-inset-top, 0px) + var(--pause-margin-top));
+  right: var(--pause-margin-right);
   z-index: 4;
   display: flex;
   flex-direction: column;
@@ -1930,8 +1993,7 @@ html.pause-menu-open .tb-avatar-level { display: none; }
   color: var(--accent-pink);
   box-shadow: inset 0 0 0 1px rgba(var(--accent-pink-rgb), 0.12);
 }
-html.pause-menu-open .account-page button:not(:disabled),
-html.pause-menu-open .title-page .settings-back { cursor: pointer !important; }
+html.pause-menu-open .account-page button:not(:disabled):not(.settings-back) { cursor: pointer !important; }
 html.pause-menu-open .account-page input { cursor: text !important; }
 .pause-menu .title-page .title-list {
   flex: 0 1 auto;
@@ -1973,14 +2035,24 @@ html.pause-menu-open .account-page input { cursor: text !important; }
   left: 0;
   top: 50%;
   transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 8px 0;
   border: 0;
   background: transparent;
-  color: rgba(255, 255, 255, 0.62);
+  color: #fff;
   font-size: 14px;
-  cursor: pointer;
+  /* 按键图标 + 文字整体作为点击目标，反馈与首页左下角按键提示一致 */
+  transition: opacity 0.15s var(--ease-out), transform 0.15s var(--ease-out);
+  user-select: none;
+  -webkit-user-select: none;
 }
-.settings-back:hover { color: #fff; }
+/* 二级页左上角：按键图标 + 白色文字 */
+.settings-back-icon { height: var(--key-icon-height); width: auto; }
+.settings-back-label { color: #fff; line-height: 1; }
+.settings-back:hover { opacity: 0.85; }
+.settings-back:active { transform: translateY(-50%) scale(0.95); }
 .settings-tabs { gap: 0; }
 .settings-tab {
   padding: 0 22px;
@@ -1990,6 +2062,7 @@ html.pause-menu-open .account-page input { cursor: text !important; }
 .settings-tab:hover { color: var(--text-primary); }
 .settings-tab.is-active { color: var(--accent-pink); }
 .settings-layout {
+  position: relative; /* 设置页 / 更新日志页的分割线滚动条以它为定位容器 */
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
@@ -2000,13 +2073,27 @@ html.pause-menu-open .account-page input { cursor: text !important; }
   padding-top: 28px;
   overflow: hidden;
 }
+/* 设置页 / 更新日志页的分割线：独立静态元素，不参与任何入场动画 */
+.settings-layout::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 28px; /* 与 .settings-layout 的 padding-top 一致 */
+  bottom: 0;
+  width: 1px;
+  margin-left: -0.5px;
+  background: rgba(255, 255, 255, 0.14);
+  pointer-events: none;
+  z-index: 1;
+}
 .settings-left {
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  padding-right: clamp(15px, 2.5vw, 43px);
+  /* 中心线左侧间距 = 网页左边距 */
+  padding-right: var(--pause-margin-left, 16px);
 }
 .settings-left::-webkit-scrollbar {
   display: none;
@@ -2273,8 +2360,8 @@ html.has-card-blur .pause-menu .settings-page .font-item {
 }
 .settings-description {
   min-height: 0;
-  padding: 0 0 0 clamp(15px, 2.5vw, 43px);
-  border-left: 1px solid rgba(255, 255, 255, 0.14);
+  /* 中心线右侧间距 = 网页右边距；分割线由 .settings-layout::after 静态绘制 */
+  padding: 0 0 0 var(--pause-margin-right, 16px);
 }
 .settings-description h3 {
   margin: 0;
@@ -2294,6 +2381,70 @@ html.has-card-blur .pause-menu .settings-page .font-item {
   line-height: 1.9;
   white-space: pre-line;
 }
+
+/* ===== 暂停菜单左下角版本（按键图标 + 文字，可点击进入更新日志） ===== */
+.pause-version-hint {
+  position: absolute;
+  left: var(--pause-margin-left, 16px);
+  bottom: var(--pause-margin-bottom, 16px);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+}
+.pause-version-hint .bottom-key-hint-label {
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+/* 版本提示入场动画：与右侧经验条（.bottom-exp-hud）完全一致的时长 / 缓动 / 延迟与位移，
+   只是不做 translateX(-50%)（它本来就靠左边距定位，不是水平居中） */
+@keyframes pause-version-hint-enter {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.pause-menu.open .pause-version-hint {
+  animation: pause-version-hint-enter 0.58s var(--ease-out) 0.08s both;
+}
+/* 版本只在暂停菜单主菜单显示，二级页（设置 / 称号 / 用户切换 / 更新日志）不显示 */
+.pause-menu.is-subpage-open .pause-version-hint {
+  display: none;
+}
+
+/* ===== 更新日志页面：设置页布局，只有左侧内容 + 中心分割线，不使用卡片 ===== */
+.update-page {
+  min-height: 0;
+}
+.update-layout {
+  min-height: 0;
+}
+.update-left {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.update-log-entry {
+  margin: 0 0 28px;
+  /* 与首页 3 卡片里的内容同一套入场动画（延迟由 JS 按顺序给出） */
+  animation: card-content-rise var(--card-content-duration) var(--ease-out) var(--content-rise-delay, 0ms) backwards;
+}
+.update-log-entry:last-child {
+  margin-bottom: 0;
+}
+.update-log-version {
+  margin: 0 0 4px;
+  color: #fff;
+  font-size: 16px;
+  line-height: 1.9;
+}
+.update-log-line {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 14px;
+  line-height: 1.9;
+  white-space: pre-line;
+}
+.update-log-line.is-heading {
+  /* 与普通行完全一致的行距与字号，只是文字更亮 */
+  color: #fff;
+}
 .pause-menu .sidebar-list {
   flex: 0 1 auto;
   max-height: min(48vh, 430px);
@@ -2311,17 +2462,6 @@ html.has-card-blur .pause-menu .settings-page .font-item {
   color: var(--text-primary);
   font-size: 14px;
 }
-.pause-menu .sidebar-item::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: #fff;
-  opacity: 0;
-  pointer-events: none;
-}
 .pause-menu .sidebar-item:hover,
 .pause-menu .sidebar-item:focus-visible,
 .pause-menu .sidebar-item.is-selected {
@@ -2337,11 +2477,6 @@ html.has-card-blur .pause-menu .settings-page .font-item {
 .pause-menu .sidebar-item:focus-visible > svg,
 .pause-menu .sidebar-item.is-selected > svg {
   color: var(--accent-pink);
-}
-.pause-menu .sidebar-item:hover::before,
-.pause-menu .sidebar-item:focus-visible::before,
-.pause-menu .sidebar-item.is-selected::before {
-  opacity: 1;
 }
 .pause-menu-ads {
   grid-column: 3;
@@ -2498,6 +2633,11 @@ html.has-card-blur .pause-menu .settings-page .font-item {
   animation: pause-control-in-right 0.46s var(--ease-out) 0.10s backwards;
 }
 .pause-menu.open .settings-topnav {
+  animation: pause-control-in-top 0.42s var(--ease-out) backwards;
+}
+/* 称号 / 用户切换页左上角的返回按钮（按键 + 文字）补上与设置 / 更新日志页相同的入场动画 */
+.pause-menu.open .pause-menu-inner > .sidebar-panel.title-page:not([hidden]) .title-topbar,
+.pause-menu.open .pause-menu-inner > .sidebar-panel.account-page:not([hidden]) .account-topbar {
   animation: pause-control-in-top 0.42s var(--ease-out) backwards;
 }
 .pause-menu.open .settings-description {
@@ -3085,6 +3225,46 @@ body.startup-lock { overflow: hidden; }
   background: #000;
   transition: opacity 0.4s ease;
 }
+/* 开场图片序列（logo/1~5）：放到最大（等比撑满屏幕，多余部分留黑），交叉淡入淡出，每张 3 秒 */
+.startup-splash-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  z-index: 2;
+}
+.startup-splash-art.is-visible { opacity: 1; }
+.startup-splash-art[hidden] { display: none; }
+/* 第 5 张图片上的旋转 loading：外层负责居中，内层负责顺时针旋转 */
+.startup-splash-loading {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 3;
+}
+.startup-splash-loading.is-visible { opacity: 1; }
+.startup-splash-loading[hidden] { display: none; }
+.startup-splash-loading-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: startup-splash-spin 1s linear infinite;
+}
+@keyframes startup-splash-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 .startup-overlay.is-landing .startup-video { opacity: 0; }
 .startup-landing {
   position: absolute;
@@ -3273,6 +3453,30 @@ body.startup-lock { overflow: hidden; }
 
 /* ===== 跟随鼠标的称号主题光球 ===== */
 html.fx-cursor, html.fx-cursor body, html.fx-cursor body * { cursor: none !important; }
+/* 联网检测 / 进入主页 5 秒后的旋转 loading：以鼠标中心为中心，位于光效之上 */
+.refresh-loading {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 121; /* 在 .cursor-glow（120）之上 */
+  /* loading.png 原始 64×64，显示为 1.5 倍大小 = 96×96 */
+  width: 96px;
+  height: 96px;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+  transition: opacity 0.35s ease;
+}
+.refresh-loading.is-visible { opacity: 1; }
+.refresh-loading[hidden] { display: none; }
+.refresh-loading-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* 与开场 loading 同一套顺时针旋转动画 */
+  animation: startup-splash-spin 1s linear infinite;
+  -webkit-user-drag: none;
+}
 .cursor-glow {
   position: fixed;
   left: 0;
@@ -3306,7 +3510,6 @@ html.pause-menu-open .settings-page .settings-step-btn:not(:disabled),
 html.pause-menu-open .settings-page .theme-toggle:not(:disabled),
 html.pause-menu-open .settings-page .settings-tab,
 html.pause-menu-open .settings-page .settings-tab *,
-html.pause-menu-open .settings-page .settings-back,
 html.pause-menu-open .settings-page button.keybind-button:not(:disabled),
 html.pause-menu-open .settings-page .sponsor-option,
 html.pause-menu-open .settings-page .sponsor-option * {
@@ -4421,8 +4624,8 @@ body.minigame-open { overflow: hidden; }
   .settings-description {
     padding: 18px 0 0;
     border-top: 1px solid rgba(255, 255, 255, 0.14);
-    border-left: 0;
   }
+  .settings-layout::after { display: none; }
 }
 
 .console-footer { padding: 12px 16px 0; display: flex; justify-content: center; }
@@ -6742,8 +6945,9 @@ html.key-icons-home-active:not(.outer-screen-layout):not(.inner-screen-layout) .
 .bottom-key-hints {
   position: fixed;
   left: 16px;
-  /* 与 .ruler 的中心线对齐：刻度中心距底 21px，提示行高 20px。 */
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 11px);
+  /* 与 .ruler 的中心线对齐：刻度中心距底 21px，提示行高 20px；
+     再叠加 --bottom-ui-lift，使第一个图标的左边距 = 下边距。 */
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 11px + var(--bottom-ui-lift, 0px));
   z-index: 14;
   display: none;
   align-items: center;
@@ -6756,6 +6960,24 @@ html.key-icons-home-active:not(.outer-screen-layout):not(.inner-screen-layout) .
 html.key-icons-home-active:not(.outer-screen-layout):not(.inner-screen-layout) .bottom-key-hints {
   display: flex;
 }
+/* 「按键图标 + 文字」整块可点击：点击等同于按对应按键 */
+.key-hint-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--key-icon-height);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: opacity 0.15s var(--ease-out), transform 0.15s var(--ease-out);
+}
+.key-hint-button:hover { opacity: 0.85; }
+.key-hint-button:active { transform: scale(0.95); }
 .bottom-key-hint {
   display: inline-flex;
   align-items: center;

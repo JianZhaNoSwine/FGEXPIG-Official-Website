@@ -121,6 +121,7 @@
 
   var runtimeCacheActivityId = '';
   var runtimeCacheBoostEnabled = false;
+  var runtimeCacheFontPaths = [];
   var runtimeCacheWorkerReady = null;
 
   function postRuntimeCacheActivity(worker) {
@@ -129,7 +130,8 @@
       worker.postMessage({
         type: 'fgexpig-cache-activity',
         activity: runtimeCacheActivityId,
-        boost: runtimeCacheBoostEnabled
+        boost: runtimeCacheBoostEnabled,
+        font: runtimeCacheFontPaths
       });
     } catch (err) {}
   }
@@ -150,6 +152,20 @@
         runtimeCacheWorkerReady = null;
         return null;
       });
+  }
+
+  // 当前选中字体的文件（告诉 Service Worker，缓存加速时只缓存选中的这一套字体）
+  function setRuntimeCacheFont(paths) {
+    var next = Array.isArray(paths) ? paths.map(String) : [];
+    if (next.length === runtimeCacheFontPaths.length && next.every(function (p, i) { return p === runtimeCacheFontPaths[i]; })) return;
+    runtimeCacheFontPaths = next;
+    if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
+    postRuntimeCacheActivity(navigator.serviceWorker.controller);
+    if (runtimeCacheWorkerReady) {
+      runtimeCacheWorkerReady.then(function (registration) {
+        if (registration) postRuntimeCacheActivity(registration.active || registration.waiting);
+      });
+    }
   }
 
   // 「缓存加速」开关：开启后 Service Worker 使用新缓存方案（可缓存更多静态资源 + 延迟释放非选中活动）。
@@ -232,19 +248,22 @@
       prevNav: 'q.webp', nextNav: 'e.webp',
       prevActivity: 'a.webp', nextActivity: 'd.webp',
       toggleMusic: 'x.webp', rewindMusic: 'z.webp', forwardMusic: 'c.webp',
-      toggleUi: 'tab.webp', openSettings: 'i.webp', pauseBack: 'esc.webp'
+      toggleUi: 'tab.webp', openSettings: 'i.webp', pauseBack: 'esc.webp',
+      subpageBack: 'esc.webp', logoutAccount: 't.webp', openUpdateLog: 'v.webp'
     },
     xbox: {
       prevNav: 'lb.webp', nextNav: 'rb.webp',
       prevActivity: 'lt.webp', nextActivity: 'rt.webp',
       toggleMusic: 'x.webp', rewindMusic: 'left.webp', forwardMusic: 'right.webp',
-      toggleUi: 'y.webp', openSettings: 'menu.webp', pauseBack: 'view.webp'
+      toggleUi: 'y.webp', openSettings: 'menu.webp', pauseBack: 'view.webp',
+      subpageBack: 'b.webp', logoutAccount: 'ls.webp', openUpdateLog: 'rs.webp'
     },
     ps5: {
       prevNav: 'l1.webp', nextNav: 'r1.webp',
       prevActivity: 'l2.webp', nextActivity: 'r2.webp',
       toggleMusic: 'square.webp', rewindMusic: 'left.webp', forwardMusic: 'right.webp',
-      toggleUi: 'triangle.webp', openSettings: 'options.webp', pauseBack: 'touchpad.webp'
+      toggleUi: 'triangle.webp', openSettings: 'options.webp', pauseBack: 'touchpad.webp',
+      subpageBack: 'circle.webp', logoutAccount: 'l3.webp', openUpdateLog: 'r3.webp'
     }
   };
 
@@ -395,8 +414,10 @@
       }
     }
     scheduleDockSideIconAlignment();
+    syncAdminCornerButtons();
     // 图标切换后浏览器可能还没完成新图布局，稍后再校准一次底栏两侧位置。
     setTimeout(scheduleDockSideIconAlignment, 120);
+    setTimeout(syncAdminCornerButtons, 120);
   }
 
   function showDockSelectedFrameForHomeEntry() {
@@ -411,18 +432,32 @@
     ['toggleUi', '显示']
   ];
 
+  // 统一的「按键图标 + 文字」可点击提示：整块视为一个整体，
+  // 点击等同于按下对应按键（后续新增页面复用这个函数即可）。
+  function createKeyHintButton(actionId, label, className) {
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'key-hint-button' + (className ? ' ' + className : '');
+    button.setAttribute('data-key-hint-action', actionId);
+    button.setAttribute('aria-label', label);
+    button.appendChild(createKeyIcon(actionId, 'key-hint-icon'));
+    var labelEl = document.createElement('span');
+    labelEl.className = 'key-hint-label bottom-key-hint-label';
+    labelEl.textContent = label;
+    button.appendChild(labelEl);
+    button.addEventListener('click', function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      performKeyAction(actionId);
+    });
+    return button;
+  }
+
   function renderBottomKeyHints() {
     if (!bottomKeyHintsEl) return;
     bottomKeyHintsEl.innerHTML = '';
     BOTTOM_KEY_HINTS.forEach(function (entry) {
-      var item = document.createElement('span');
-      item.className = 'bottom-key-hint';
-      item.appendChild(createKeyIcon(entry[0], 'bottom-key-hint-icon'));
-      var label = document.createElement('span');
-      label.className = 'bottom-key-hint-label';
-      label.textContent = entry[1];
-      item.appendChild(label);
-      bottomKeyHintsEl.appendChild(item);
+      bottomKeyHintsEl.appendChild(createKeyHintButton(entry[0], entry[1], 'bottom-key-hint'));
     });
     syncKeyIcons();
   }
@@ -1145,14 +1180,98 @@
     requestAnimationFrame(function () { syncLiquidGlassRenderer(true); });
   }
 
+  // 管理员的两个角落按钮（控制台 / 数据管理）移到顶栏两侧按键图标的外侧，垂直居中
+  function syncAdminCornerButtons() {
+    if (typeof editBtn === 'undefined' || typeof consoleBtn === 'undefined') return;
+    if (!editBtn || !consoleBtn) return;
+    var topbar = document.getElementById('topbar');
+    var leftIcon = document.querySelector('.topbar-key-icon-left');
+    var rightIcon = document.querySelector('.topbar-key-icon-right');
+    var reset = function (btn) {
+      btn.style.top = '';
+      btn.style.left = '';
+      btn.style.right = '';
+      btn.style.bottom = '';
+    };
+    if (!topbar || !leftIcon || !rightIcon) {
+      reset(consoleBtn);
+      reset(editBtn);
+      return;
+    }
+    var topRect = topbar.getBoundingClientRect();
+    var leftRect = leftIcon.getBoundingClientRect();
+    var rightRect = rightIcon.getBoundingClientRect();
+    if (!topRect.height || !leftRect.width || !rightRect.width) {
+      // 内屏 / 外屏等不显示按键图标时，保持原来的角落位置
+      reset(consoleBtn);
+      reset(editBtn);
+      return;
+    }
+    var gap = 12;
+    var centerY = topRect.top + topRect.height / 2;
+    consoleBtn.style.bottom = 'auto';
+    consoleBtn.style.right = 'auto';
+    consoleBtn.style.top = (centerY - consoleBtn.offsetHeight / 2).toFixed(2) + 'px';
+    consoleBtn.style.left = (leftRect.left - gap - consoleBtn.offsetWidth).toFixed(2) + 'px';
+    editBtn.style.bottom = 'auto';
+    editBtn.style.right = 'auto';
+    editBtn.style.top = (centerY - editBtn.offsetHeight / 2).toFixed(2) + 'px';
+    editBtn.style.left = (rightRect.right + gap).toFixed(2) + 'px';
+  }
+
   var dockSideIconAlignFrame = 0;
+  var dockSideIconSettleTimer = 0;
+  // 下边距固定值（px）：= 暂停菜单右上角「网页价值」第一行文字距网页顶部的距离（16px）。
+  // 直接写死，不再读取实时计算的左边距 / 卡片边界。
+  var BOTTOM_UI_FIXED_MARGIN_PX = 16;
+  // .bottom-key-hints 的基准下边距（CSS 里是 11px）。
+  var BOTTOM_UI_HINT_BASE_PX = 11;
 
   function scheduleDockSideIconAlignment() {
     if (dockSideIconAlignFrame) return;
     dockSideIconAlignFrame = requestAnimationFrame(function () {
       dockSideIconAlignFrame = 0;
       syncDockSideIconAlignment();
+      // 卡片入场动画 / 布局稳定后位置还会变化，稍后再校准一次避免留下错位。
+      if (dockSideIconSettleTimer) window.clearTimeout(dockSideIconSettleTimer);
+      dockSideIconSettleTimer = window.setTimeout(function () {
+        dockSideIconSettleTimer = 0;
+        syncDockSideIconAlignment();
+      }, 900);
     });
+  }
+
+  // 取某个栏目的内容区左右边界（卡片还没生成时兜底，避免用到别的栏目卡片导致错位）
+  function sectionContentBounds(sectionEl) {
+    if (!sectionEl) return null;
+    var rect = sectionEl.getBoundingClientRect();
+    if (!rect.width) return null;
+    var style = getComputedStyle(sectionEl);
+    var padLeft = parseFloat(style.paddingLeft) || 0;
+    var padRight = parseFloat(style.paddingRight) || 0;
+    return { left: rect.left + padLeft, right: rect.right - padRight };
+  }
+
+  // 取某个栏目里所有可见 .section-card 的左右边界（没有卡片时返回 null）
+  function sectionCardBounds(sectionEl) {
+    if (!sectionEl) return null;
+    var nodes = sectionEl.querySelectorAll('.section-card');
+    var left = 0;
+    var right = 0;
+    var found = false;
+    for (var i = 0; i < nodes.length; i++) {
+      var rect = nodes[i].getBoundingClientRect();
+      if (!rect.width) continue;
+      if (!found) {
+        left = rect.left;
+        right = rect.right;
+        found = true;
+      } else {
+        if (rect.left < left) left = rect.left;
+        if (rect.right > right) right = rect.right;
+      }
+    }
+    return found ? { left: left, right: right } : null;
   }
 
   function syncDockSideIconAlignment() {
@@ -1160,32 +1279,60 @@
     var wrap = dock.closest ? dock.closest('.dock-wrap') : null;
     if (!wrap) return;
     var wrapRect = wrap.getBoundingClientRect();
-    var avatarRect = (userMenuBtn.querySelector('.tb-avatar') || userMenuBtn).getBoundingClientRect();
-    if (!wrapRect.width || !avatarRect.width) return;
+    if (!wrapRect.width) return;
 
     var fallbackSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--key-icon-height')) || 20;
     var firstHintIcon = bottomKeyHintsEl ? bottomKeyHintsEl.querySelector('.key-icon') : null;
     var firstHintRect = firstHintIcon ? firstHintIcon.getBoundingClientRect() : null;
     var firstHintWidth = firstHintRect && firstHintRect.width ? firstHintRect.width : fallbackSize;
-    var avatarCenter = avatarRect.left + avatarRect.width / 2;
-    var firstHintLeft = avatarCenter - firstHintWidth / 2;
+
+    // 基准：优先取商店页（首页）3 张卡片的左右边界，其余栏目沿用同一基准，
+    // 这样切换栏目时底栏两侧按键与下边距都不会跳动；首页卡片未生成时退回当前栏目。
+    var basePage = pagesWrap ? pagesWrap.querySelector('.page.active') : null;
+    var baseSection = pagesWrap ? pagesWrap.querySelector('.page.active .page-section.active') : null;
+    var homeSection = basePage ? basePage.querySelector('.page-section[data-section="home"]') : null;
+    // 优先用商店页的 3 卡片边界；首页卡片尚未生成时只用内容区兜底，
+    // 不再退回其他栏目的卡片（各栏目卡片宽度不同，会造成底栏错位）。
+    var baseBounds = sectionCardBounds(homeSection) || sectionContentBounds(homeSection) || sectionContentBounds(baseSection);
+    if (!baseBounds) return;
+    var cardsLeft = baseBounds.left;
+    var cardsRight = baseBounds.right;
+    var firstHintLeft = cardsLeft;
 
     if (bottomKeyHintsEl) bottomKeyHintsEl.style.left = firstHintLeft.toFixed(2) + 'px';
 
+    // 左下角第一个按键图标的下边距：固定 px（= 暂停菜单右上角第一行文字距网页顶部的高度），
+    // 不再根据实时计算的左边距推导。
+    var rootEl = document.documentElement;
+    var hintsVisible = !rootEl.classList.contains('outer-screen-layout') && !rootEl.classList.contains('inner-screen-layout');
+    var bottomLift = hintsVisible ? (BOTTOM_UI_FIXED_MARGIN_PX - BOTTOM_UI_HINT_BASE_PX) : 0;
+    var bottomLiftValue = bottomLift.toFixed(2) + 'px';
+    if (rootEl.style.getPropertyValue('--bottom-ui-lift') !== bottomLiftValue) {
+      rootEl.style.setProperty('--bottom-ui-lift', bottomLiftValue);
+    }
+
+    // 暂停菜单 / 用户切换 / 称号 / 设置页沿用首页四等边边距（宽屏 / 内屏为 16px）；
+    // 正屏模式比较特殊：左右边距按首页 3 卡片的左右边界实时调整。
+    var vpWidth = document.documentElement.clientWidth || window.innerWidth;
+    if (rootEl.classList.contains('portrait-layout')) {
+      rootEl.style.setProperty('--pause-margin-left', Math.max(0, cardsLeft).toFixed(2) + 'px');
+      rootEl.style.setProperty('--pause-margin-right', Math.max(0, vpWidth - cardsRight).toFixed(2) + 'px');
+    } else {
+      rootEl.style.removeProperty('--pause-margin-left');
+      rootEl.style.removeProperty('--pause-margin-right');
+    }
+
     var leftDockKey = wrap.querySelector('.dock-side-key-left');
+    var rightDockKey = wrap.querySelector('.dock-side-key-right');
     if (!leftDockKey) return;
     var leftDockWidth = leftDockKey.getBoundingClientRect().width || fallbackSize;
-    // PC / Xbox 键位图标较窄：与左下角第一个图标居中对齐；
-    // PlayStation 键位图标较宽：保持左对齐，避免左侧溢出。
-    var leftDockCenter;
-    if (keyIconPlatform() === 'ps5') {
-      leftDockCenter = firstHintLeft + leftDockWidth / 2;
-    } else {
-      leftDockCenter = firstHintLeft + firstHintWidth / 2;
-    }
-    // 右图标以视口中心为轴，与左图标严格对称。
-    var viewportWidth = document.documentElement.clientWidth || window.innerWidth;
-    var rightDockCenter = viewportWidth - leftDockCenter;
+    var rightDockWidth = rightDockKey && rightDockKey.getBoundingClientRect().width ? rightDockKey.getBoundingClientRect().width : fallbackSize;
+    // 左右两侧分别以卡片左 / 右边界为准：
+    // PC / Xbox 键位图标较窄：与左下角第一个图标居中对齐（左侧）/ 镜像（右侧）；
+    // PlayStation 键位图标较宽：左右分别贴齐卡片左 / 右边界。
+    var psLayout = keyIconPlatform() === 'ps5';
+    var leftDockCenter = psLayout ? cardsLeft + leftDockWidth / 2 : cardsLeft + firstHintWidth / 2;
+    var rightDockCenter = psLayout ? cardsRight - rightDockWidth / 2 : cardsRight - firstHintWidth / 2;
 
     wrap.style.setProperty('--dock-key-avatar-x', (leftDockCenter - wrapRect.left).toFixed(2) + 'px');
     wrap.style.setProperty('--dock-key-music-x', (rightDockCenter - wrapRect.left).toFixed(2) + 'px');
@@ -1442,6 +1589,10 @@
   var startupLanding = document.getElementById('startupLanding');
   var startupAudioStart = document.getElementById('startupAudioStart');
   var startupLogo = document.getElementById('startupLogo');
+  var startupSplashA = document.getElementById('startupSplashA');
+  var startupSplashB = document.getElementById('startupSplashB');
+  var startupSplashLoading = document.getElementById('startupSplashLoading');
+  var startupSplashLoadingArt = startupSplashLoading ? startupSplashLoading.querySelector('.startup-splash-loading-art') : null;
   var startupEntryComplete = !startupOverlay;
   var startupAudioPending = false;
   var startupPlayAttempt = 0;
@@ -1578,12 +1729,14 @@
 
   // 手动滚动处理：原生滚动条不参与布局，使用覆盖式指示条跟随内容滚动。
   // 滚轮使用缓动动画；指示条支持拖动和点击轨道定位。
-  function attachManualScroll(el) {
-    var card = el.closest ? el.closest('.section-card') : null;
+  function attachManualScroll(el, host) {
+    var card = host || (el.closest ? el.closest('.section-card') : null);
     if (!card) return;
 
     var track = document.createElement('div');
     track.className = 'card-scroll-track';
+    // 设置页 / 更新日志页的分割线滚动条：不透明白色 + 常驻显示
+    if (host && host.classList && host.classList.contains('settings-layout')) track.classList.add('divider-scroll-track');
     track.setAttribute('role', 'scrollbar');
     track.setAttribute('aria-orientation', 'vertical');
     var thumb = document.createElement('i');
@@ -1633,10 +1786,19 @@
       var cardRect = card.getBoundingClientRect();
       var bodyRect = el.getBoundingClientRect();
       var trackWidth = track.offsetWidth || 14;
-      var gap = Math.max(0, cardRect.right - bodyRect.right);
       track.style.top = (bodyRect.top - cardRect.top).toFixed(2) + 'px';
       track.style.height = clientHeight + 'px';
-      track.style.right = Math.max(0, (gap - trackWidth) / 2).toFixed(2) + 'px';
+      if (card.classList && card.classList.contains('settings-layout')) {
+        // 设置页 / 更新日志页：滚动条放在分割线（两列中缝）上，中心对齐
+        track.style.left = '50%';
+        track.style.right = 'auto';
+        track.style.transform = 'translateX(-50%)';
+      } else {
+        var gap = Math.max(0, cardRect.right - bodyRect.right);
+        track.style.left = 'auto';
+        track.style.transform = '';
+        track.style.right = Math.max(0, (gap - trackWidth) / 2).toFixed(2) + 'px';
+      }
       syncThumb(clientHeight, scrollHeight);
     }
 
@@ -8149,13 +8311,24 @@
       return;
     }
     startupLogo.alt = activityTitle(name);
-    startupLogo.onload = function () {
-      startupLogo.hidden = false;
+    // 起始页 logo 自身处于 hidden（无布局盒），若用 lazy 会被浏览器一直推迟加载，
+    // 导致有时首次打开看不到 logo；这里强制 eager 并主动补一次检查。
+    startupLogo.loading = 'eager';
+    var revealStartupLogo = function () {
+      if (startupLogo.naturalWidth > 0) startupLogo.hidden = false;
     };
+    startupLogo.onload = revealStartupLogo;
     startupLogo.onerror = function () {
       startupLogo.hidden = true;
     };
     bindResponsiveAsset(startupLogo, 'logo/' + name + '.png');
+    // 图片命中缓存时可能不触发 load，主动查几次。
+    revealStartupLogo();
+    if (!startupLogo.complete || !startupLogo.naturalWidth) {
+      requestAnimationFrame(revealStartupLogo);
+      window.setTimeout(revealStartupLogo, 120);
+      window.setTimeout(revealStartupLogo, 600);
+    }
   }
 
   function attemptStartupVideoPlay() {
@@ -8263,10 +8436,157 @@
     startupCloseTimer = setTimeout(function () {
       startupOverlay.hidden = true;
       releaseStartupVideoSource();
+      startRefreshLoadingCycle();
+      showCursorGlowOnEntry();
       syncLiquidGlassRenderer(true);
       startupCloseTimer = 0;
       showDockSelectedFrameForHomeEntry();
     }, outerSlideOut ? 650 : 500);
+  }
+
+  /* ---------- 开场图片序列：logo/1~5 每张 3 秒（含淡入淡出），播放完才显示登录页 ---------- */
+  var STARTUP_SPLASH_SOURCES = [
+    'logo/1.webp', 'logo/2.webp', 'logo/3.webp', 'logo/4.webp', 'logo/5.webp'
+  ];
+  var STARTUP_SPLASH_STEP_MS = 3000;  // 每张展示 3 秒（包含淡入淡出时间）
+  var STARTUP_SPLASH_FADE_MS = 500;   // 与 CSS 的 transition 保持一致
+  var startupSplashActive = false;
+  var startupSplashRunId = 0;
+  var startupSplashDone = null;
+  var startupSplashStepTimer = 0;
+  var startupSplashStepFn = null;
+
+  // 第 5 张图片上的 loading：位置 = 图片内部「横向 39.74%、纵向 50%」，
+  // 大小 = loading 原始尺寸 × 图片放大倍率 × 3，并保持顺时针旋转。
+  function positionStartupLoading(layer) {
+    if (!startupSplashLoading || !startupSplashLoadingArt || !layer) return;
+    var rect = layer.getBoundingClientRect();
+    var natW = layer.naturalWidth || 0;
+    var natH = layer.naturalHeight || 0;
+    if (!rect.width || !rect.height || !natW || !natH) {
+      startupSplashLoading.hidden = true;
+      return;
+    }
+    // object-fit: contain 后图片实际绘制区域
+    var scale = Math.min(rect.width / natW, rect.height / natH);
+    var drawW = natW * scale;
+    var drawH = natH * scale;
+    var drawLeft = rect.left + (rect.width - drawW) / 2;
+    var drawTop = rect.top + (rect.height - drawH) / 2;
+    var centerX = drawLeft + drawW * 0.3974;
+    var centerY = drawTop + drawH * 0.5;
+    var loadNatW = startupSplashLoadingArt.naturalWidth || 0;
+    var loadNatH = startupSplashLoadingArt.naturalHeight || 0;
+    var loadW = loadNatW ? loadNatW * scale * 3 : 48;
+    var loadH = loadNatH ? loadNatH * scale * 3 : 48;
+    startupSplashLoading.style.left = centerX.toFixed(2) + 'px';
+    startupSplashLoading.style.top = centerY.toFixed(2) + 'px';
+    startupSplashLoading.style.width = loadW.toFixed(2) + 'px';
+    startupSplashLoading.style.height = loadH.toFixed(2) + 'px';
+  }
+
+  function hideStartupLoading() {
+    if (!startupSplashLoading) return;
+    startupSplashLoading.classList.remove('is-visible');
+    startupSplashLoading.hidden = true;
+  }
+
+  function cleanupStartupSplashLayers() {
+    [startupSplashA, startupSplashB].forEach(function (layer) {
+      if (!layer) return;
+      layer.hidden = true;
+      layer.classList.remove('is-visible');
+      layer.removeAttribute('src');
+    });
+    if (startupSplashLoading) {
+      startupSplashLoading.hidden = true;
+      startupSplashLoading.classList.remove('is-visible');
+    }
+  }
+
+  // 点击 / 任意按键：只跳过当前这一张，立刻切到下一张（第 5 张则进入登录页）
+  function advanceStartupSplash() {
+    if (!startupSplashActive || typeof startupSplashStepFn !== 'function') return false;
+    if (startupSplashStepTimer) {
+      window.clearTimeout(startupSplashStepTimer);
+      startupSplashStepTimer = 0;
+    }
+    startupSplashStepFn();
+    return true;
+  }
+
+  function runStartupSplash(done) {
+    var layers = [startupSplashA, startupSplashB];
+    if (!layers[0] || !layers[1] || !STARTUP_SPLASH_SOURCES.length) {
+      if (done) done();
+      return;
+    }
+    startupSplashActive = true;
+    startupSplashDone = done || null;
+    var runId = ++startupSplashRunId;
+    // 预加载：最多等 2.5 秒，确保第一张淡入时已经可用
+    var preloads = STARTUP_SPLASH_SOURCES.map(function (src) {
+      return new Promise(function (resolve) {
+        var img = new Image();
+        img.onload = function () { resolve(); };
+        img.onerror = function () { resolve(); };
+        img.src = src;
+      });
+    });
+    var timeout = new Promise(function (resolve) { window.setTimeout(resolve, 2500); });
+    Promise.race([Promise.all(preloads), timeout]).then(function () {
+      if (!startupSplashActive || runId !== startupSplashRunId) return;
+      var index = 0;
+      var current = 0;
+      var step = function () {
+        if (!startupSplashActive || runId !== startupSplashRunId) return;
+        startupSplashStepTimer = 0;
+        if (index >= STARTUP_SPLASH_SOURCES.length) {
+          // 最后一张淡出后再显示登录页
+          layers[current].classList.remove('is-visible');
+          hideStartupLoading();
+          startupSplashStepFn = null;
+          window.setTimeout(function () {
+            if (runId !== startupSplashRunId) return;
+            startupSplashActive = false;
+            startupSplashDone = null;
+            cleanupStartupSplashLayers();
+            if (done) done();
+          }, STARTUP_SPLASH_FADE_MS);
+          return;
+        }
+        var nextLayer = layers[1 - current];
+        var currentLayer = layers[current];
+        nextLayer.hidden = false;
+        nextLayer.src = STARTUP_SPLASH_SOURCES[index];
+        var isLastSlide = index === STARTUP_SPLASH_SOURCES.length - 1;
+        var reveal = function () {
+          requestAnimationFrame(function () {
+            nextLayer.classList.add('is-visible');
+            currentLayer.classList.remove('is-visible');
+            if (isLastSlide) {
+              // 第 5 张：叠加旋转 loading
+              positionStartupLoading(nextLayer);
+              startupSplashLoading.hidden = false;
+              requestAnimationFrame(function () { startupSplashLoading.classList.add('is-visible'); });
+            } else {
+              hideStartupLoading();
+            }
+          });
+          current = 1 - current;
+          index += 1;
+          if (startupSplashStepTimer) window.clearTimeout(startupSplashStepTimer);
+          startupSplashStepTimer = window.setTimeout(step, STARTUP_SPLASH_STEP_MS);
+        };
+        if (nextLayer.complete) reveal();
+        else {
+          nextLayer.addEventListener('load', reveal, { once: true });
+          nextLayer.addEventListener('error', reveal, { once: true });
+        }
+      };
+      startupSplashStepFn = step;
+      step();
+    });
   }
 
   function initStartupOverlay() {
@@ -8276,15 +8596,33 @@
     }
     document.body.classList.add('startup-lock');
     syncImmersiveCursorState();
+    // 外屏模式保持原样（直接进登录页）；其他模式先依次播放 logo/1~5 开场图片
+    var outerScreenStartup = shouldUseOuterScreenLayout();
+    var startStartupLanding = function () {
+      if (outerScreenStartup) showStartupLanding();
+      else runStartupSplash(showStartupLanding);
+    };
     if (window.matchMedia && window.matchMedia('(max-width: 720px)').matches) {
       startupVideo.pause();
-      showStartupLanding();
+      startStartupLanding();
       startupOverlay.addEventListener('click', function (event) {
+        if (startupSplashActive) {
+          event.preventDefault();
+          event.stopPropagation();
+          advanceStartupSplash();
+          return;
+        }
         event.preventDefault();
         event.stopPropagation();
         closeStartupOverlay();
       });
       document.addEventListener('keydown', function (event) {
+        if (startupSplashActive) {
+          event.preventDefault();
+          event.stopPropagation();
+          advanceStartupSplash();
+          return;
+        }
         if (startupOverlay && startupOverlay.hidden) return;
         event.preventDefault();
         event.stopPropagation();
@@ -8297,9 +8635,15 @@
     startupVideo.addEventListener('error', closeStartupOverlay);
     startupVideo.addEventListener('play', scheduleStartupCrossfade);
     startupVideo.addEventListener('playing', scheduleStartupCrossfade);
-    showStartupLanding();
+    startStartupLanding();
 
     startupOverlay.addEventListener('click', function (event) {
+      if (startupSplashActive) {
+        event.preventDefault();
+        event.stopPropagation();
+        advanceStartupSplash();
+        return;
+      }
       if (startupAudioPending) {
         event.preventDefault();
         event.stopPropagation();
@@ -8320,6 +8664,12 @@
     });
 
     document.addEventListener('keydown', function (event) {
+      if (startupSplashActive) {
+        event.preventDefault();
+        event.stopPropagation();
+        advanceStartupSplash();
+        return;
+      }
       if (startupAudioPending) {
         event.preventDefault();
         event.stopPropagation();
@@ -8777,6 +9127,81 @@
     }
     if (!cursorGlowFrame) cursorGlowFrame = requestAnimationFrame(runCursorGlowFrame);
   }
+  /* ---------- 联网检测 / 进入主页 5 秒后的旋转 loading（跟随鼠标中心，在光效之上） ---------- */
+  var refreshLoadingEl = document.getElementById('refreshLoading');
+  var REFRESH_LOADING_FADE_MS = 350;   // 与 CSS transition 一致
+  var REFRESH_LOADING_HOLD_MS = 3000;  // 淡入淡出之外的展示时间
+  var REFRESH_CHECK_INTERVAL_MS = 10 * 60 * 1000;
+  var refreshLoadingTimer = 0;
+  var refreshLoadingHideTimer = 0;
+  var refreshLoadingFirstTimer = 0;
+  var refreshLoadingInterval = 0;
+  var refreshLoadingCycleStarted = false;
+
+  function positionRefreshLoading() {
+    if (!refreshLoadingEl || refreshLoadingEl.hidden) return;
+    var size = refreshLoadingEl.offsetWidth || 44;
+    var x = (typeof cursorX === 'number' && cursorX >= 0 ? cursorX : window.innerWidth / 2) - size / 2;
+    var y = (typeof cursorY === 'number' && cursorY >= 0 ? cursorY : window.innerHeight / 2) - size / 2;
+    refreshLoadingEl.style.transform = 'translate3d(' + x.toFixed(2) + 'px,' + y.toFixed(2) + 'px,0)';
+  }
+
+  // 重新拉取当前活动的数据文件（no-store 绕过缓存），内容有变化则通过既有 merge 流程更新
+  function syncDataFragmentIfChanged(type, id) {
+    var descriptor = dataFileDescriptor(type, id);
+    if (!descriptor) return Promise.resolve(false);
+    return loadDataFragmentRaw(type, id).then(function (fragment) {
+      if (!fragment) return false;
+      var current = descriptor.current();
+      if (descriptor.hasData(current) && dataFileJson(current) === dataFileJson(fragment)) return false;
+      try {
+        descriptor.merge(fragment);
+        return true;
+      } catch (err) {
+        return false;
+      }
+    }).catch(function () { return false; });
+  }
+
+  function checkForNewData() {
+    var id = String(curNavLogo || '');
+    var types = ['core', 'shop', 'library', 'account', 'title', 'update'];
+    if (id) types = types.concat(['review', 'achievements', 'schedule', 'list', 'news', 'points']);
+    return Promise.all(types.map(function (type) { return syncDataFragmentIfChanged(type, id); }));
+  }
+
+  // 播放 loading：淡入 → 显示 3 秒（不含淡入淡出）→ 淡出；withCheck 为真时同时联网检测
+  function playRefreshLoading(withCheck) {
+    if (!refreshLoadingEl) return;
+    if (refreshLoadingTimer) { window.clearTimeout(refreshLoadingTimer); refreshLoadingTimer = 0; }
+    if (refreshLoadingHideTimer) { window.clearTimeout(refreshLoadingHideTimer); refreshLoadingHideTimer = 0; }
+    refreshLoadingEl.hidden = false;
+    positionRefreshLoading();
+    requestAnimationFrame(function () { refreshLoadingEl.classList.add('is-visible'); });
+    if (withCheck) checkForNewData();
+    refreshLoadingTimer = window.setTimeout(function () {
+      refreshLoadingTimer = 0;
+      refreshLoadingEl.classList.remove('is-visible');
+      refreshLoadingHideTimer = window.setTimeout(function () {
+        refreshLoadingHideTimer = 0;
+        if (!refreshLoadingEl.classList.contains('is-visible')) refreshLoadingEl.hidden = true;
+      }, REFRESH_LOADING_FADE_MS);
+    }, REFRESH_LOADING_FADE_MS + REFRESH_LOADING_HOLD_MS);
+  }
+
+  // 进入主站后：5 秒先播一次（仅动画）；之后每 10 分钟播一次（动画 + 联网检测）
+  function startRefreshLoadingCycle() {
+    if (refreshLoadingCycleStarted) return;
+    refreshLoadingCycleStarted = true;
+    refreshLoadingFirstTimer = window.setTimeout(function () {
+      refreshLoadingFirstTimer = 0;
+      playRefreshLoading(false);
+    }, 5000);
+    refreshLoadingInterval = window.setInterval(function () {
+      playRefreshLoading(true);
+    }, REFRESH_CHECK_INTERVAL_MS);
+  }
+
   function onCursorMove(e) {
     if (e.pointerType === 'touch') {
       setInputMode('keyboard');
@@ -8785,9 +9210,24 @@
     // 暂停菜单/启动层期间仍记录真实鼠标位置，返回后才不会先闪到旧坐标。
     cursorX = e.clientX;
     cursorY = e.clientY;
+    positionRefreshLoading();
     setInputMode('keyboard');
     if (!cursorGlowEl || !document.documentElement.classList.contains('fx-cursor')) return;
     cursorGlowEl.classList.add('is-visible');
+    scheduleCursorGlowUpdate(0);
+  }
+
+  // 正屏 / 宽屏模式进入首页时立刻显示自定义光标（不用等鼠标移动）
+  function showCursorGlowOnEntry() {
+    var root = document.documentElement;
+    if (root.classList.contains('outer-screen-layout') || root.classList.contains('inner-screen-layout')) return;
+    if (!cursorGlowEl || !root.classList.contains('fx-cursor')) return;
+    if (cursorX < 0 || cursorY < 0) {
+      cursorX = Math.round(window.innerWidth / 2);
+      cursorY = Math.round(window.innerHeight / 2);
+    }
+    cursorGlowEl.classList.add('is-visible');
+    updateCursorGlowPosition();
     scheduleCursorGlowUpdate(0);
   }
 
@@ -8880,6 +9320,7 @@
     else if (actionId === 'forwardMusic') seekMusicBy(5);
     else if (actionId === 'toggleUi') toggleUiHidden();
     else if (actionId === 'openSettings') openSettingsShortcut();
+    else if (actionId === 'openUpdateLog') openUpdatePanel();
     else if (actionId === 'pauseBack') {
       if (sponsorOverlay && !sponsorOverlay.hidden) {
         sponsorOverlay.hidden = true;
@@ -9435,6 +9876,7 @@
   var panelTitles = document.getElementById('panelTitles');
   var panelAccounts = document.getElementById('panelAccounts');
   var panelSettings = document.getElementById('panelSettings');
+  var panelUpdate = document.getElementById('panelUpdate');
   var accountLogoutTop = document.getElementById('accountLogoutTop');
   var accountLoginForm = document.getElementById('accountLoginForm');
   var accountLoginUser = document.getElementById('accountLoginUser');
@@ -9497,7 +9939,8 @@
     { id: 'rewindMusic', label: '音乐回退', defaultKey: 'z', xbox: '←', playstation: '←', gamepadButton: 14 },
     { id: 'forwardMusic', label: '音乐快进', defaultKey: 'c', xbox: '→', playstation: '→', gamepadButton: 15 },
     { id: 'toggleUi', label: '隐藏/显示HUD', defaultKey: 'tab', xbox: 'Y', playstation: '△', gamepadButton: 3 },
-    { id: 'openSettings', label: '设置页', defaultKey: 'i', xbox: 'MENU', playstation: 'OPTIONS' }
+    { id: 'openSettings', label: '设置页', defaultKey: 'i', xbox: 'MENU', playstation: 'OPTIONS' },
+    { id: 'openUpdateLog', label: '更新日志', defaultKey: 'v', xbox: 'RS', playstation: 'R3', gamepadButton: 11 }
   ];
   var GAMEPAD_ACTION_BY_BUTTON = {};
   KEYBIND_ACTIONS.forEach(function (action) {
@@ -9633,6 +10076,7 @@
     panelTitles.hidden = which !== 'titles';
     panelAccounts.hidden = which !== 'accounts';
     panelSettings.hidden = which !== 'settings';
+    if (panelUpdate) panelUpdate.hidden = which !== 'update';
     var isSubpage = which !== 'menu';
     if (pauseMenu) {
       pauseMenu.classList.toggle('is-subpage-open', isSubpage);
@@ -10000,9 +10444,25 @@
     return FONT_OPTIONS[0];
   }
 
+  // 每个字体选项对应的字体文件（缓存加速时只缓存当前选中的这一套）
+  var FONT_ASSET_FILES = {
+    sarasa: ['fonts/等距更纱黑体(默认).woff', 'fonts/等距更纱黑体(默认).ttf'],
+    kaiti: ['fonts/楷体.woff', 'fonts/楷体.ttf'],
+    'mengya-bear': ['fonts/萌芽熊体.woff', 'fonts/萌芽熊体.ttf'],
+    'shanhai-summer': ['fonts/山海仲夏夜物语.woff', 'fonts/山海仲夏夜物语.ttf']
+  };
+
+  function fontAssetPaths(id) {
+    var files = FONT_ASSET_FILES[id] || [];
+    return files.map(function (file) {
+      try { return new URL(file, location.href).pathname; } catch (err) { return ''; }
+    }).filter(function (p) { return !!p; });
+  }
+
   function applyFont(id, persist) {
     var opt = fontOptionById(id);
     currentFontId = opt.id;
+    setRuntimeCacheFont(fontAssetPaths(opt.id));
     document.documentElement.style.setProperty('--app-font', opt.family);
     document.documentElement.setAttribute('data-font', opt.id);
     if (navEl && navColorOverlay) {
@@ -10315,8 +10775,15 @@
     if (accountLoginPass) accountLoginPass.value = '';
     if (accountLoginUser) accountLoginUser.value = account && account.user ? account.user : (user.isAdmin ? 'admin' : '');
     if (accountLogoutTop) {
-      accountLogoutTop.textContent = isGuestUser() ? '返回' : '退出登录';
-      accountLogoutTop.setAttribute('data-guest-return', isGuestUser() ? '1' : '0');
+      var guestReturn = isGuestUser();
+      var logoutLabel = accountLogoutTop.querySelector('.settings-back-label');
+      var logoutIcon = accountLogoutTop.querySelector('.settings-back-icon');
+      if (logoutLabel) logoutLabel.textContent = guestReturn ? '返回' : '退出登录';
+      else accountLogoutTop.textContent = guestReturn ? '返回' : '退出登录';
+      accountLogoutTop.setAttribute('data-guest-return', guestReturn ? '1' : '0');
+      // 用户切换页固定使用 T 键图标（已登录 = 退出登录，访客 = 返回，都可通过 T 触发）
+      if (logoutIcon) logoutIcon.dataset.keyIconAction = 'logoutAccount';
+      syncKeyIcons();
     }
     showSidebarPanel('accounts');
   }
@@ -10336,6 +10803,8 @@
   if (accountLoginForm) accountLoginForm.addEventListener('submit', doInlineAccountLogin);
   if (accountLoginClear) accountLoginClear.addEventListener('click', clearInlineAccountLogin);
   if (settingsBackBtn) settingsBackBtn.addEventListener('click', resetSidebarPanel);
+  var updateBackBtn = document.getElementById('updateBack');
+  if (updateBackBtn) updateBackBtn.addEventListener('click', resetSidebarPanel);
   Array.prototype.forEach.call(settingsTabs, function (tab) {
     tab.addEventListener('click', function () {
       showSettingsTab(tab.getAttribute('data-settings-tab'));
@@ -10528,9 +10997,39 @@
     if (input.setSelectionRange) input.setSelectionRange(end, end);
   }
 
+  // 切换账号页：方向键上下在「账号 / 密码」两个输入框之间来回切换
+  function moveAccountInputFocus(direction) {
+    if (!accountLoginUser || !accountLoginPass) return;
+    var active = document.activeElement;
+    if (active === accountLoginUser) {
+      focusInputEnd(accountLoginPass);
+    } else if (active === accountLoginPass) {
+      focusInputEnd(accountLoginUser);
+    } else {
+      focusInputEnd(direction > 0 ? accountLoginUser : accountLoginPass);
+    }
+  }
+
+  // 切换账号页：A / 叉 = 确认登录
+  function submitAccountLoginFromGamepad() {
+    if (!accountLoginForm) return;
+    if (typeof accountLoginForm.requestSubmit === 'function') {
+      accountLoginForm.requestSubmit();
+    } else {
+      accountLoginForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    }
+  }
+
   function handleAccountLoginKeydown(event) {
     if (!pauseMenu || !pauseMenu.classList.contains('open') || !panelAccounts || panelAccounts.hidden) return false;
     var target = event.target;
+    // 用户切换页：按 T 直接退出登录（在输入框内输入时不触发）。
+    if (normalizeKeyName(event.key) === 't' && !isTypingTarget(target)) {
+      event.preventDefault();
+      event.stopPropagation();
+      logoutInlineAccount();
+      return true;
+    }
     if (target === accountLoginUser) {
       if (event.key === 'Enter') {
         event.preventDefault();
@@ -10693,7 +11192,11 @@
   }
 
   function pauseMenuItems() {
-    return panelMenu ? Array.prototype.slice.call(panelMenu.querySelectorAll('.sidebar-item')) : [];
+    if (!panelMenu) return [];
+    // 访客会隐藏「称号」等项（display:none），手柄/键盘选择时必须跳过不可见项。
+    return Array.prototype.slice.call(panelMenu.querySelectorAll('.sidebar-item')).filter(function (el) {
+      return el.getClientRects().length > 0;
+    });
   }
   function updatePauseMenuSelection() {
     var items = pauseMenuItems();
@@ -10937,6 +11440,11 @@
       moveScrollTop(settingsScroller);
       return;
     }
+    // 更新日志页面：手柄右摇杆直接滚动日志内容
+    if (pauseMenu && pauseMenu.classList.contains('open') && panelUpdate && !panelUpdate.hidden && updateContentEl) {
+      moveScrollTop(updateContentEl);
+      return;
+    }
     if (pauseMenu && pauseMenu.classList.contains('open')) return;
     if (!gamepadScrollTarget || !gamepadScrollTarget.isConnected) {
       gamepadScrollTarget = findScrollableAt(cursorX, cursorY) || document.scrollingElement || document.documentElement;
@@ -11077,12 +11585,29 @@
   }
   function gamepadStartupInput() {
     if (!startupOverlay || startupOverlay.hidden || startupClosing) return false;
+    // 开屏图片：按任意手柄键跳一张（与点击 / 键盘一致）
+    if (startupSplashActive) {
+      advanceStartupSplash();
+      return true;
+    }
     if (startupAudioPending) {
       attemptStartupVideoPlay();
       return true;
     }
+    var smallScreen = !!(window.matchMedia && window.matchMedia('(max-width: 720px)').matches);
     if (startupLandingShown && !startupLeaving) {
+      // 手机上的登录页没有视频，点一下就直接进入网页 —— 手柄按键同样直接关闭
+      if (smallScreen && startupVideo && startupVideo.paused) {
+        closeStartupOverlay();
+        return true;
+      }
       leaveStartupLanding();
+      return true;
+    }
+    // 开场视频播放中：按任意手柄键跳过（与鼠标点击 / 键盘一致）
+    if (startupVideo && !startupVideo.paused && !startupVideo.ended && !startupLeaving) {
+      startupVideo.pause();
+      closeStartupOverlay();
       return true;
     }
     return false;
@@ -11198,6 +11723,13 @@
         if (!startupEntryComplete || (startupOverlay && !startupOverlay.hidden)) {
           setInputMode('gamepad');
           gamepadStartupInput();
+        }
+        else if (pauseMenu && pauseMenu.classList.contains('open') && panelAccounts && !panelAccounts.hidden) {
+          // 切换账号页：L3/LS 退出登录，方向键上下切换输入框，A/叉 确认，B/圈 取消
+          if (b === 10) logoutInlineAccount();
+          else if (b === 12 || b === 13) moveAccountInputFocus(b === 12 ? -1 : 1);
+          else if (b === 0) submitAccountLoginFromGamepad();
+          else if (b === 1) gamepadBackAction();
         }
         else if (b === 0) gamepadPrimaryAction();
         else if (b === 1) gamepadBackAction();
@@ -12761,6 +13293,111 @@
     return normalized;
   }
 
+  /* ---------- 更新日志：数据源 resources/update.js ---------- */
+  var updateStore = { updates: [] };
+  var pauseVersionHintEl = document.getElementById('pauseVersionHint');
+  var updateContentEl = document.getElementById('updateContent');
+
+  function normalizeUpdateEntries(list) {
+    var out = [];
+    (Array.isArray(list) ? list : []).forEach(function (entry) {
+      if (!entry || typeof entry !== 'object') return;
+      var version = String(entry.version || '').trim();
+      if (!version) return;
+      var content = Array.isArray(entry.content) ? entry.content.map(function (line) {
+        return String(line === undefined || line === null ? '' : line);
+      }) : [];
+      out.push({ version: version, content: content });
+    });
+    return out;
+  }
+
+  // TXT：第一行是版本，下面是内容；多个日志之间以空行分隔
+  function updateEntriesFromTxt(text) {
+    var entries = [];
+    var current = null;
+    String(text || '').replace(/\r\n?/g, '\n').split('\n').forEach(function (raw) {
+      var line = String(raw || '').replace(/\s+$/, '');
+      if (!line.trim()) {
+        current = null;
+        return;
+      }
+      if (!current) {
+        current = { version: line.trim(), content: [] };
+        entries.push(current);
+      } else {
+        current.content.push(line);
+      }
+    });
+    return entries;
+  }
+
+  function currentUpdateVersion() {
+    var entries = updateStore && updateStore.updates ? updateStore.updates : [];
+    return entries.length ? entries[0].version : '';
+  }
+
+  // 左下角版本提示：按键图标 + 版本文字（点击 / 按 V · RS · R3 进入更新日志）
+  function renderPauseVersionHint() {
+    if (!pauseVersionHintEl) return;
+    pauseVersionHintEl.innerHTML = '';
+    var label = currentUpdateVersion();
+    if (!label) return;
+    pauseVersionHintEl.appendChild(createKeyHintButton('openUpdateLog', label, 'pause-version-hint-button'));
+    syncKeyIcons();
+  }
+
+  function renderUpdateLog() {
+    if (!updateContentEl) return;
+    updateContentEl.innerHTML = '';
+    var entries = updateStore && updateStore.updates ? updateStore.updates : [];
+    if (!entries.length) {
+      var empty = document.createElement('p');
+      empty.className = 'update-log-line';
+      empty.textContent = '暂无更新日志';
+      updateContentEl.appendChild(empty);
+      return;
+    }
+    entries.forEach(function (entry, entryIndex) {
+      var block = document.createElement('div');
+      block.className = 'update-log-entry';
+      // 与首页卡片内容一致的错峰延迟：每级 36ms，上限 540ms
+      block.style.setProperty('--content-rise-delay', Math.min(entryIndex * 36, 540) + 'ms');
+      var title = document.createElement('h3');
+      title.className = 'update-log-version';
+      title.textContent = entry.version;
+      block.appendChild(title);
+      (entry.content || []).forEach(function (line) {
+        var p = document.createElement('p');
+        var isHeading = !!line && line.trim().charAt(0) !== '-';
+        p.className = 'update-log-line' + (isHeading ? ' is-heading' : '');
+        p.textContent = line;
+        block.appendChild(p);
+      });
+      updateContentEl.appendChild(block);
+    });
+    updateContentEl.scrollTop = 0;
+  }
+
+  function applyUpdateData() {
+    var meta = document.getElementById('updateMeta');
+    var n = updateStore && updateStore.updates ? updateStore.updates.length : 0;
+    var version = currentUpdateVersion();
+    if (meta) meta.textContent = n ? ('已加载 ' + n + ' 条日志' + (version ? ' · 当前 ' + version : '')) : '未加载';
+    renderUpdateLog();
+    renderPauseVersionHint();
+  }
+
+  function openUpdatePanel() {
+    if (!pauseMenu) return;
+    if (!pauseMenu.classList.contains('open')) openSidebar('left');
+    sidebarPanelOrigin = 'menu';
+    renderUpdateLog();
+    showSidebarPanel('update');
+    // 每次打开日志都固定从最上面开始
+    if (updateContentEl) updateContentEl.scrollTop = 0;
+  }
+
   function dataFileDescriptor(type, id) {
     var activityId = String(id || '').trim();
     function activityPath(filename) {
@@ -12838,6 +13475,20 @@
           accountStore = { accounts: normalizeAccountRows(fragment.accounts) };
           applyAccountData();
           syncUserMediaFromAccounts();
+        }
+      };
+    }
+    if (type === 'update') {
+      return {
+        path: 'resources/update.js',
+        parse: function (text) { return { updates: updateEntriesFromTxt(text) }; },
+        current: function () { return { updates: (updateStore && updateStore.updates) || [] }; },
+        hasData: function (fragment) {
+          return !!(fragment && Array.isArray(fragment.updates) && fragment.updates.length);
+        },
+        merge: function (fragment) {
+          updateStore = { updates: normalizeUpdateEntries(fragment.updates) };
+          applyUpdateData();
         }
       };
     }
@@ -13043,8 +13694,10 @@
         function () { accountFileInput.click(); }, function () { exportDataFile('account'); }));
       dmContentEl.appendChild(makeDataCard('称号数据', '昵称 · [等级]称号', 'titleMeta',
         function () { titleFileInput.click(); }, function () { exportDataFile('title'); }));
+      dmContentEl.appendChild(makeDataCard('更新日志', '第一行版本 · 下面内容 · 空行分隔多条日志（resources/update.js）', 'updateMeta',
+        function () { updateFileInput.click(); }, function () { exportDataFile('update'); }));
       // 刷新各 meta
-      applyCoreData(); applyShopData(); applyLibraryData(); applyAccountData(); applyTitleData();
+      applyCoreData(); applyShopData(); applyLibraryData(); applyAccountData(); applyTitleData(); applyUpdateData();
     } else {
       // 各赛季：测评、成就与热点
       var id = dmActiveCat;
@@ -13086,6 +13739,11 @@
   titleFileInput.addEventListener('change', function () {
     if (titleFileInput.files && titleFileInput.files[0]) generateDataFileFromTxt('title', '', titleFileInput.files[0]);
     titleFileInput.value = '';
+  });
+  var updateFileInput = document.getElementById('updateFileInput');
+  updateFileInput.addEventListener('change', function () {
+    if (updateFileInput.files && updateFileInput.files[0]) generateDataFileFromTxt('update', '', updateFileInput.files[0]);
+    updateFileInput.value = '';
   });
   reviewFileInput.addEventListener('change', function () {
     if (reviewFileInput.files && reviewFileInput.files[0] && dmActiveCat !== 'all')
@@ -15013,13 +15671,15 @@
       loadDataFragment('account', ''),
       loadDataFragment('title', ''),
       loadDataFragment('shop', ''),
-      loadDataFragment('library', '')
+      loadDataFragment('library', ''),
+      loadDataFragment('update', '')
     ]).then(function () {
       applyCoreData();
       applyAccountData();
       applyTitleData();
       applyShopData();
       applyLibraryData();
+      applyUpdateData();
       applyReviewData();
       applyAchvData();
       applyScheduleData();
@@ -15164,6 +15824,16 @@
     }, 800);
   }
 
+  // 设置页 / 更新日志页：把滚动条放在分割线上（中心对齐）
+  function initDividerScrollbars() {
+    var settingsLayout = document.querySelector('#panelSettings .settings-layout');
+    var settingsScroll = document.querySelector('#panelSettings .settings-left');
+    if (settingsLayout && settingsScroll) attachManualScroll(settingsScroll, settingsLayout);
+    var updateLayout = document.querySelector('#panelUpdate .settings-layout');
+    var updateScroll = document.getElementById('updateContent');
+    if (updateLayout && updateScroll) attachManualScroll(updateScroll, updateLayout);
+  }
+
   function init() {
     initStartupOverlay();
     initFontSetting();
@@ -15172,6 +15842,8 @@
     initCursorGlow();
     initGamepadControls();
     renderBottomKeyHints();
+    initDividerScrollbars();
+    syncAdminCornerButtons();
     readSlotSize();
 
     // 先用已缓存的核心数据构建；没有缓存时回退到内置列表，后续同步数据时再重建。
@@ -15229,6 +15901,9 @@
       layoutTopbarIdentity();
       var activeSection = pagesWrap ? pagesWrap.querySelector('.page.active .page-section.active') : null;
       scheduleSectionCardSnap(activeSection || document);
+      // 视口宽度变化后卡片边界会变，底栏两侧按键与下边距需要重新对齐。
+      scheduleDockSideIconAlignment();
+      syncAdminCornerButtons();
     });
   }
 

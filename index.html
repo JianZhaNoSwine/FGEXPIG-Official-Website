@@ -14,16 +14,23 @@
 <link rel="icon" href="favicon.ico?v=7" type="image/x-icon">
 <link rel="shortcut icon" href="favicon.ico?v=7">
 <link rel="apple-touch-icon" href="favicon.ico?v=7">
-<link rel="stylesheet" href="css/style.css?v=20260924gz142">
+<link rel="stylesheet" href="css/style.css?v=20260924gz192">
 </head>
 <body>
 
 <!-- 启动视频与进入页 -->
 <div class="startup-overlay" id="startupOverlay">
   <video class="startup-video" id="startupVideo" src="wallpaper/start.mp4" playsinline preload="none"></video>
+  <!-- 开场图片序列：logo/1~5 每张 3 秒（含淡入淡出），播放完才进入登录页 -->
+  <img class="startup-splash-art" id="startupSplashA" alt="" draggable="false" hidden>
+  <img class="startup-splash-art" id="startupSplashB" alt="" draggable="false" hidden>
+  <!-- 第 5 张图片播放时的旋转 loading（位置/大小按图片放大倍率计算） -->
+  <div class="startup-splash-loading" id="startupSplashLoading" hidden>
+    <img class="startup-splash-loading-art" src="logo/loading.png" alt="" draggable="false">
+  </div>
   <div class="startup-audio-start" id="startupAudioStart" hidden>点击播放视频</div>
   <div class="startup-landing" id="startupLanding" hidden>
-    <img class="startup-logo" id="startupLogo" alt="活动 Logo" draggable="false" hidden>
+    <img class="startup-logo" id="startupLogo" alt="活动 Logo" draggable="false" loading="eager" decoding="async" hidden>
     <div class="startup-press">PRESS ANY BUTTON</div>
   </div>
 </div>
@@ -103,7 +110,7 @@
 </div>
 
 <!-- 左下角按键提示 -->
-<div class="bottom-key-hints" id="bottomKeyHints" aria-hidden="true"></div>
+<div class="bottom-key-hints" id="bottomKeyHints"></div>
 
 <!-- 内屏活动选择页 -->
 <section class="inner-activity-picker" id="innerActivityPicker" aria-hidden="true">
@@ -115,10 +122,12 @@
 
 <!-- 全屏暂停菜单 -->
 <section class="pause-menu" id="pauseMenu" aria-hidden="true">
-  <div class="pause-site-value" role="img" aria-label="6,149,893,323；￥226.38 CNY">
-    <span class="pause-site-value-item is-visits" aria-hidden="true">6,149,893,323</span>
-    <span class="pause-site-value-item is-value" aria-hidden="true">￥226.38 CNY</span>
+  <div class="pause-site-value" role="img" aria-label="6,366,794,586；￥233.33 CNY">
+    <span class="pause-site-value-item is-visits" aria-hidden="true">6,366,794,586</span>
+    <span class="pause-site-value-item is-value" aria-hidden="true">￥233.33 CNY</span>
   </div>
+  <!-- 左下角版本号（按键 + 文字，点击或按 V / RS / R3 进入更新日志） -->
+  <div class="pause-version-hint" id="pauseVersionHint"></div>
   <div class="sidebar-inner pause-menu-inner">
     <div class="sidebar-panel" id="panelMenu">
       <div class="sidebar-list">
@@ -147,7 +156,10 @@
 
     <div class="sidebar-panel title-page" id="panelTitles" hidden>
       <div class="title-topbar">
-        <button class="settings-back" id="titleBackTop" type="button">返回</button>
+        <button class="settings-back" id="titleBackTop" type="button">
+          <img class="key-icon settings-back-icon" data-key-icon-action="subpageBack" alt="" aria-hidden="true" draggable="false">
+          <span class="settings-back-label">返回</span>
+        </button>
       </div>
       <div class="title-page-center">
         <div class="sidebar-list title-list" id="titleList"></div>
@@ -156,7 +168,10 @@
 
     <div class="sidebar-panel account-page" id="panelAccounts" hidden>
       <div class="account-topbar">
-        <button class="settings-back account-logout-top" id="accountLogoutTop" type="button">退出登录</button>
+        <button class="settings-back account-logout-top" id="accountLogoutTop" type="button">
+          <img class="key-icon settings-back-icon" data-key-icon-action="logoutAccount" alt="" aria-hidden="true" draggable="false">
+          <span class="settings-back-label">退出登录</span>
+        </button>
       </div>
       <div class="account-page-center">
         <form class="account-login-card" id="accountLoginForm">
@@ -175,7 +190,10 @@
     </div>
     <div class="sidebar-panel settings-page" id="panelSettings" hidden>
       <div class="settings-topnav">
-        <button class="settings-back" id="settingsBack" type="button">返回</button>
+        <button class="settings-back" id="settingsBack" type="button">
+          <img class="key-icon settings-back-icon" data-key-icon-action="subpageBack" alt="" aria-hidden="true" draggable="false">
+          <span class="settings-back-label">返回</span>
+        </button>
         <img class="settings-topnav-key settings-topnav-key-left key-icon" data-key-icon-action="prevNav" alt="" aria-hidden="true" draggable="false">
         <nav class="topnav settings-tabs" aria-label="设置分类">
           <div class="topnav-thumb no-anim">
@@ -320,6 +338,19 @@
         </aside>
       </div>
     </div>
+
+    <div class="sidebar-panel update-page" id="panelUpdate" hidden>
+      <div class="settings-topnav update-topbar">
+        <button class="settings-back" id="updateBack" type="button">
+          <img class="key-icon settings-back-icon" data-key-icon-action="subpageBack" alt="" aria-hidden="true" draggable="false">
+          <span class="settings-back-label">返回</span>
+        </button>
+      </div>
+      <div class="settings-layout update-layout">
+        <div class="settings-left update-left" id="updateContent"></div>
+        <aside class="settings-description update-divider" aria-hidden="true"></aside>
+      </div>
+    </div>
   </div>
   <div class="bottom-exp-hud" id="bottomExpHud" aria-hidden="true">
     <div class="bottom-exp-main">
@@ -398,6 +429,7 @@
 <input type="file" id="libraryFileInput" accept=".txt,.js" hidden>
 <input type="file" id="hotspotFileInput" accept=".txt,.js" hidden>
 <input type="file" id="hotspotPointsFileInput" accept=".txt,.js" hidden>
+<input type="file" id="updateFileInput" accept=".txt,.js" hidden>
 
 <!-- 右下角编辑按钮（常驻，打开数据管理侧边栏） -->
 <button class="edit-btn" id="editBtn" type="button" aria-label="编辑" title="数据管理" hidden>
@@ -447,11 +479,16 @@
 <!-- 跟随鼠标的称号主题光球 -->
 <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
 
+<!-- 联网检测 / 进入主页 5 秒后的旋转 loading：跟随鼠标中心，位于光效之上 -->
+<div class="refresh-loading" id="refreshLoading" hidden>
+  <img class="refresh-loading-art" src="logo/loading.png" alt="" draggable="false">
+</div>
+
 <script src="js/minigames.js"></script>
 <script src="js/emoji-manifest.js"></script>
 <script src="js/emoji-trim-data.js"></script>
 <script src="js/emoji-trim.js"></script>
-<script src="js/outer-settings-pages.js?v=20260924gz142"></script>
-<script src="js/main.js?v=20260924gz142"></script>
+<script src="js/outer-settings-pages.js?v=20260924gz192"></script>
+<script src="js/main.js?v=20260924gz192"></script>
 </body>
 </html>
