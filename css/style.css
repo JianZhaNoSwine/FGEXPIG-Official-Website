@@ -7173,13 +7173,17 @@ html.key-icons-home-active:not(.outer-screen-layout):not(.inner-screen-layout) .
   transform: none;
 }
 .filter-layout {
-  padding-top: 28px;
+  padding-top: 0;
   padding-bottom: 0;
   overflow: hidden;
+}
+.pause-menu .filter-page .filter-layout::after {
+  top: 28px;
 }
 .filter-left {
   min-width: 0;
   overflow: hidden;
+  padding-top: 4px;
   padding-right: var(--pause-margin-left, 16px);
 }
 .filter-option-list {
@@ -7187,7 +7191,7 @@ html.key-icons-home-active:not(.outer-screen-layout):not(.inner-screen-layout) .
   flex-direction: column;
   width: 100%;
   min-width: 0;
-  padding-top: 4px;
+  padding-top: 0;
 }
 .filter-option-card {
   width: 100%;
@@ -7207,6 +7211,7 @@ html.has-card-blur .pause-menu .filter-page .filter-option-card {
   overscroll-behavior: contain;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  padding-top: 4px;
   padding-left: var(--pause-margin-right, 16px);
 }
 .filter-logo-pane::-webkit-scrollbar {

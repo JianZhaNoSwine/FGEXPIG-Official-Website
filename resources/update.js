@@ -1,6 +1,18 @@
 (window.FGEXPIG_DATA_FILES = window.FGEXPIG_DATA_FILES || {})["resources/update.js"] = {
   "updates": [
     {
+      "version": "V1.401.000 Release",
+      "content": [
+        "更新内容",
+        "- 简化了开屏界面",
+        "- 新增了同步功能，同步完成后进入网页可以享受免加载流畅浏览网页",
+        "- 新增了活动中心筛选",
+        "- 完善了各个界面的键位",
+        "- 移除了自动更新记忆",
+        "- 修复了部分已知问题"
+      ]
+    },
+    {
       "version": "V1.301.000 Release",
       "content": [
         "更新内容",

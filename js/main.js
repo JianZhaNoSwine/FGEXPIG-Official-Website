@@ -499,7 +499,7 @@
   var filterDeveloperValEl = document.getElementById('filterDeveloperVal');
 
   function activityFilterDisplayText() {
-    var year = activityFilter.year === 'all' ? '全部年份' : activityFilter.year + '年';
+    var year = activityFilter.year === 'all' ? '全部年份' : activityFilter.year;
     var developer = activityFilter.developer === 'all' ? '全部开发商' : activityFilter.developer;
     return year + '｜' + developer + '｜活动中心';
   }
@@ -8683,6 +8683,10 @@
 
   function syncThenCloseStartupOverlay() {
     if (startupSyncActive) return;
+    if (shouldUseOuterScreenLayout()) {
+      closeStartupOverlay();
+      return;
+    }
     runStartupSync(closeStartupOverlay);
   }
 
@@ -8743,6 +8747,10 @@
     startupLeaving = true;
     startupOverlay.classList.add('is-leaving');
     if (startupCollapseTimer) clearTimeout(startupCollapseTimer);
+    if (shouldUseOuterScreenLayout()) {
+      closeStartupOverlay();
+      return;
+    }
     startupCollapseTimer = setTimeout(function () {
       startupCollapseTimer = 0;
       runStartupSync(attemptStartupVideoPlay);
@@ -10396,7 +10404,7 @@
     filterDeveloperEl.innerHTML = '';
     filterYearEl.appendChild(makeFilterOption('all', '全部年份'));
     filterDeveloperEl.appendChild(makeFilterOption('all', '全部开发商'));
-    options.years.forEach(function (year) { filterYearEl.appendChild(makeFilterOption(year, year + '年')); });
+    options.years.forEach(function (year) { filterYearEl.appendChild(makeFilterOption(year, year)); });
     options.developers.forEach(function (developer) { filterDeveloperEl.appendChild(makeFilterOption(developer, developer)); });
     var preview = normalizeActivityFilter(pendingActivityFilter || activityFilter);
     filterYearEl.value = preview.year;
