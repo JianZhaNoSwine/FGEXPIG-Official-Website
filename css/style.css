@@ -3186,6 +3186,7 @@ html.pause-settings-open .tb-left {
 /* ===== 启动视频与进入页 ===== */
 body.startup-lock { overflow: hidden; }
 .startup-overlay {
+  --startup-press-bottom: clamp(36px, 8vh, 80px);
   position: fixed;
   inset: 0;
   z-index: 10000;
@@ -3270,7 +3271,7 @@ body.startup-lock { overflow: hidden; }
 .startup-press {
   position: absolute;
   left: 50%;
-  bottom: clamp(36px, 8vh, 80px);
+  bottom: var(--startup-press-bottom);
   transform: translateX(-50%);
   color: #fff;
   font-size: calc(var(--text-large) * 2);
@@ -3290,23 +3291,31 @@ body.startup-lock { overflow: hidden; }
   position: absolute;
   inset: 0;
   z-index: 3;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 18px;
   background: #000;
 }
 .startup-sync[hidden] { display: none; }
 .startup-sync-text {
+  position: absolute;
+  left: 50%;
+  bottom: var(--startup-press-bottom);
+  transform: translateX(-50%);
   margin: 0;
   color: #fff;
-  font-size: 16px;
+  font-size: calc(var(--text-large) * 2);
+  line-height: 1;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+  animation: startup-press-pulse 1.6s ease-in-out infinite;
 }
 .startup-sync-row {
+  position: absolute;
+  left: 50%;
+  top: calc(100% - var(--startup-press-bottom) + 8px);
+  transform: translateX(-50%);
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
 }
 .startup-sync-bar {
   position: relative;
@@ -3329,6 +3338,7 @@ body.startup-lock { overflow: hidden; }
 .startup-sync-count {
   color: rgba(255, 255, 255, 0.72);
   font-size: 13px;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 .startup-audio-start {

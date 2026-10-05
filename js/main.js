@@ -8318,8 +8318,12 @@
   var startupSyncFillEl = document.getElementById('startupSyncFill');
   var startupSyncCountEl = document.getElementById('startupSyncCount');
   var startupSyncActive = false;
+  var STARTUP_SYNC_MIN_MS = 2000;
 
   function startupSyncUrls() {
+    if (Array.isArray(window.FGEXPIG_SYNC_MANIFEST) && window.FGEXPIG_SYNC_MANIFEST.length) {
+      return window.FGEXPIG_SYNC_MANIFEST.slice();
+    }
     var id = String(curNavLogo || (typeof state !== 'undefined' && state ? LOGOS[state.index] : '') || '');
     var urls = [];
     if (id) {
@@ -8359,19 +8363,42 @@
   }
 
   function preloadStartupUrl(url) {
-    return new Promise(function (resolve) {
-      var img = new Image();
-      var done = false;
-      var finish = function () {
-        if (done) return;
-        done = true;
-        resolve();
+    if (typeof fetch !== 'function') return Promise.resolve();
+    var load = fetch(url, { cache: 'no-store', credentials: 'same-origin' }).then(function (response) {
+      if (!response || !response.ok || !response.body || typeof response.body.getReader !== 'function') return;
+      var reader = response.body.getReader();
+      var drain = function () {
+        return reader.read().then(function (result) {
+          if (result.done) return;
+          return drain();
+        });
       };
-      img.onload = finish;
-      img.onerror = finish;
-      img.src = url;
-      window.setTimeout(finish, 8000);
+      return drain();
+    }).catch(function () {});
+    var timeout = new Promise(function (resolve) {
+      window.setTimeout(resolve, 30000);
     });
+    return Promise.race([load, timeout]);
+  }
+
+  function preloadStartupUrls(urls, onProgress) {
+    var total = urls.length;
+    var nextIndex = 0;
+    var loaded = 0;
+    var concurrency = Math.min(8, total);
+    var runNext = function () {
+      if (nextIndex >= total) return Promise.resolve();
+      var url = urls[nextIndex];
+      nextIndex += 1;
+      return preloadStartupUrl(url).then(function () {
+        loaded += 1;
+        if (onProgress) onProgress(loaded, total);
+        return runNext();
+      });
+    };
+    var workers = [];
+    for (var i = 0; i < concurrency; i++) workers.push(runNext());
+    return Promise.all(workers);
   }
 
   function runStartupSync(done) {
@@ -8382,11 +8409,26 @@
     startupSyncActive = true;
     startupSyncEl.hidden = false;
     if (startupSyncFillEl) startupSyncFillEl.style.width = '0%';
-    if (startupSyncCountEl) startupSyncCountEl.textContent = '(0/0)';
+    if (startupSyncCountEl) {
+      var manifestTotal = Array.isArray(window.FGEXPIG_SYNC_MANIFEST) ? window.FGEXPIG_SYNC_MANIFEST.length : 0;
+      startupSyncCountEl.textContent = '0/' + manifestTotal;
+    }
+    var startedAt = Date.now();
+    var syncFinished = false;
     var finish = function () {
-      startupSyncActive = false;
-      startupSyncEl.hidden = true;
-      if (done) done();
+      if (syncFinished) return;
+      syncFinished = true;
+      var reveal = function () {
+        startupSyncActive = false;
+        startupSyncEl.hidden = true;
+        if (done) done();
+      };
+      var remaining = Math.max(0, STARTUP_SYNC_MIN_MS - (Date.now() - startedAt));
+      if (remaining > 0) {
+        window.setTimeout(reveal, remaining);
+      } else {
+        reveal();
+      }
     };
     var refresh = (typeof initData === 'function') ? initData().catch(function () {}) : Promise.resolve();
     refresh.then(function () {
@@ -8396,19 +8438,17 @@
       var update = function () {
         var percent = total ? Math.round((loaded / total) * 100) : 100;
         if (startupSyncFillEl) startupSyncFillEl.style.width = percent + '%';
-        if (startupSyncCountEl) startupSyncCountEl.textContent = '(' + loaded + '/' + total + ')';
+        if (startupSyncCountEl) startupSyncCountEl.textContent = loaded + '/' + total;
       };
       update();
       if (!total) {
         finish();
         return;
       }
-      Promise.all(urls.map(function (url) {
-        return preloadStartupUrl(url).then(function () {
-          loaded += 1;
-          update();
-        });
-      })).then(finish, finish);
+      preloadStartupUrls(urls, function () {
+        loaded += 1;
+        update();
+      }).then(finish, finish);
     });
   }
 
