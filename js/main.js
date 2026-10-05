@@ -120,7 +120,6 @@
   }
 
   var runtimeCacheActivityId = '';
-  var runtimeCacheBoostEnabled = false;
   var runtimeCacheFontPaths = [];
   var runtimeCacheWorkerReady = null;
 
@@ -130,7 +129,6 @@
       worker.postMessage({
         type: 'fgexpig-cache-activity',
         activity: runtimeCacheActivityId,
-        boost: runtimeCacheBoostEnabled,
         font: runtimeCacheFontPaths
       });
     } catch (err) {}
@@ -154,25 +152,11 @@
       });
   }
 
-  // 当前选中字体的文件（告诉 Service Worker，缓存加速时只缓存选中的这一套字体）
+  // 当前选中字体的文件（告诉 Service Worker 优先确保这套字体已缓存）
   function setRuntimeCacheFont(paths) {
     var next = Array.isArray(paths) ? paths.map(String) : [];
     if (next.length === runtimeCacheFontPaths.length && next.every(function (p, i) { return p === runtimeCacheFontPaths[i]; })) return;
     runtimeCacheFontPaths = next;
-    if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
-    postRuntimeCacheActivity(navigator.serviceWorker.controller);
-    if (runtimeCacheWorkerReady) {
-      runtimeCacheWorkerReady.then(function (registration) {
-        if (registration) postRuntimeCacheActivity(registration.active || registration.waiting);
-      });
-    }
-  }
-
-  // 「缓存加速」开关：开启后 Service Worker 使用新缓存方案（可缓存更多静态资源 + 延迟释放非选中活动）。
-  function setRuntimeCacheBoost(enabled) {
-    enabled = !!enabled;
-    if (runtimeCacheBoostEnabled === enabled) return;
-    runtimeCacheBoostEnabled = enabled;
     if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
     postRuntimeCacheActivity(navigator.serviceWorker.controller);
     if (runtimeCacheWorkerReady) {
@@ -1591,8 +1575,6 @@
   var startupLogo = document.getElementById('startupLogo');
   var startupSplashA = document.getElementById('startupSplashA');
   var startupSplashB = document.getElementById('startupSplashB');
-  var startupSplashLoading = document.getElementById('startupSplashLoading');
-  var startupSplashLoadingArt = startupSplashLoading ? startupSplashLoading.querySelector('.startup-splash-loading-art') : null;
   var startupEntryComplete = !startupOverlay;
   var startupAudioPending = false;
   var startupPlayAttempt = 0;
@@ -8331,6 +8313,110 @@
     }
   }
 
+  /* ---------- 开屏同步：联网获取数据 + 确认缓存资源齐全 ---------- */
+  var startupSyncEl = document.getElementById('startupSync');
+  var startupSyncFillEl = document.getElementById('startupSyncFill');
+  var startupSyncCountEl = document.getElementById('startupSyncCount');
+  var startupSyncActive = false;
+
+  function startupSyncUrls() {
+    var id = String(curNavLogo || (typeof state !== 'undefined' && state ? LOGOS[state.index] : '') || '');
+    var urls = [];
+    if (id) {
+      urls.push(wallpaperUrl(id));
+      urls.push(responsiveImageUrl('logo/' + id + '.png'));
+      urls.push(musicUrl(id));
+    }
+    urls.push(responsiveImageUrl('logo/choose.png'));
+    urls = urls.concat(fontAssetPaths(currentFontId));
+    var platform = keyIconPlatform();
+    var iconFiles = KEY_ICON_FILES[platform] || {};
+    Object.keys(iconFiles).forEach(function (action) {
+      urls.push('button/' + platform + '/' + iconFiles[action] + '?v=' + KEY_ICON_ASSET_VERSION);
+    });
+    if (id) {
+      try {
+        var listDesc = dataFileDescriptor('list', id);
+        var listFrag = listDesc ? listDesc.current() : null;
+        var rows = listFrag && listFrag.lists ? listFrag.lists[id] : null;
+        (rows || []).forEach(function (row) {
+          if (row && row.file) urls.push(responsiveImageUrl(resourcePictureUrl(id, row.file)));
+        });
+      } catch (err) {}
+      try {
+        (achvsOf(id) || []).forEach(function (row) {
+          var name = row && (row.name || row.title);
+          if (name) urls.push(responsiveImageUrl(achvIconOriginalUrl(id, name), 'achievements'));
+        });
+      } catch (err) {}
+    }
+    var seen = {};
+    return urls.filter(function (url) {
+      if (!url || seen[url]) return false;
+      seen[url] = true;
+      return true;
+    });
+  }
+
+  function preloadStartupUrl(url) {
+    return new Promise(function (resolve) {
+      var img = new Image();
+      var done = false;
+      var finish = function () {
+        if (done) return;
+        done = true;
+        resolve();
+      };
+      img.onload = finish;
+      img.onerror = finish;
+      img.src = url;
+      window.setTimeout(finish, 8000);
+    });
+  }
+
+  function runStartupSync(done) {
+    if (!startupSyncEl) {
+      if (done) done();
+      return;
+    }
+    startupSyncActive = true;
+    startupSyncEl.hidden = false;
+    if (startupSyncFillEl) startupSyncFillEl.style.width = '0%';
+    if (startupSyncCountEl) startupSyncCountEl.textContent = '(0/0)';
+    var finish = function () {
+      startupSyncActive = false;
+      startupSyncEl.hidden = true;
+      if (done) done();
+    };
+    var refresh = (typeof initData === 'function') ? initData().catch(function () {}) : Promise.resolve();
+    refresh.then(function () {
+      var urls = startupSyncUrls();
+      var total = urls.length;
+      var loaded = 0;
+      var update = function () {
+        var percent = total ? Math.round((loaded / total) * 100) : 100;
+        if (startupSyncFillEl) startupSyncFillEl.style.width = percent + '%';
+        if (startupSyncCountEl) startupSyncCountEl.textContent = '(' + loaded + '/' + total + ')';
+      };
+      update();
+      if (!total) {
+        finish();
+        return;
+      }
+      Promise.all(urls.map(function (url) {
+        return preloadStartupUrl(url).then(function () {
+          loaded += 1;
+          update();
+        });
+      })).then(finish, finish);
+    });
+  }
+
+  function syncThenCloseStartupOverlay() {
+    if (startupSyncActive) return;
+    runStartupSync(closeStartupOverlay);
+  }
+
   function attemptStartupVideoPlay() {
     if (!startupVideo || startupClosing) return;
     if (startupCollapseTimer) {
@@ -8390,7 +8476,7 @@
     if (startupCollapseTimer) clearTimeout(startupCollapseTimer);
     startupCollapseTimer = setTimeout(function () {
       startupCollapseTimer = 0;
-      attemptStartupVideoPlay();
+      runStartupSync(attemptStartupVideoPlay);
     }, 430);
   }
 
@@ -8436,7 +8522,6 @@
     startupCloseTimer = setTimeout(function () {
       startupOverlay.hidden = true;
       releaseStartupVideoSource();
-      startRefreshLoadingCycle();
       showCursorGlowOnEntry();
       syncLiquidGlassRenderer(true);
       startupCloseTimer = 0;
@@ -8446,50 +8531,15 @@
 
   /* ---------- 开场图片序列：logo/1~5 每张 3 秒（含淡入淡出），播放完才显示登录页 ---------- */
   var STARTUP_SPLASH_SOURCES = [
-    'logo/1.webp', 'logo/2.webp', 'logo/3.webp', 'logo/4.webp', 'logo/5.webp'
+    'wallpaper/open.webp'
   ];
-  var STARTUP_SPLASH_STEP_MS = 3000;  // 每张展示 3 秒（包含淡入淡出时间）
+  var STARTUP_SPLASH_STEP_MS = 5000;  // 单张开屏图展示 5 秒（包含淡入淡出时间）
   var STARTUP_SPLASH_FADE_MS = 500;   // 与 CSS 的 transition 保持一致
   var startupSplashActive = false;
   var startupSplashRunId = 0;
   var startupSplashDone = null;
   var startupSplashStepTimer = 0;
   var startupSplashStepFn = null;
-
-  // 第 5 张图片上的 loading：位置 = 图片内部「横向 39.74%、纵向 50%」，
-  // 大小 = loading 原始尺寸 × 图片放大倍率 × 3，并保持顺时针旋转。
-  function positionStartupLoading(layer) {
-    if (!startupSplashLoading || !startupSplashLoadingArt || !layer) return;
-    var rect = layer.getBoundingClientRect();
-    var natW = layer.naturalWidth || 0;
-    var natH = layer.naturalHeight || 0;
-    if (!rect.width || !rect.height || !natW || !natH) {
-      startupSplashLoading.hidden = true;
-      return;
-    }
-    // object-fit: contain 后图片实际绘制区域
-    var scale = Math.min(rect.width / natW, rect.height / natH);
-    var drawW = natW * scale;
-    var drawH = natH * scale;
-    var drawLeft = rect.left + (rect.width - drawW) / 2;
-    var drawTop = rect.top + (rect.height - drawH) / 2;
-    var centerX = drawLeft + drawW * 0.3974;
-    var centerY = drawTop + drawH * 0.5;
-    var loadNatW = startupSplashLoadingArt.naturalWidth || 0;
-    var loadNatH = startupSplashLoadingArt.naturalHeight || 0;
-    var loadW = loadNatW ? loadNatW * scale * 3 : 48;
-    var loadH = loadNatH ? loadNatH * scale * 3 : 48;
-    startupSplashLoading.style.left = centerX.toFixed(2) + 'px';
-    startupSplashLoading.style.top = centerY.toFixed(2) + 'px';
-    startupSplashLoading.style.width = loadW.toFixed(2) + 'px';
-    startupSplashLoading.style.height = loadH.toFixed(2) + 'px';
-  }
-
-  function hideStartupLoading() {
-    if (!startupSplashLoading) return;
-    startupSplashLoading.classList.remove('is-visible');
-    startupSplashLoading.hidden = true;
-  }
 
   function cleanupStartupSplashLayers() {
     [startupSplashA, startupSplashB].forEach(function (layer) {
@@ -8498,10 +8548,6 @@
       layer.classList.remove('is-visible');
       layer.removeAttribute('src');
     });
-    if (startupSplashLoading) {
-      startupSplashLoading.hidden = true;
-      startupSplashLoading.classList.remove('is-visible');
-    }
   }
 
   // 点击 / 任意按键：只跳过当前这一张，立刻切到下一张（第 5 张则进入登录页）
@@ -8544,7 +8590,6 @@
         if (index >= STARTUP_SPLASH_SOURCES.length) {
           // 最后一张淡出后再显示登录页
           layers[current].classList.remove('is-visible');
-          hideStartupLoading();
           startupSplashStepFn = null;
           window.setTimeout(function () {
             if (runId !== startupSplashRunId) return;
@@ -8559,19 +8604,10 @@
         var currentLayer = layers[current];
         nextLayer.hidden = false;
         nextLayer.src = STARTUP_SPLASH_SOURCES[index];
-        var isLastSlide = index === STARTUP_SPLASH_SOURCES.length - 1;
         var reveal = function () {
           requestAnimationFrame(function () {
             nextLayer.classList.add('is-visible');
             currentLayer.classList.remove('is-visible');
-            if (isLastSlide) {
-              // 第 5 张：叠加旋转 loading
-              positionStartupLoading(nextLayer);
-              startupSplashLoading.hidden = false;
-              requestAnimationFrame(function () { startupSplashLoading.classList.add('is-visible'); });
-            } else {
-              hideStartupLoading();
-            }
           });
           current = 1 - current;
           index += 1;
@@ -8614,7 +8650,7 @@
         }
         event.preventDefault();
         event.stopPropagation();
-        closeStartupOverlay();
+        syncThenCloseStartupOverlay();
       });
       document.addEventListener('keydown', function (event) {
         if (startupSplashActive) {
@@ -8626,7 +8662,7 @@
         if (startupOverlay && startupOverlay.hidden) return;
         event.preventDefault();
         event.stopPropagation();
-        closeStartupOverlay();
+        syncThenCloseStartupOverlay();
       }, true);
       return;
     }
@@ -9127,81 +9163,6 @@
     }
     if (!cursorGlowFrame) cursorGlowFrame = requestAnimationFrame(runCursorGlowFrame);
   }
-  /* ---------- 联网检测 / 进入主页 5 秒后的旋转 loading（跟随鼠标中心，在光效之上） ---------- */
-  var refreshLoadingEl = document.getElementById('refreshLoading');
-  var REFRESH_LOADING_FADE_MS = 350;   // 与 CSS transition 一致
-  var REFRESH_LOADING_HOLD_MS = 3000;  // 淡入淡出之外的展示时间
-  var REFRESH_CHECK_INTERVAL_MS = 10 * 60 * 1000;
-  var refreshLoadingTimer = 0;
-  var refreshLoadingHideTimer = 0;
-  var refreshLoadingFirstTimer = 0;
-  var refreshLoadingInterval = 0;
-  var refreshLoadingCycleStarted = false;
-
-  function positionRefreshLoading() {
-    if (!refreshLoadingEl || refreshLoadingEl.hidden) return;
-    var size = refreshLoadingEl.offsetWidth || 44;
-    var x = (typeof cursorX === 'number' && cursorX >= 0 ? cursorX : window.innerWidth / 2) - size / 2;
-    var y = (typeof cursorY === 'number' && cursorY >= 0 ? cursorY : window.innerHeight / 2) - size / 2;
-    refreshLoadingEl.style.transform = 'translate3d(' + x.toFixed(2) + 'px,' + y.toFixed(2) + 'px,0)';
-  }
-
-  // 重新拉取当前活动的数据文件（no-store 绕过缓存），内容有变化则通过既有 merge 流程更新
-  function syncDataFragmentIfChanged(type, id) {
-    var descriptor = dataFileDescriptor(type, id);
-    if (!descriptor) return Promise.resolve(false);
-    return loadDataFragmentRaw(type, id).then(function (fragment) {
-      if (!fragment) return false;
-      var current = descriptor.current();
-      if (descriptor.hasData(current) && dataFileJson(current) === dataFileJson(fragment)) return false;
-      try {
-        descriptor.merge(fragment);
-        return true;
-      } catch (err) {
-        return false;
-      }
-    }).catch(function () { return false; });
-  }
-
-  function checkForNewData() {
-    var id = String(curNavLogo || '');
-    var types = ['core', 'shop', 'library', 'account', 'title', 'update'];
-    if (id) types = types.concat(['review', 'achievements', 'schedule', 'list', 'news', 'points']);
-    return Promise.all(types.map(function (type) { return syncDataFragmentIfChanged(type, id); }));
-  }
-
-  // 播放 loading：淡入 → 显示 3 秒（不含淡入淡出）→ 淡出；withCheck 为真时同时联网检测
-  function playRefreshLoading(withCheck) {
-    if (!refreshLoadingEl) return;
-    if (refreshLoadingTimer) { window.clearTimeout(refreshLoadingTimer); refreshLoadingTimer = 0; }
-    if (refreshLoadingHideTimer) { window.clearTimeout(refreshLoadingHideTimer); refreshLoadingHideTimer = 0; }
-    refreshLoadingEl.hidden = false;
-    positionRefreshLoading();
-    requestAnimationFrame(function () { refreshLoadingEl.classList.add('is-visible'); });
-    if (withCheck) checkForNewData();
-    refreshLoadingTimer = window.setTimeout(function () {
-      refreshLoadingTimer = 0;
-      refreshLoadingEl.classList.remove('is-visible');
-      refreshLoadingHideTimer = window.setTimeout(function () {
-        refreshLoadingHideTimer = 0;
-        if (!refreshLoadingEl.classList.contains('is-visible')) refreshLoadingEl.hidden = true;
-      }, REFRESH_LOADING_FADE_MS);
-    }, REFRESH_LOADING_FADE_MS + REFRESH_LOADING_HOLD_MS);
-  }
-
-  // 进入主站后：5 秒先播一次（仅动画）；之后每 10 分钟播一次（动画 + 联网检测）
-  function startRefreshLoadingCycle() {
-    if (refreshLoadingCycleStarted) return;
-    refreshLoadingCycleStarted = true;
-    refreshLoadingFirstTimer = window.setTimeout(function () {
-      refreshLoadingFirstTimer = 0;
-      playRefreshLoading(false);
-    }, 5000);
-    refreshLoadingInterval = window.setInterval(function () {
-      playRefreshLoading(true);
-    }, REFRESH_CHECK_INTERVAL_MS);
-  }
-
   function onCursorMove(e) {
     if (e.pointerType === 'touch') {
       setInputMode('keyboard');
@@ -9210,7 +9171,6 @@
     // 暂停菜单/启动层期间仍记录真实鼠标位置，返回后才不会先闪到旧坐标。
     cursorX = e.clientX;
     cursorY = e.clientY;
-    positionRefreshLoading();
     setInputMode('keyboard');
     if (!cursorGlowEl || !document.documentElement.classList.contains('fx-cursor')) return;
     cursorGlowEl.classList.add('is-visible');
@@ -9908,9 +9868,6 @@
   var performanceModeInput = document.getElementById('performanceMode');
   var performanceModeCard = document.getElementById('performanceModeCard');
   var performanceModeVal = document.getElementById('performanceModeVal');
-  var cacheBoostInput = document.getElementById('cacheBoost');
-  var cacheBoostCard = document.getElementById('cacheBoostCard');
-  var cacheBoostVal = document.getElementById('cacheBoostVal');
   var imageQualityInput = document.getElementById('imageQuality');
   var imageQualityVal = document.getElementById('imageQualityVal');
   var imageQualityPrev = document.getElementById('imageQualityPrev');
@@ -10314,7 +10271,6 @@
     var dim = 100 - brightness;
 
     var performanceOn = !!(performanceModeInput && performanceModeInput.checked);
-    var cacheBoostOn = !!(cacheBoostInput && cacheBoostInput.checked);
     var nextQualitySignature = qualityCategorySignature();
     var qualityChanged = imageQualityLevel !== quality || appliedQualitySignature !== nextQualitySignature;
     appliedQualitySignature = nextQualitySignature;
@@ -10352,8 +10308,6 @@
     fxLevelInput.disabled = performanceOn;
     if (fxLevelControl) fxLevelControl.classList.toggle('is-disabled', performanceOn);
     if (performanceModeVal) performanceModeVal.textContent = performanceOn ? '开启' : '关闭';
-    if (cacheBoostVal) cacheBoostVal.textContent = cacheBoostOn ? '开启' : '关闭';
-    setRuntimeCacheBoost(cacheBoostOn);
     if (imageQualityInput) imageQualityInput.value = String(imageQualityLevel);
     if (imageQualityVal) imageQualityVal.textContent = qualityLabel(imageQualityLevel);
     syncSettingsRangeFill(wallpaperDimInput);
@@ -10389,7 +10343,6 @@
           blur: blur,
           fxLevel: level,
           performance: performanceOn,
-          cacheBoost: cacheBoostOn,
           imageQuality: imageQualityLevel,
           imageQualityCategories: qualityCategorySnapshot
         }));
@@ -10404,7 +10357,6 @@
       if (raw) saved = JSON.parse(raw);
     } catch (err) {}
     if (performanceModeInput) performanceModeInput.checked = !!(saved && saved.performance);
-    if (cacheBoostInput) cacheBoostInput.checked = !!(saved && saved.cacheBoost);
     var quality = IMAGE_QUALITY_MIN;
     if (saved && Object.prototype.hasOwnProperty.call(saved, 'imageQuality')) {
       quality = saved.imageQuality;
@@ -10923,20 +10875,6 @@
       if (event.key !== 'Enter' && event.key !== ' ') return;
       event.preventDefault();
       performanceModeInput.checked = !performanceModeInput.checked;
-      applyThemeFromControls(true);
-    });
-  }
-  if (cacheBoostInput) cacheBoostInput.addEventListener('change', function () { applyThemeFromControls(true); });
-  if (cacheBoostCard) {
-    cacheBoostCard.addEventListener('click', function (event) {
-      if (event.target === cacheBoostInput) return;
-      cacheBoostInput.checked = !cacheBoostInput.checked;
-      applyThemeFromControls(true);
-    });
-    cacheBoostCard.addEventListener('keydown', function (event) {
-      if (event.key !== 'Enter' && event.key !== ' ') return;
-      event.preventDefault();
-      cacheBoostInput.checked = !cacheBoostInput.checked;
       applyThemeFromControls(true);
     });
   }

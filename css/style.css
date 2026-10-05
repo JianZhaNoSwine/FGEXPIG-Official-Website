@@ -3242,28 +3242,7 @@ body.startup-lock { overflow: hidden; }
 }
 .startup-splash-art.is-visible { opacity: 1; }
 .startup-splash-art[hidden] { display: none; }
-/* 第 5 张图片上的旋转 loading：外层负责居中，内层负责顺时针旋转 */
-.startup-splash-loading {
-  position: absolute;
-  left: 0;
-  top: 0;
-  transform: translate(-50%, -50%);
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  pointer-events: none;
-  z-index: 3;
-}
-.startup-splash-loading.is-visible { opacity: 1; }
-.startup-splash-loading[hidden] { display: none; }
-.startup-splash-loading-art {
-  display: block;
-  width: 100%;
-  height: 100%;
-  animation: startup-splash-spin 1s linear infinite;
-}
-@keyframes startup-splash-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+
 }
 .startup-overlay.is-landing .startup-video { opacity: 0; }
 .startup-landing {
@@ -3305,6 +3284,52 @@ body.startup-lock { overflow: hidden; }
 }
 .startup-overlay.is-leaving .startup-press {
   animation: startup-press-collapse 0.42s ease-in both;
+}
+/* ===== 开屏同步阶段：黑底 + 第一行文字 + 第二行进度条（当前 / 总数） ===== */
+.startup-sync {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: #000;
+}
+.startup-sync[hidden] { display: none; }
+.startup-sync-text {
+  margin: 0;
+  color: #fff;
+  font-size: 16px;
+}
+.startup-sync-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.startup-sync-bar {
+  position: relative;
+  width: min(320px, 60vw);
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  overflow: hidden;
+}
+.startup-sync-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0%;
+  border-radius: 999px;
+  background: #fff;
+  transition: width 0.18s linear;
+}
+.startup-sync-count {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
 }
 .startup-audio-start {
   position: absolute;
@@ -3453,30 +3478,6 @@ body.startup-lock { overflow: hidden; }
 
 /* ===== 跟随鼠标的称号主题光球 ===== */
 html.fx-cursor, html.fx-cursor body, html.fx-cursor body * { cursor: none !important; }
-/* 联网检测 / 进入主页 5 秒后的旋转 loading：以鼠标中心为中心，位于光效之上 */
-.refresh-loading {
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 121; /* 在 .cursor-glow（120）之上 */
-  /* loading.png 原始 64×64，显示为 1.5 倍大小 = 96×96 */
-  width: 96px;
-  height: 96px;
-  opacity: 0;
-  pointer-events: none;
-  will-change: transform, opacity;
-  transition: opacity 0.35s ease;
-}
-.refresh-loading.is-visible { opacity: 1; }
-.refresh-loading[hidden] { display: none; }
-.refresh-loading-art {
-  display: block;
-  width: 100%;
-  height: 100%;
-  /* 与开场 loading 同一套顺时针旋转动画 */
-  animation: startup-splash-spin 1s linear infinite;
-  -webkit-user-drag: none;
-}
 .cursor-glow {
   position: fixed;
   left: 0;

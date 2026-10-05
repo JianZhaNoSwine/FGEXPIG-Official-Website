@@ -14,7 +14,7 @@
 <link rel="icon" href="favicon.ico?v=7" type="image/x-icon">
 <link rel="shortcut icon" href="favicon.ico?v=7">
 <link rel="apple-touch-icon" href="favicon.ico?v=7">
-<link rel="stylesheet" href="css/style.css?v=20260924gz192">
+<link rel="stylesheet" href="css/style.css?v=20260924gz194">
 </head>
 <body>
 
@@ -24,9 +24,12 @@
   <!-- 开场图片序列：logo/1~5 每张 3 秒（含淡入淡出），播放完才进入登录页 -->
   <img class="startup-splash-art" id="startupSplashA" alt="" draggable="false" hidden>
   <img class="startup-splash-art" id="startupSplashB" alt="" draggable="false" hidden>
-  <!-- 第 5 张图片播放时的旋转 loading（位置/大小按图片放大倍率计算） -->
-  <div class="startup-splash-loading" id="startupSplashLoading" hidden>
-    <img class="startup-splash-loading-art" src="logo/loading.png" alt="" draggable="false">
+  <div class="startup-sync" id="startupSync" hidden>
+    <p class="startup-sync-text">正在连接网络并同步记忆...</p>
+    <div class="startup-sync-row">
+      <div class="startup-sync-bar"><i class="startup-sync-fill" id="startupSyncFill"></i></div>
+      <span class="startup-sync-count" id="startupSyncCount">(0/0)</span>
+    </div>
   </div>
   <div class="startup-audio-start" id="startupAudioStart" hidden>点击播放视频</div>
   <div class="startup-landing" id="startupLanding" hidden>
@@ -235,13 +238,6 @@
                 <div class="settings-card-control">
                   <span class="theme-value" id="performanceModeVal">关闭</span>
                   <input class="theme-toggle" id="performanceMode" type="checkbox" role="switch" aria-label="性能模式">
-                </div>
-              </div>
-              <div class="theme-control toggle-option cache-boost-control" id="cacheBoostCard" role="button" tabindex="0">
-                <span class="settings-card-label">缓存加速</span>
-                <div class="settings-card-control">
-                  <span class="theme-value" id="cacheBoostVal">关闭</span>
-                  <input class="theme-toggle" id="cacheBoost" type="checkbox" role="switch" aria-label="缓存加速">
                 </div>
               </div>
               <div class="theme-control">
@@ -479,16 +475,12 @@
 <!-- 跟随鼠标的称号主题光球 -->
 <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
 
-<!-- 联网检测 / 进入主页 5 秒后的旋转 loading：跟随鼠标中心，位于光效之上 -->
-<div class="refresh-loading" id="refreshLoading" hidden>
-  <img class="refresh-loading-art" src="logo/loading.png" alt="" draggable="false">
-</div>
 
 <script src="js/minigames.js"></script>
 <script src="js/emoji-manifest.js"></script>
 <script src="js/emoji-trim-data.js"></script>
 <script src="js/emoji-trim.js"></script>
-<script src="js/outer-settings-pages.js?v=20260924gz192"></script>
-<script src="js/main.js?v=20260924gz192"></script>
+<script src="js/outer-settings-pages.js?v=20260924gz194"></script>
+<script src="js/main.js?v=20260924gz194"></script>
 </body>
 </html>
