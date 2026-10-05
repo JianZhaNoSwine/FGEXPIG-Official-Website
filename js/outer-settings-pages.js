@@ -30,7 +30,9 @@
     if (select) {
       select.removeAttribute('hidden');
       select.value = String(b.getImageQualityLevel());
-      select.addEventListener('change', function () { b.setImageQuality(this.value, true); });
+      select.addEventListener('change', function () {
+        if (b.setImageQuality(this.value, true) === false) this.value = String(b.getImageQualityLevel());
+      });
     }
   }
   function buildSettings(section) {

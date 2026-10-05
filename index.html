@@ -14,7 +14,7 @@
 <link rel="icon" href="favicon.ico?v=7" type="image/x-icon">
 <link rel="shortcut icon" href="favicon.ico?v=7">
 <link rel="apple-touch-icon" href="favicon.ico?v=7">
-<link rel="stylesheet" href="css/style.css?v=20260924gz200">
+<link rel="stylesheet" href="css/style.css?v=20260924gz239">
 </head>
 <body>
 
@@ -28,7 +28,7 @@
     <p class="startup-sync-text">CONNECTING TO THE NETWORK</p>
     <div class="startup-sync-row">
       <div class="startup-sync-bar"><i class="startup-sync-fill" id="startupSyncFill"></i></div>
-      <span class="startup-sync-count" id="startupSyncCount">0/0</span>
+      <span class="startup-sync-count" id="startupSyncCount">0 / 0 / 0</span>
     </div>
   </div>
   <div class="startup-audio-start" id="startupAudioStart" hidden>点击播放视频</div>
@@ -115,6 +115,9 @@
 <!-- 左下角按键提示 -->
 <div class="bottom-key-hints" id="bottomKeyHints"></div>
 
+<!-- 首页右下角活动筛选入口 -->
+<div class="home-filter-hint" id="homeFilterHint"></div>
+
 <!-- 内屏活动选择页 -->
 <section class="inner-activity-picker" id="innerActivityPicker" aria-hidden="true">
   <div class="inner-activity-picker-panel" role="dialog" aria-label="选择活动">
@@ -158,11 +161,13 @@
     </div>
 
     <div class="sidebar-panel title-page" id="panelTitles" hidden>
-      <div class="title-topbar">
+      <div class="title-topbar"></div>
+      <div class="title-bottom-actions" id="titleBottomActions">
         <button class="settings-back" id="titleBackTop" type="button">
           <img class="key-icon settings-back-icon" data-key-icon-action="subpageBack" alt="" aria-hidden="true" draggable="false">
           <span class="settings-back-label">返回</span>
         </button>
+        <div class="title-bottom-hints" id="titleBottomHints"></div>
       </div>
       <div class="title-page-center">
         <div class="sidebar-list title-list" id="titleList"></div>
@@ -170,7 +175,12 @@
     </div>
 
     <div class="sidebar-panel account-page" id="panelAccounts" hidden>
-      <div class="account-topbar">
+      <div class="account-topbar"></div>
+      <div class="account-bottom-actions" id="accountBottomActions">
+        <button class="settings-back" id="accountBackBottom" type="button">
+          <img class="key-icon settings-back-icon" data-key-icon-action="subpageBack" alt="" aria-hidden="true" draggable="false">
+          <span class="settings-back-label">返回</span>
+        </button>
         <button class="settings-back account-logout-top" id="accountLogoutTop" type="button">
           <img class="key-icon settings-back-icon" data-key-icon-action="logoutAccount" alt="" aria-hidden="true" draggable="false">
           <span class="settings-back-label">退出登录</span>
@@ -193,10 +203,6 @@
     </div>
     <div class="sidebar-panel settings-page" id="panelSettings" hidden>
       <div class="settings-topnav">
-        <button class="settings-back" id="settingsBack" type="button">
-          <img class="key-icon settings-back-icon" data-key-icon-action="subpageBack" alt="" aria-hidden="true" draggable="false">
-          <span class="settings-back-label">返回</span>
-        </button>
         <img class="settings-topnav-key settings-topnav-key-left key-icon" data-key-icon-action="prevNav" alt="" aria-hidden="true" draggable="false">
         <nav class="topnav settings-tabs" aria-label="设置分类">
           <div class="topnav-thumb no-anim">
@@ -228,6 +234,13 @@
           </button>
         </nav>
         <img class="settings-topnav-key settings-topnav-key-right key-icon" data-key-icon-action="nextNav" alt="" aria-hidden="true" draggable="false">
+      </div>
+      <div class="settings-bottom-actions" id="settingsBottomActions">
+        <button class="settings-back" id="settingsBack" type="button">
+          <img class="key-icon settings-back-icon" data-key-icon-action="subpageBack" alt="" aria-hidden="true" draggable="false">
+          <span class="settings-back-label">返回</span>
+        </button>
+        <div class="settings-bottom-hints" id="settingsBottomHints"></div>
       </div>
       <div class="settings-layout">
         <div class="settings-left">
@@ -305,15 +318,15 @@
               <div class="theme-control">
                 <span class="settings-card-label">亮度</span>
                 <div class="settings-card-control">
-                  <span class="theme-value" id="wallpaperDimVal">65%</span>
-                  <input class="theme-range" id="wallpaperDim" type="range" min="0" max="100" step="1" value="65">
+                  <span class="theme-value" id="wallpaperDimVal">0%</span>
+                  <input class="theme-range" id="wallpaperDim" type="range" min="0" max="100" step="1" value="0">
                 </div>
               </div>
               <div class="theme-control">
                 <span class="settings-card-label">模糊度</span>
                 <div class="settings-card-control">
-                  <span class="theme-value" id="cardBlurVal">0px</span>
-                  <input class="theme-range" id="cardBlur" type="range" min="0" max="24" step="1" value="0">
+                  <span class="theme-value" id="cardBlurVal">1px</span>
+                  <input class="theme-range" id="cardBlur" type="range" min="0" max="24" step="1" value="1">
                 </div>
               </div>
               <div class="theme-control" id="fxLevelControl">
@@ -345,6 +358,46 @@
       <div class="settings-layout update-layout">
         <div class="settings-left update-left" id="updateContent"></div>
         <aside class="settings-description update-divider" aria-hidden="true"></aside>
+      </div>
+    </div>
+
+    <div class="sidebar-panel filter-page" id="panelFilter" hidden>
+      <div class="settings-topnav filter-topbar">
+        <button class="settings-back" id="filterBack" type="button">
+          <img class="key-icon settings-back-icon" data-key-icon-action="subpageBack" alt="" aria-hidden="true" draggable="false">
+          <span class="settings-back-label">返回</span>
+        </button>
+      </div>
+      <div class="settings-layout filter-layout">
+        <div class="settings-left filter-left">
+          <div class="sidebar-list theme-list filter-option-list">
+            <div class="theme-control filter-option-card">
+            <span class="settings-card-label">年份</span>
+            <div class="settings-card-control">
+              <span class="theme-value" id="filterYearVal">全部年份</span>
+              <div class="settings-stepper">
+                <button class="settings-step-btn" id="filterYearPrev" type="button" aria-label="上一年份">‹</button>
+                <button class="settings-step-btn" id="filterYearNext" type="button" aria-label="下一年份">›</button>
+              </div>
+              <select id="filterYear" aria-label="年份筛选" hidden></select>
+            </div>
+          </div>
+          <div class="theme-control filter-option-card">
+            <span class="settings-card-label">开发商</span>
+            <div class="settings-card-control">
+              <span class="theme-value" id="filterDeveloperVal">全部开发商</span>
+              <div class="settings-stepper">
+                <button class="settings-step-btn" id="filterDeveloperPrev" type="button" aria-label="上一个开发商">‹</button>
+                <button class="settings-step-btn" id="filterDeveloperNext" type="button" aria-label="下一个开发商">›</button>
+              </div>
+              <select id="filterDeveloper" aria-label="开发商筛选" hidden></select>
+            </div>
+          </div>
+          </div>
+        </div>
+        <div class="filter-logo-pane" id="filterLogoPane">
+          <div class="filter-logo-grid" id="filterLogoGrid"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -480,8 +533,8 @@
 <script src="js/emoji-manifest.js"></script>
 <script src="js/emoji-trim-data.js"></script>
 <script src="js/emoji-trim.js"></script>
-<script src="js/sync-manifest.js?v=20260924gz200"></script>
-<script src="js/outer-settings-pages.js?v=20260924gz200"></script>
-<script src="js/main.js?v=20260924gz200"></script>
+<script src="js/sync-manifest.js?v=20260924gz239"></script>
+<script src="js/outer-settings-pages.js?v=20260924gz239"></script>
+<script src="js/main.js?v=20260924gz239"></script>
 </body>
 </html>

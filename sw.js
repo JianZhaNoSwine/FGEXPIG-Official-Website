@@ -1,14 +1,22 @@
 /* 统一缓存机制：
    - 文本（HTML / CSS / JS / JSON / TXT 等）只联网读取，不进入缓存；
-   - 其它内容（图片 / 音乐 / 字体 / 视频 …）全部缓存，先读缓存再联网校验；
-   - resources 文件夹里「非当前选中活动」的资源文件不缓存（离开 10 秒后释放缓存）；
-     logo / 音乐之类的核心数据始终缓存。 */
-const CACHE_NAME = 'fgexpig-assets-v74';
+   - 图片 / 音乐 / 字体 / 视频等二进制资源先读缓存，再联网校验更新；
+   - 只保留当前筛选活动、当前画质级别的资源，其余不进入缓存。 */
+const CACHE_NAME = 'fgexpig-assets-v75';
 const ACTIVITY_RELEASE_DELAY = 10000;
 /* 文本类：不缓存 */
 const TEXT_PATH_RE = /\.(?:html?|css|js|json|txt|xml|csv|md)$/i;
 
 let activeActivity = '';
+let allowedActivities = [];
+let qualityConfig = {
+  wallpaper: 1,
+  profileMusic: 1,
+  achievements: 1,
+  badges: 1,
+  resources: 1,
+  emoji: 1
+};
 let releaseTimer = 0;
 const releaseDeadlines = {};
 
@@ -25,25 +33,50 @@ function activityIdOf(path) {
   return match ? match[1] : '';
 }
 
+function activityAllowed(id) {
+  if (!id) return false;
+  if (!allowedActivities.length) return id === activeActivity;
+  return allowedActivities.indexOf(id) >= 0;
+}
+
+function qualityCategoryOf(path) {
+  if (/^\/wallpaper\//.test(path)) return 'wallpaper';
+  if (/^\/(?:profile|music)\//.test(path)) return 'profileMusic';
+  if (/^\/logo\//.test(path)) return 'badges';
+  if (/^\/emoji\//.test(path)) return 'emoji';
+  if (/^\/resources\//.test(path)) {
+    if (/\/icons\//.test(path)) return 'achievements';
+    if (/\/pictures\//.test(path)) return 'resources';
+  }
+  return '';
+}
+
+function qualityLevelOf(path) {
+  const match = /\/([1-5])\/[^/]+$/.exec(path);
+  return match ? Number(match[1]) : 0;
+}
+
+function qualityAllowed(path) {
+  const category = qualityCategoryOf(path);
+  if (!category) return true;
+  const level = qualityLevelOf(path);
+  if (!level) return true;
+  return level === Number(qualityConfig[category] || 1);
+}
+
 function cacheKind(path) {
   if (isTextPath(path)) return '';
   if (isResourcePath(path)) {
     const id = activityIdOf(path);
-    if (!id) return '';
-    if (id === activeActivity) return 'activity';
-    if (releaseDeadlines[id]) return 'activity'; // 宽限期内仍可读缓存
-    return '';
+    return activityAllowed(id) && qualityAllowed(path) ? 'activity' : '';
   }
-  return 'asset';
+  return qualityAllowed(path) ? 'asset' : '';
 }
 
 function keepable(path) {
   if (isTextPath(path)) return false;
-  if (!isResourcePath(path)) return true;
-  const id = activityIdOf(path);
-  if (!id) return false;
-  if (id === activeActivity) return true;
-  return !!releaseDeadlines[id];
+  if (isResourcePath(path)) return activityAllowed(activityIdOf(path)) && qualityAllowed(path);
+  return qualityAllowed(path);
 }
 
 async function pruneCache() {
@@ -135,11 +168,25 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('message', event => {
   const data = event.data || {};
+  if (data.type === 'fgexpig-cache-config') {
+    activeActivity = String(data.activity || '');
+    allowedActivities = Array.isArray(data.activities)
+      ? data.activities.map(id => String(id || '')).filter(Boolean).filter((id, index, list) => list.indexOf(id) === index)
+      : [];
+    if (data.quality && typeof data.quality === 'object') {
+      Object.keys(qualityConfig).forEach(key => {
+        const level = Math.round(Number(data.quality[key]));
+        if (isFinite(level)) qualityConfig[key] = Math.max(1, Math.min(5, level));
+      });
+    }
+    event.waitUntil(pruneCache());
+    return;
+  }
   if (data.type !== 'fgexpig-cache-activity') return;
   const previousActivity = activeActivity;
   activeActivity = String(data.activity || '');
   event.waitUntil((async () => {
-    // 非当前活动的资源文件延迟 10 秒释放：期间切回来可以直接读缓存。
+    // 兼容旧消息：只更新当前活动，不扩大缓存范围。
     if (previousActivity && previousActivity !== activeActivity) {
       releaseDeadlines[previousActivity] = Date.now() + ACTIVITY_RELEASE_DELAY;
     }

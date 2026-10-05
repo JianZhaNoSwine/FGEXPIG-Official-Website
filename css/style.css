@@ -86,6 +86,8 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-user-select: none; user-select: none; }
 *::selection { background: transparent; color: inherit; }
+*:focus, *:focus-visible { outline: none !important; }
+* { -webkit-tap-highlight-color: transparent; }
 
 button, input, select, textarea { font-family: inherit; }
 /* 全局文字统一使用粗体 */
@@ -1937,7 +1939,26 @@ html.pause-menu-open .tb-avatar-level { display: none; }
   justify-content: center;
 }
 .account-page-center {
-  padding-top: 0;
+  padding: 44px 0;
+}
+.pause-menu .settings-page {
+  position: relative;
+}
+.pause-menu .settings-page .settings-layout {
+  padding-bottom: 44px;
+}
+.pause-menu .settings-page .settings-layout::after {
+  bottom: 44px;
+}
+.pause-menu .filter-page {
+  position: relative;
+}
+.pause-menu .filter-page .filter-layout {
+  padding-top: 24px;
+  padding-bottom: 44px;
+}
+.pause-menu .title-page .title-list {
+  padding-bottom: 62px;
 }
 .account-login-card {
   display: flex;
@@ -2053,6 +2074,70 @@ html.pause-menu-open .account-page input { cursor: text !important; }
 .settings-back-label { color: #fff; line-height: 1; }
 .settings-back:hover { opacity: 0.85; }
 .settings-back:active { transform: translateY(-50%) scale(0.95); }
+
+/* 用户切换 / 称号 / 设置 / 活动中心：返回按键移到左下角，并沿用首页左下角按键提示的对齐规则 */
+.pause-menu .filter-page > .settings-back {
+  position: fixed;
+  top: auto;
+  left: var(--bottom-ui-left, 16px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 11px + var(--bottom-ui-lift, 0px));
+  height: var(--key-icon-height);
+  padding: 0;
+  transform: none;
+  z-index: 12;
+}
+.pause-menu .filter-page > .settings-back:active,
+.pause-menu .settings-bottom-actions .settings-back:active,
+.pause-menu .settings-bottom-actions .key-hint-button:active,
+.pause-menu .account-bottom-actions .settings-back:active,
+.pause-menu .title-bottom-actions .settings-back:active,
+.pause-menu .title-bottom-actions .key-hint-button:active {
+  transform: scale(0.95);
+}
+.pause-menu .settings-bottom-actions,
+.pause-menu .account-bottom-actions,
+.pause-menu .title-bottom-actions {
+  position: fixed;
+  left: var(--bottom-ui-left, 16px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 11px + var(--bottom-ui-lift, 0px));
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  height: var(--key-icon-height);
+}
+.pause-menu .settings-bottom-actions > .settings-back,
+.pause-menu .account-bottom-actions > .settings-back,
+.pause-menu .title-bottom-actions > .settings-back {
+  position: static;
+  left: auto;
+  top: auto;
+  height: var(--key-icon-height);
+  padding: 0;
+  transform: none;
+}
+.pause-menu .settings-bottom-hints,
+.pause-menu .title-bottom-hints {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  height: var(--key-icon-height);
+}
+.pause-menu .settings-bottom-hints .key-hint-button,
+.pause-menu .title-bottom-hints .key-hint-button {
+  height: var(--key-icon-height);
+}
+.pause-menu .settings-bottom-hints .key-icon,
+.pause-menu .title-bottom-hints .key-icon {
+  height: var(--key-icon-height);
+  max-height: var(--key-icon-height);
+}
+/* 左下角按键默认使用与首页左下角按键提示相同的入场动画 */
+.pause-menu.open .pause-menu-inner > .sidebar-panel.title-page:not([hidden]) .title-bottom-actions,
+.pause-menu.open .pause-menu-inner > .sidebar-panel.account-page:not([hidden]) .account-bottom-actions,
+.pause-menu.open .pause-menu-inner > .sidebar-panel.settings-page:not([hidden]) .settings-bottom-actions {
+  animation: bottom-key-hints-enter 0.58s var(--ease-out) 0.08s backwards;
+}
 .settings-tabs { gap: 0; }
 .settings-tab {
   padding: 0 22px;
@@ -2100,19 +2185,24 @@ html.pause-menu-open .account-page input { cursor: text !important; }
   width: 0;
   height: 0;
 }
-.pause-menu .settings-page .sidebar-list {
+.pause-menu .settings-page .sidebar-list,
+.pause-menu .filter-page .filter-option-list {
   max-height: none;
   overflow: visible;
   padding: 0;
 }
-.pause-menu .settings-page .theme-list { gap: 10px; }
+.pause-menu .settings-page .theme-list,
+.pause-menu .filter-page .filter-option-list {
+  gap: 10px;
+}
 .pause-menu .settings-page .quality-category-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 .pause-menu .settings-page .font-list { align-items: stretch; gap: 10px; }
-.pause-menu .settings-page .theme-control {
+.pause-menu .settings-page .theme-control,
+.pause-menu .filter-page .theme-control {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   align-items: center;
@@ -2123,21 +2213,24 @@ html.pause-menu-open .account-page input { cursor: text !important; }
   border: 1px solid rgba(255, 255, 255, 0.22);
   background: rgba(255, 255, 255, 0.14);
 }
-.pause-menu .settings-page .settings-card-label {
+.pause-menu .settings-page .settings-card-label,
+.pause-menu .filter-page .settings-card-label {
   min-width: 0;
   color: var(--text-primary);
   font-size: var(--text-large);
   line-height: 1.35;
   text-align: left;
 }
-.pause-menu .settings-page .settings-card-control {
+.pause-menu .settings-page .settings-card-control,
+.pause-menu .filter-page .settings-card-control {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
   min-width: 0;
 }
-.pause-menu .settings-page .settings-card-control .theme-value {
+.pause-menu .settings-page .settings-card-control .theme-value,
+.pause-menu .filter-page .settings-card-control .theme-value {
   flex: 0 0 auto;
   font-size: var(--text-large);
   text-align: left;
@@ -2159,13 +2252,15 @@ html.pause-menu-open .account-page input { cursor: text !important; }
   background: rgba(255, 255, 255, 0.12);
   text-align: left;
 }
-.pause-menu .settings-page .settings-stepper {
+.pause-menu .settings-page .settings-stepper,
+.pause-menu .filter-page .settings-stepper {
   display: flex;
   align-items: center;
   gap: 6px;
   margin-left: auto;
 }
-.pause-menu .settings-page .settings-step-btn {
+.pause-menu .settings-page .settings-step-btn,
+.pause-menu .filter-page .settings-step-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2179,11 +2274,13 @@ html.pause-menu-open .account-page input { cursor: text !important; }
   line-height: 1;
   cursor: pointer;
 }
-.pause-menu .settings-page .settings-step-btn:hover {
+.pause-menu .settings-page .settings-step-btn:hover,
+.pause-menu .filter-page .settings-step-btn:hover {
   border-color: rgba(255, 255, 255, 0.62);
   background: transparent;
 }
-.pause-menu .settings-page .settings-step-btn:active { transform: scale(0.94); }
+.pause-menu .settings-page .settings-step-btn:active,
+.pause-menu .filter-page .settings-step-btn:active { transform: scale(0.94); }
 .pause-menu .settings-page .keybind-icon-mode-control {
   margin-bottom: 2px;
 }
@@ -2281,8 +2378,12 @@ html.pause-menu-open .account-page input { cursor: text !important; }
 /* 设置项被鼠标悬停或手柄选中时，文本统一使用主题粉色。 */
 .pause-menu .settings-page .theme-control:hover .settings-card-label,
 .pause-menu .settings-page .theme-control:hover .theme-value,
+.pause-menu .filter-page .filter-option-card:hover .settings-card-label,
+.pause-menu .filter-page .filter-option-card:hover .theme-value,
 .pause-menu .settings-page .theme-control.is-gamepad-selected .settings-card-label,
 .pause-menu .settings-page .theme-control.is-gamepad-selected .theme-value,
+.pause-menu .filter-page .filter-option-card.is-gamepad-selected .settings-card-label,
+.pause-menu .filter-page .filter-option-card.is-gamepad-selected .theme-value,
 .pause-menu .settings-page .font-item:hover .font-item-name,
 .pause-menu .settings-page .font-item.is-gamepad-selected .font-item-name {
   color: var(--accent-pink);
@@ -2354,6 +2455,7 @@ html.pause-menu-open .account-page input { cursor: text !important; }
   border-color: #fff;
 }
 html.has-card-blur .pause-menu .settings-page .theme-control,
+html.has-card-blur .pause-menu .filter-page .filter-option-card,
 html.has-card-blur .pause-menu .settings-page .font-item {
   -webkit-backdrop-filter: blur(var(--card-blur, 0px)) saturate(140%);
   backdrop-filter: blur(var(--card-blur, 0px)) saturate(140%);
@@ -3339,6 +3441,7 @@ body.startup-lock { overflow: hidden; }
   color: rgba(255, 255, 255, 0.72);
   font-size: 13px;
   line-height: 1;
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
 .startup-audio-start {
@@ -3518,6 +3621,8 @@ html.pause-menu-open #cursorGlow {
   display: none !important;
 }
 html.pause-menu-open .settings-page .settings-step-btn:not(:disabled),
+html.pause-menu-open .filter-page .settings-step-btn:not(:disabled),
+html.pause-menu-open .filter-page .settings-step-btn:not(:disabled) *,
 html.pause-menu-open .settings-page .theme-toggle:not(:disabled),
 html.pause-menu-open .settings-page .settings-tab,
 html.pause-menu-open .settings-page .settings-tab *,
@@ -3666,6 +3771,7 @@ html.has-card-blur .dock-item,
 html.has-card-blur .data-card,
 html.has-card-blur .account-login-card,
 html.has-card-blur .pause-ad-slot,
+html.has-card-blur .pause-menu .filter-page .filter-option-card,
 html.has-card-blur .login-dialog {
   -webkit-backdrop-filter: blur(var(--card-blur, 0px)) saturate(140%);
   backdrop-filter: blur(var(--card-blur, 0px)) saturate(140%);
@@ -6578,7 +6684,8 @@ html.has-card-blur:not(.outer-screen-layout) .page,
 html.has-card-blur:not(.outer-screen-layout) .page-section {
   transition: none !important;
 }
-html.has-card-blur:not(.outer-screen-layout) .section-card {
+html.has-card-blur:not(.outer-screen-layout) .section-card,
+html.has-card-blur:not(.outer-screen-layout) .pause-menu .filter-page .filter-option-card {
   -webkit-backdrop-filter: blur(var(--card-blur, 0px)) saturate(140%) !important;
   backdrop-filter: blur(var(--card-blur, 0px)) saturate(140%) !important;
   will-change: backdrop-filter;
@@ -6951,7 +7058,7 @@ html.key-icons-home-active:not(.outer-screen-layout):not(.inner-screen-layout) .
 
 /* 左下角按键提示行：与刻度条中心线对齐 */
 .bottom-key-hints.entering {
-  animation: bottom-key-hints-enter 0.58s var(--ease-out) 0.08s both;
+  animation: bottom-key-hints-enter 0.58s var(--ease-out) 0.08s backwards;
 }
 .bottom-key-hints {
   position: fixed;
@@ -6970,6 +7077,40 @@ html.key-icons-home-active:not(.outer-screen-layout):not(.inner-screen-layout) .
 }
 html.key-icons-home-active:not(.outer-screen-layout):not(.inner-screen-layout) .bottom-key-hints {
   display: flex;
+}
+
+/* 首页右下角活动筛选入口：文字在前、键位图标在后 */
+.home-filter-hint {
+  position: fixed;
+  right: 16px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 11px + var(--bottom-ui-lift, 0px));
+  z-index: 14;
+  display: none;
+  align-items: center;
+  height: var(--key-icon-height);
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+html.key-icons-home-active:not(.outer-screen-layout):not(.inner-screen-layout) .home-filter-hint {
+  display: flex;
+}
+.home-filter-hint.entering {
+  animation: bottom-key-hints-enter 0.58s var(--ease-out) 0.08s both;
+}
+.home-filter-hint-button {
+  gap: 6px;
+  pointer-events: auto;
+}
+.home-filter-hint .key-icon {
+  height: var(--key-icon-height);
+  max-height: var(--key-icon-height);
+}
+.home-filter-hint-label {
+  color: var(--text-primary);
+  font-size: var(--text-large);
+  line-height: 1;
+  text-shadow: 0 1px 1px #000, 0 1px 4px rgba(0, 0, 0, .92);
 }
 /* 「按键图标 + 文字」整块可点击：点击等同于按对应按键 */
 .key-hint-button {
@@ -7006,6 +7147,176 @@ html.key-icons-home-active:not(.outer-screen-layout):not(.inner-screen-layout) .
   line-height: 1;
   text-shadow: 0 1px 1px #000, 0 0 4px rgba(0, 0, 0, .92);
 }
+/* 活动中心：更新日志式两栏布局，左侧筛选，右侧 logo 网格。 */
+.pause-menu .filter-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+.pause-menu .filter-page[hidden] {
+  display: none !important;
+}
+.filter-topbar {
+  justify-content: flex-start;
+  gap: 18px;
+  padding: 0;
+}
+.filter-topbar > .settings-back {
+  position: static;
+  left: auto;
+  top: auto;
+  height: var(--key-icon-height);
+  padding: 0;
+  transform: none;
+}
+.filter-layout {
+  padding-top: 28px;
+  padding-bottom: 0;
+  overflow: hidden;
+}
+.filter-left {
+  min-width: 0;
+  overflow: hidden;
+  padding-right: var(--pause-margin-left, 16px);
+}
+.filter-option-list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  padding-top: 4px;
+}
+.filter-option-card {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.filter-option-card select[hidden] {
+  display: none !important;
+}
+html.has-card-blur .pause-menu .filter-page .filter-option-card {
+  -webkit-backdrop-filter: blur(var(--card-blur, 0px)) saturate(140%) !important;
+  backdrop-filter: blur(var(--card-blur, 0px)) saturate(140%) !important;
+}
+.filter-logo-pane {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-left: var(--pause-margin-right, 16px);
+}
+.filter-logo-pane::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+.filter-logo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(calc(var(--card-w) + 14px), 1fr));
+  justify-items: center;
+  align-content: start;
+  gap: 14px;
+  padding-bottom: 0;
+}
+.filter-logo-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--card-w);
+  height: var(--card-h);
+  min-width: 0;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  box-sizing: border-box;
+}
+.filter-logo-card img {
+  display: block;
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .48)) drop-shadow(0 5px 9px rgba(0, 0, 0, .28));
+}
+.pause-menu.open .filter-page:not([hidden]) .filter-logo-card {
+  animation: card-content-rise var(--card-content-duration) var(--ease-out) backwards;
+}
+
+/* 活动中心左侧：直接复制设置页画质调节卡片的最终样式，避免被其他规则覆盖。 */
+.pause-menu .filter-page .filter-option-card.theme-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  min-height: var(--achv-item-h);
+  padding: 8px 9px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.14);
+}
+.pause-menu .filter-page .filter-option-card.theme-control .settings-card-label {
+  min-width: 0;
+  color: var(--text-primary);
+  font-size: var(--text-large);
+  line-height: 1.35;
+  text-align: left;
+}
+.pause-menu .filter-page .filter-option-card.theme-control .settings-card-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+.pause-menu .filter-page .filter-option-card.theme-control .theme-value {
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: var(--text-large);
+  text-align: left;
+}
+.pause-menu .filter-page .filter-option-card.theme-control .settings-stepper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.pause-menu .filter-page .filter-option-card.theme-control .settings-step-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #fff;
+  border-radius: 6px;
+  background: transparent;
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.pause-menu .filter-page .filter-option-card.theme-control .settings-step-btn:hover {
+  border-color: #fff;
+  background: transparent;
+}
+.pause-menu .filter-page .filter-option-card.theme-control .settings-step-btn:active {
+  transform: scale(0.94);
+}
+.pause-menu .filter-page .filter-option-card.theme-control:hover .settings-card-label,
+.pause-menu .filter-page .filter-option-card.theme-control:hover .theme-value,
+.pause-menu .filter-page .filter-option-card.theme-control.is-gamepad-selected .settings-card-label,
+.pause-menu .filter-page .filter-option-card.theme-control.is-gamepad-selected .theme-value {
+  color: var(--accent-pink);
+}
+.pause-menu .filter-page .filter-option-card.theme-control.is-gamepad-selected {
+  outline: none !important;
+  box-shadow: inset 0 0 0 2px #fff !important;
+}
+
 /* 底栏缩短：两侧各让出一个头像圆尺寸，左右图标占用释放出的空间 */
 .dock {
   width: calc(var(--slot) * 6 + 180px - 2 * var(--dock-side-inset));

@@ -17,6 +17,19 @@
   ];
   // 外屏/内屏兼容路径的可见窗口；非外屏改由中间卡片组的实际边界计算。
   var SIDE_SLOTS = 3;
+  var ACTIVITY_FILTER_KEY = 'fgexpig_activity_filter_v1';
+  function normalizeActivityFilter(raw) {
+    var value = raw && typeof raw === 'object' ? raw : {};
+    return {
+      year: String(value.year || 'all').trim() || 'all',
+      developer: String(value.developer || 'all').trim() || 'all'
+    };
+  }
+  function loadActivityFilter() {
+    try { return normalizeActivityFilter(JSON.parse(localStorage.getItem(ACTIVITY_FILTER_KEY) || '{}')); } catch (err) {}
+    return normalizeActivityFilter({});
+  }
+  var activityFilter = loadActivityFilter();
 
   // 站点名：网页标题默认值，并作为各活动页标题的后缀（便于搜索引擎分别收录各活动）
   var SITE_NAME = '探索的猪仔官方网站';
@@ -24,7 +37,7 @@
 
   var IMAGE_QUALITY_MIN = 1;
   var IMAGE_QUALITY_MAX = 5;
-  var imageQualityLevel = 1;
+  var imageQualityLevel = IMAGE_QUALITY_MAX;
   var IMAGE_QUALITY_CATEGORIES = [
     { id: 'wallpaper', label: '壁纸' },
     { id: 'profileMusic', label: '头像与音乐' },
@@ -34,12 +47,12 @@
     { id: 'emoji', label: '表情包' }
   ];
   var imageQualityCategories = {
-    wallpaper: IMAGE_QUALITY_MIN,
-    profileMusic: IMAGE_QUALITY_MIN,
-    achievements: IMAGE_QUALITY_MIN,
-    badges: IMAGE_QUALITY_MIN,
-    resources: IMAGE_QUALITY_MIN,
-    emoji: IMAGE_QUALITY_MIN
+    wallpaper: IMAGE_QUALITY_MAX,
+    profileMusic: IMAGE_QUALITY_MAX,
+    achievements: IMAGE_QUALITY_MAX,
+    badges: IMAGE_QUALITY_MAX,
+    resources: IMAGE_QUALITY_MAX,
+    emoji: IMAGE_QUALITY_MAX
   };
   var appliedQualitySignature = null;
   var ASSET_REVISION = '20260925perf3';
@@ -126,9 +139,15 @@
   function postRuntimeCacheActivity(worker) {
     if (!worker) return;
     try {
+      var quality = {};
+      IMAGE_QUALITY_CATEGORIES.forEach(function (category) {
+        quality[category.id] = imageQualityCategories[category.id] || IMAGE_QUALITY_MIN;
+      });
       worker.postMessage({
-        type: 'fgexpig-cache-activity',
+        type: 'fgexpig-cache-config',
         activity: runtimeCacheActivityId,
+        activities: typeof activityIds === 'function' ? activityIds() : [],
+        quality: quality,
         font: runtimeCacheFontPaths
       });
     } catch (err) {}
@@ -233,21 +252,27 @@
       prevActivity: 'a.webp', nextActivity: 'd.webp',
       toggleMusic: 'x.webp', rewindMusic: 'z.webp', forwardMusic: 'c.webp',
       toggleUi: 'tab.webp', openSettings: 'i.webp', pauseBack: 'esc.webp',
-      subpageBack: 'esc.webp', logoutAccount: 't.webp', openUpdateLog: 'v.webp'
+      subpageBack: 'esc.webp', logoutAccount: 't.webp', openFilter: 'space.webp',
+      resetSettings: 'r.webp', applySettings: 'f.webp',
+      titleQuickEquip: 'w.webp', openUpdateLog: 'v.webp'
     },
     xbox: {
       prevNav: 'lb.webp', nextNav: 'rb.webp',
       prevActivity: 'lt.webp', nextActivity: 'rt.webp',
       toggleMusic: 'x.webp', rewindMusic: 'left.webp', forwardMusic: 'right.webp',
       toggleUi: 'y.webp', openSettings: 'menu.webp', pauseBack: 'view.webp',
-      subpageBack: 'b.webp', logoutAccount: 'ls.webp', openUpdateLog: 'rs.webp'
+      subpageBack: 'b.webp', logoutAccount: 'ls.webp', openFilter: 'ls.webp',
+      resetSettings: 'x.webp', applySettings: 'y.webp',
+      titleQuickEquip: 'a.webp', openUpdateLog: 'rs.webp'
     },
     ps5: {
       prevNav: 'l1.webp', nextNav: 'r1.webp',
       prevActivity: 'l2.webp', nextActivity: 'r2.webp',
       toggleMusic: 'square.webp', rewindMusic: 'left.webp', forwardMusic: 'right.webp',
       toggleUi: 'triangle.webp', openSettings: 'options.webp', pauseBack: 'touchpad.webp',
-      subpageBack: 'circle.webp', logoutAccount: 'l3.webp', openUpdateLog: 'r3.webp'
+      subpageBack: 'circle.webp', logoutAccount: 'l3.webp', openFilter: 'l3.webp',
+      resetSettings: 'square.webp', applySettings: 'triangle.webp',
+      titleQuickEquip: 'cross.webp', openUpdateLog: 'r3.webp'
     }
   };
 
@@ -318,6 +343,7 @@
     keyIconModeId = normalizeKeyIconMode(id);
     if (persist) {
       try { localStorage.setItem(KEY_ICON_MODE_KEY, keyIconModeId); } catch (err) {}
+      markSettingsDirty();
     }
     syncKeyIcons();
     renderKeybindList(true);
@@ -365,6 +391,25 @@
     if (src) img.src = src;
     else img.hidden = true;
     return img;
+  }
+
+  function homeBottomKeyActionAvailable() {
+    if (!startupEntryComplete || (startupOverlay && !startupOverlay.hidden)) return false;
+    if (pauseMenu && pauseMenu.classList.contains('open')) return false;
+    if (loginOverlay && loginOverlay.classList.contains('show')) return false;
+    if (document.querySelector('.minigame-overlay:not([hidden])')) return false;
+    var section = document.querySelector('.page.active .page-section.active');
+    var sectionKey = section && section.dataset ? section.dataset.section : '';
+    return sectionKey === 'home' || sectionKey === 'files' || sectionKey === 'news';
+  }
+
+  function homeFilterActionAvailable() {
+    var section = document.querySelector('.page.active .page-section.active');
+    var sectionKey = section && section.dataset ? section.dataset.section : '';
+    var mainSectionActive = sectionKey === 'home' || sectionKey === 'files' || sectionKey === 'news';
+    return mainSectionActive && !(pauseMenu && pauseMenu.classList.contains('open')) &&
+      !document.documentElement.classList.contains('ui-hidden') &&
+      !(startupOverlay && !startupOverlay.hidden);
   }
 
   function syncKeyIconVisibility() {
@@ -445,6 +490,60 @@
     });
     syncKeyIcons();
   }
+
+  var homeFilterHintEl = document.getElementById('homeFilterHint');
+  var settingsBottomHintsEl = document.getElementById('settingsBottomHints');
+  var titleBottomHintsEl = document.getElementById('titleBottomHints');
+  var filterLogoPaneEl = document.getElementById('filterLogoPane');
+  var filterYearValEl = document.getElementById('filterYearVal');
+  var filterDeveloperValEl = document.getElementById('filterDeveloperVal');
+
+  function activityFilterDisplayText() {
+    var year = activityFilter.year === 'all' ? '全部年份' : activityFilter.year + '年';
+    var developer = activityFilter.developer === 'all' ? '全部开发商' : activityFilter.developer;
+    return year + '｜' + developer + '｜活动中心';
+  }
+
+  function renderHomeFilterHint() {
+    if (!homeFilterHintEl) return;
+    homeFilterHintEl.innerHTML = '';
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'key-hint-button home-filter-hint-button';
+    button.setAttribute('aria-label', activityFilterDisplayText());
+    var label = document.createElement('span');
+    label.className = 'key-hint-label bottom-key-hint-label home-filter-hint-label';
+    label.textContent = activityFilterDisplayText();
+    button.appendChild(label);
+    button.appendChild(createKeyIcon('openFilter', 'key-hint-icon'));
+    button.addEventListener('click', function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      performKeyAction('openFilter');
+    });
+    homeFilterHintEl.appendChild(button);
+    syncKeyIcons();
+    scheduleDockSideIconAlignment();
+  }
+  function markSettingsDirty() {
+    settingsDirty = true;
+  }
+
+  function renderTitleBottomActions() {
+    if (!titleBottomHintsEl) return;
+    titleBottomHintsEl.innerHTML = '';
+    titleBottomHintsEl.appendChild(createKeyHintButton('titleQuickEquip', '快捷佩戴', 'bottom-key-hint title-bottom-hint'));
+    syncKeyIcons();
+  }
+
+  function renderSettingsBottomActions() {
+    if (!settingsBottomHintsEl) return;
+    settingsBottomHintsEl.innerHTML = '';
+    settingsBottomHintsEl.appendChild(createKeyHintButton('resetSettings', '重置设置', 'bottom-key-hint settings-bottom-hint'));
+    settingsBottomHintsEl.appendChild(createKeyHintButton('applySettings', '应用设置', 'bottom-key-hint settings-bottom-hint'));
+    syncKeyIcons();
+  }
+
   var pagesWrap = document.getElementById('pages');
   var bgA = document.getElementById('bgA');
   var bgB = document.getElementById('bgB');
@@ -509,12 +608,51 @@
 
   // 活动列表：核心数据已加载则只取「已举办」(held!==false) 的活动并保持 ID 顺序；
   // 没有任何已举办数据时回退到内置兜底列表
-  function activityIds() {
+  function activityYearOf(row) {
+    var time = coreReleaseTimestamp(row && row.releaseDate);
+    if (!isFinite(time)) return '';
+    return String(new Date(time).getUTCFullYear());
+  }
+
+  function activityDeveloperOf(row) {
+    return String((row && (row.developer || row.publisher)) || '').trim();
+  }
+
+  function coreRowsForFilter(filterState) {
+    var filter = normalizeActivityFilter(filterState || activityFilter);
     var core = (typeof dataStore !== 'undefined' && dataStore && dataStore.core) || [];
-    var ids = core
-      .filter(function (r) { return r.held !== false; })
-      .map(function (r) { return r.id; })
-      .filter(Boolean);
+    if (!core.length) return [];
+    return core.filter(function (row) {
+      if (!row || row.held === false) return false;
+      if (filter.year !== 'all' && activityYearOf(row) !== filter.year) return false;
+      if (filter.developer !== 'all' && activityDeveloperOf(row) !== filter.developer) return false;
+      return true;
+    });
+  }
+
+  function filteredCoreRows() {
+    return coreRowsForFilter(activityFilter);
+  }
+
+  function normalizeActivityFilterAgainstCore() {
+    var core = (typeof dataStore !== 'undefined' && dataStore && dataStore.core) || [];
+    var rows = core.filter(function (row) { return row && row.held !== false; });
+    if (!rows.length) return;
+    var years = {};
+    var developers = {};
+    rows.forEach(function (row) {
+      var year = activityYearOf(row);
+      var developer = activityDeveloperOf(row);
+      if (year) years[year] = true;
+      if (developer) developers[developer] = true;
+    });
+    if (activityFilter.year !== 'all' && !years[activityFilter.year]) activityFilter.year = 'all';
+    if (activityFilter.developer !== 'all' && !developers[activityFilter.developer]) activityFilter.developer = 'all';
+  }
+
+  function activityIds() {
+    var rows = filteredCoreRows();
+    var ids = rows.map(function (r) { return r.id; }).filter(Boolean);
     return ids.length ? ids : LOGOS.slice();
   }
 
@@ -535,7 +673,8 @@
 
   // 显示值为 11 时作为默认活动；有多个时取发行日期最新者，日期相同取核心数据中靠后的项。
   function defaultSelectedActivityId() {
-    var core = (typeof dataStore !== 'undefined' && dataStore && dataStore.core) || [];
+    var core = filteredCoreRows();
+    if (!core.length) core = (typeof dataStore !== 'undefined' && dataStore && dataStore.core) || [];
     var bestId = '';
     var bestTime = -Infinity;
     var bestIndex = -1;
@@ -1288,6 +1427,7 @@
     // 左下角第一个按键图标的下边距：固定 px（= 暂停菜单右上角第一行文字距网页顶部的高度），
     // 不再根据实时计算的左边距推导。
     var rootEl = document.documentElement;
+    rootEl.style.setProperty('--bottom-ui-left', firstHintLeft.toFixed(2) + 'px');
     var hintsVisible = !rootEl.classList.contains('outer-screen-layout') && !rootEl.classList.contains('inner-screen-layout');
     var bottomLift = hintsVisible ? (BOTTOM_UI_FIXED_MARGIN_PX - BOTTOM_UI_HINT_BASE_PX) : 0;
     var bottomLiftValue = bottomLift.toFixed(2) + 'px';
@@ -1298,6 +1438,7 @@
     // 暂停菜单 / 用户切换 / 称号 / 设置页沿用首页四等边边距（宽屏 / 内屏为 16px）；
     // 正屏模式比较特殊：左右边距按首页 3 卡片的左右边界实时调整。
     var vpWidth = document.documentElement.clientWidth || window.innerWidth;
+    if (homeFilterHintEl) homeFilterHintEl.style.right = Math.max(0, vpWidth - cardsRight).toFixed(2) + 'px';
     if (rootEl.classList.contains('portrait-layout')) {
       rootEl.style.setProperty('--pause-margin-left', Math.max(0, cardsLeft).toFixed(2) + 'px');
       rootEl.style.setProperty('--pause-margin-right', Math.max(0, vpWidth - cardsRight).toFixed(2) + 'px');
@@ -1830,8 +1971,10 @@
       if (track && track.parentNode) track.parentNode.removeChild(track);
       card._manualScrollCleanup = null;
       el._stopManualScrollAnimation = null;
+      if (el._syncManualScroll === syncScrollbar) el._syncManualScroll = null;
     }
     card._manualScrollCleanup = disposeManualScroll;
+    el._syncManualScroll = syncScrollbar;
 
     function animateScrollTo(value, duration) {
       targetScrollTop = clampScrollTop(value);
@@ -1977,7 +2120,7 @@
     }
     if (window.MutationObserver) {
       mutationObserver = new MutationObserver(scheduleSync);
-      mutationObserver.observe(el, { childList: true, subtree: true });
+      mutationObserver.observe(el, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden', 'style', 'class'] });
     }
     startupSyncFrame = requestAnimationFrame(function () {
       startupSyncFrame = 0;
@@ -8320,9 +8463,66 @@
   var startupSyncActive = false;
   var STARTUP_SYNC_MIN_MS = 2000;
 
+  function startupManifestUrls() {
+    if (!Array.isArray(window.FGEXPIG_SYNC_MANIFEST)) return [];
+    return window.FGEXPIG_SYNC_MANIFEST.map(function (raw) {
+      var url = String(raw || '');
+      var path = url.split(/[?#]/)[0];
+      var query = url.indexOf('?') >= 0 ? '&' : '?';
+      if (/^button\//i.test(path)) return url + query + 'v=' + encodeURIComponent(KEY_ICON_ASSET_VERSION);
+      if (/(?:\/([1-5]))\/[^/]+$/i.test(path)) return url + query + 'imgv=' + encodeURIComponent(ASSET_REVISION);
+      return url;
+    });
+  }
+
+  function startupUrlPath(url) {
+    return String(url || '').split(/[?#]/)[0];
+  }
+
+  function startupTextResource(url) {
+    return /\.(?:html?|css|js|json|txt|xml|csv|md)$/i.test(startupUrlPath(url));
+  }
+
+  function startupQualityCategory(path) {
+    if (/^wallpaper\//i.test(path)) return 'wallpaper';
+    if (/^(profile|music)\//i.test(path)) return 'profileMusic';
+    if (/^logo\//i.test(path)) return 'badges';
+    if (/^emoji\//i.test(path)) return 'emoji';
+    if (/^resources\//i.test(path)) {
+      if (/\/icons\//i.test(path)) return 'achievements';
+      if (/\/pictures\//i.test(path)) return 'resources';
+    }
+    return '';
+  }
+
+  function startupQualityLevel(path) {
+    var match = /\/([1-5])\/[^/]+$/.exec(path);
+    return match ? Number(match[1]) : 0;
+  }
+
+  function startupQualityAllowed(url) {
+    var path = startupUrlPath(url);
+    var category = startupQualityCategory(path);
+    if (!category) return true;
+    var level = startupQualityLevel(path);
+    if (!level) return true;
+    var selected = Number(imageQualityCategories[category] || IMAGE_QUALITY_MIN);
+    return level === selected;
+  }
+
+  function startupActivityAllowed(url) {
+    var path = startupUrlPath(url);
+    var match = /^resources\/([^/]+)\//.exec(path);
+    if (!match) return true;
+    return activityIds().indexOf(match[1]) >= 0;
+  }
+
   function startupSyncUrls() {
-    if (Array.isArray(window.FGEXPIG_SYNC_MANIFEST) && window.FGEXPIG_SYNC_MANIFEST.length) {
-      return window.FGEXPIG_SYNC_MANIFEST.slice();
+    var manifest = startupManifestUrls();
+    if (manifest.length) {
+      return manifest.filter(function (url) {
+        return !startupTextResource(url) && startupActivityAllowed(url) && startupQualityAllowed(url);
+      });
     }
     var id = String(curNavLogo || (typeof state !== 'undefined' && state ? LOGOS[state.index] : '') || '');
     var urls = [];
@@ -8358,7 +8558,7 @@
     return urls.filter(function (url) {
       if (!url || seen[url]) return false;
       seen[url] = true;
-      return true;
+      return !startupTextResource(url) && startupActivityAllowed(url) && startupQualityAllowed(url);
     });
   }
 
@@ -8401,6 +8601,34 @@
     return Promise.all(workers);
   }
 
+  function formatStartupSyncCount(current, target, all) {
+    return current + ' / ' + target + ' / ' + all;
+  }
+
+  function countCachedStartupUrls(urls) {
+    var current = 0;
+    var missing = [];
+    if (!('caches' in window)) return Promise.resolve({ current: 0, missing: urls.slice() });
+    var nextIndex = 0;
+    var concurrency = Math.min(12, urls.length);
+    var runNext = function () {
+      if (nextIndex >= urls.length) return Promise.resolve();
+      var url = urls[nextIndex];
+      nextIndex += 1;
+      return caches.match(url).then(function (hit) {
+        if (hit) current += 1;
+        else missing.push(url);
+      }).catch(function () {
+        missing.push(url);
+      }).then(runNext);
+    };
+    var workers = [];
+    for (var i = 0; i < concurrency; i++) workers.push(runNext());
+    return Promise.all(workers).then(function () {
+      return { current: current, missing: missing };
+    });
+  }
+
   function runStartupSync(done) {
     if (!startupSyncEl) {
       if (done) done();
@@ -8409,10 +8637,8 @@
     startupSyncActive = true;
     startupSyncEl.hidden = false;
     if (startupSyncFillEl) startupSyncFillEl.style.width = '0%';
-    if (startupSyncCountEl) {
-      var manifestTotal = Array.isArray(window.FGEXPIG_SYNC_MANIFEST) ? window.FGEXPIG_SYNC_MANIFEST.length : 0;
-      startupSyncCountEl.textContent = '0/' + manifestTotal;
-    }
+    var allTotal = startupManifestUrls().length;
+    if (startupSyncCountEl) startupSyncCountEl.textContent = formatStartupSyncCount(0, 0, allTotal);
     var startedAt = Date.now();
     var syncFinished = false;
     var finish = function () {
@@ -8433,22 +8659,25 @@
     var refresh = (typeof initData === 'function') ? initData().catch(function () {}) : Promise.resolve();
     refresh.then(function () {
       var urls = startupSyncUrls();
-      var total = urls.length;
-      var loaded = 0;
-      var update = function () {
-        var percent = total ? Math.round((loaded / total) * 100) : 100;
-        if (startupSyncFillEl) startupSyncFillEl.style.width = percent + '%';
-        if (startupSyncCountEl) startupSyncCountEl.textContent = loaded + '/' + total;
-      };
-      update();
-      if (!total) {
-        finish();
-        return;
-      }
-      preloadStartupUrls(urls, function () {
-        loaded += 1;
+      var target = urls.length;
+      return countCachedStartupUrls(urls).then(function (cached) {
+        var current = cached.current;
+        var update = function () {
+          var percent = target ? Math.round((Math.min(current, target) / target) * 100) : 100;
+          if (startupSyncFillEl) startupSyncFillEl.style.width = percent + '%';
+          if (startupSyncCountEl) startupSyncCountEl.textContent = formatStartupSyncCount(current, target, allTotal);
+        };
         update();
-      }).then(finish, finish);
+        if (!target || current >= target) {
+          finish();
+          return;
+        }
+        var base = current;
+        preloadStartupUrls(cached.missing, function (loaded) {
+          current = base + loaded;
+          update();
+        }).then(finish, finish);
+      });
     });
   }
 
@@ -9306,6 +9535,10 @@
 
   function performKeyAction(actionId) {
     var root = document.documentElement;
+    if (actionId === 'openFilter' && !homeFilterActionAvailable()) return;
+    if ((actionId === 'toggleMusic' || actionId === 'rewindMusic' ||
+        actionId === 'forwardMusic' || actionId === 'toggleUi') &&
+        !homeBottomKeyActionAvailable()) return;
     if (actionId !== 'toggleUi' && root.classList.contains('ui-hidden')) return;
     if (pauseMenu && pauseMenu.classList.contains('open') &&
         (actionId === 'prevNav' || actionId === 'nextNav' || actionId === 'prevActivity' || actionId === 'nextActivity')) {
@@ -9320,6 +9553,10 @@
     else if (actionId === 'forwardMusic') seekMusicBy(5);
     else if (actionId === 'toggleUi') toggleUiHidden();
     else if (actionId === 'openSettings') openSettingsShortcut();
+    else if (actionId === 'openFilter') openFilterPanel();
+    else if (actionId === 'titleQuickEquip') quickEquipDefaultTitle();
+    else if (actionId === 'resetSettings') resetSettingsDraft();
+    else if (actionId === 'applySettings') applySettingsChanges();
     else if (actionId === 'openUpdateLog') openUpdatePanel();
     else if (actionId === 'pauseBack') {
       if (sponsorOverlay && !sponsorOverlay.hidden) {
@@ -9577,6 +9814,7 @@
     setPauseMenuOpen(true);
   }
   function closeSidebars() {
+    if (!resolvePendingRestart()) return;
     sidebarPanelOrigin = 'menu';
     var replayHomeAnimation = !!(pauseMenu && pauseMenu.classList.contains('open'));
     if (replayHomeAnimation) playInterfaceAnimation(true);
@@ -9877,6 +10115,15 @@
   var panelAccounts = document.getElementById('panelAccounts');
   var panelSettings = document.getElementById('panelSettings');
   var panelUpdate = document.getElementById('panelUpdate');
+  var panelFilter = document.getElementById('panelFilter');
+  var filterYearEl = document.getElementById('filterYear');
+  var filterDeveloperEl = document.getElementById('filterDeveloper');
+  var filterLogoGridEl = document.getElementById('filterLogoGrid');
+  var pendingActivityFilter = null;
+  var pendingQualitySnapshot = null;
+  var settingsDirty = false;
+  var settingsSnapshot = null;
+  var restartPromptOpen = false;
   var accountLogoutTop = document.getElementById('accountLogoutTop');
   var accountLoginForm = document.getElementById('accountLoginForm');
   var accountLoginUser = document.getElementById('accountLoginUser');
@@ -9937,6 +10184,7 @@
     { id: 'forwardMusic', label: '音乐快进', defaultKey: 'c', xbox: '→', playstation: '→', gamepadButton: 15 },
     { id: 'toggleUi', label: '隐藏/显示HUD', defaultKey: 'tab', xbox: 'Y', playstation: '△', gamepadButton: 3 },
     { id: 'openSettings', label: '设置页', defaultKey: 'i', xbox: 'MENU', playstation: 'OPTIONS' },
+    { id: 'openFilter', label: '活动中心', defaultKey: 'space', xbox: 'LS', playstation: 'L3' },
     { id: 'openUpdateLog', label: '更新日志', defaultKey: 'v', xbox: 'RS', playstation: 'R3', gamepadButton: 11 }
   ];
   var GAMEPAD_ACTION_BY_BUTTON = {};
@@ -9973,9 +10221,13 @@
     if (/^f\d{1,2}$/.test(key)) return key.toUpperCase();
     return key.length === 1 ? key.toUpperCase() : key.charAt(0).toUpperCase() + key.slice(1);
   }
-  function loadKeybindings() {
+  function defaultKeybindings() {
     var map = {};
     KEYBIND_ACTIONS.forEach(function (action) { map[action.id] = action.defaultKey; });
+    return map;
+  }
+  function loadKeybindings() {
+    var map = defaultKeybindings();
     try {
       var saved = JSON.parse(localStorage.getItem(KEYBIND_KEY) || '{}');
       KEYBIND_ACTIONS.forEach(function (action) {
@@ -10052,6 +10304,7 @@
           minigameVolume: audioSettings.minigameVolume
         }));
       } catch (err) {}
+      markSettingsDirty();
     }
   }
 
@@ -10074,6 +10327,7 @@
     panelAccounts.hidden = which !== 'accounts';
     panelSettings.hidden = which !== 'settings';
     if (panelUpdate) panelUpdate.hidden = which !== 'update';
+    if (panelFilter) panelFilter.hidden = which !== 'filter';
     var isSubpage = which !== 'menu';
     if (pauseMenu) {
       pauseMenu.classList.toggle('is-subpage-open', isSubpage);
@@ -10082,8 +10336,116 @@
     document.documentElement.classList.toggle('pause-settings-open', which === 'settings');
     invalidateCursorTargetCache();
   }
+  function filterOptionValues() {
+    var rows = (typeof dataStore !== 'undefined' && dataStore && dataStore.core ? dataStore.core : []).filter(function (row) {
+      return row && row.held !== false;
+    });
+    var years = {};
+    var developers = {};
+    rows.forEach(function (row) {
+      var year = activityYearOf(row);
+      var developer = activityDeveloperOf(row);
+      if (year) years[year] = true;
+      if (developer) developers[developer] = true;
+    });
+    return {
+      years: Object.keys(years).sort(function (a, b) { return Number(b) - Number(a); }),
+      developers: Object.keys(developers).sort(function (a, b) { return a.localeCompare(b, 'zh-CN'); })
+    };
+  }
+
+  function makeFilterOption(value, label) {
+    var option = document.createElement('option');
+    option.value = value;
+    option.textContent = label;
+    return option;
+  }
+
+  function renderFilterGrid(filterState) {
+    if (!filterLogoGridEl) return;
+    filterLogoGridEl.innerHTML = '';
+    var rows = coreRowsForFilter(filterState || activityFilter);
+    if (!rows.length) {
+      rows = ((dataStore && dataStore.core) || []).filter(function (row) { return row && row.held !== false; });
+    }
+    rows.sort(function (a, b) {
+      var at = coreReleaseTimestamp(a && a.releaseDate);
+      var bt = coreReleaseTimestamp(b && b.releaseDate);
+      return (isFinite(bt) ? bt : -Infinity) - (isFinite(at) ? at : -Infinity);
+    });
+    rows.forEach(function (row) {
+      var id = String(row.id || '').trim();
+      if (!id) return;
+      var card = document.createElement('div');
+      card.className = 'filter-logo-card';
+      var img = document.createElement('img');
+      img.alt = row.name || id;
+      img.decoding = 'async';
+      img.loading = 'lazy';
+      img.draggable = false;
+      bindResponsiveAsset(img, 'logo/' + id + '.png');
+      card.appendChild(img);
+      filterLogoGridEl.appendChild(card);
+    });
+  }
+
+  function renderFilterPage() {
+    if (!filterYearEl || !filterDeveloperEl) return;
+    var options = filterOptionValues();
+    filterYearEl.innerHTML = '';
+    filterDeveloperEl.innerHTML = '';
+    filterYearEl.appendChild(makeFilterOption('all', '全部年份'));
+    filterDeveloperEl.appendChild(makeFilterOption('all', '全部开发商'));
+    options.years.forEach(function (year) { filterYearEl.appendChild(makeFilterOption(year, year + '年')); });
+    options.developers.forEach(function (developer) { filterDeveloperEl.appendChild(makeFilterOption(developer, developer)); });
+    var preview = normalizeActivityFilter(pendingActivityFilter || activityFilter);
+    filterYearEl.value = preview.year;
+    filterDeveloperEl.value = preview.developer;
+    if (filterYearValEl) filterYearValEl.textContent = filterYearEl.options[filterYearEl.selectedIndex].textContent;
+    if (filterDeveloperValEl) filterDeveloperValEl.textContent = filterDeveloperEl.options[filterDeveloperEl.selectedIndex].textContent;
+    renderFilterGrid(preview);
+    if (filterLogoPaneEl) filterLogoPaneEl.scrollTop = 0;
+    if (filterLogoPaneEl && typeof filterLogoPaneEl._syncManualScroll === 'function') {
+      requestAnimationFrame(filterLogoPaneEl._syncManualScroll);
+    }
+    updateFilterSelection();
+  }
+
+  function openFilterPanel() {
+    if (!pauseMenu) return;
+    if (pauseMenu.classList.contains('open') && currentSidebarPanel === 'filter') {
+      resetSidebarPanel();
+      return;
+    }
+    if (!pauseMenu.classList.contains('open')) openSidebar('left');
+    sidebarPanelOrigin = 'home';
+    filterSelectionIndex = 0;
+    renderFilterPage();
+    showSidebarPanel('filter');
+    updateFilterSelection();
+    invalidateCursorTargetCache();
+  }
+
+  function cycleActivityFilter(selectEl, key, delta) {
+    if (!selectEl || selectEl.options.length < 2) return;
+    var index = selectEl.selectedIndex + delta;
+    var count = selectEl.options.length;
+    index = ((index % count) + count) % count;
+    selectEl.selectedIndex = index;
+    requestActivityFilterChange(key, selectEl.value);
+  }
+
+  function requestActivityFilterChange(key, value) {
+    var base = normalizeActivityFilter(pendingActivityFilter || activityFilter);
+    var next = { year: base.year, developer: base.developer };
+    next[key] = String(value || 'all');
+    pendingActivityFilter = normalizeActivityFilter(next);
+    renderFilterPage();
+  }
+
   // 二级页“返回”：从首页进来的直接回首页，从暂停菜单进来的回暂停菜单
   function resetSidebarPanel() {
+    if (!resolvePendingRestart()) return;
     if (sidebarPanelOrigin === 'home' || sidebarPanelOrigin === 'hotspot') {
       closeSidebars();
       return;
@@ -10143,6 +10505,13 @@
     resetSettingsStickAcceleration();
     updateSettingsSelection();
     moveSettingsThumb(currentSettingsTab, true);
+    var settingsScroll = panelSettings ? panelSettings.querySelector('.settings-left') : null;
+    if (settingsScroll) {
+      settingsScroll.scrollTop = 0;
+      requestAnimationFrame(function () {
+        if (typeof settingsScroll._syncManualScroll === 'function') settingsScroll._syncManualScroll();
+      });
+    }
   }
 
   function syncSettingsTopnavKeyPosition() {
@@ -10172,6 +10541,8 @@
   }
 
   function openSettingsPanel(tabId) {
+    settingsDirty = false;
+    settingsSnapshot = captureSettingsSnapshot();
     renderFontList();
     renderKeybindList();
     Array.prototype.forEach.call(settingsTabs, function (tab) {
@@ -10277,22 +10648,255 @@
     if (imageQualityInput) imageQualityInput.value = String(uniform ? values[0] : imageQualityLevel);
   }
 
+  function captureQualitySnapshot() {
+    var snapshot = { imageQuality: imageQualityLevel, categories: {} };
+    IMAGE_QUALITY_CATEGORIES.forEach(function (category) {
+      snapshot.categories[category.id] = imageQualityCategories[category.id];
+    });
+    return snapshot;
+  }
+
+  function restoreQualitySnapshot(snapshot) {
+    if (!snapshot) return;
+    IMAGE_QUALITY_CATEGORIES.forEach(function (category) {
+      imageQualityCategories[category.id] = normalizeImageQuality(snapshot.categories[category.id]);
+    });
+    imageQualityLevel = normalizeImageQuality(snapshot.imageQuality);
+    renderQualityControls();
+    applyThemeFromControls(false);
+  }
+
+  function qualitySnapshotMatchesCurrent(snapshot) {
+    if (!snapshot) return true;
+    if (Number(snapshot.imageQuality) !== Number(imageQualityLevel)) return false;
+    return IMAGE_QUALITY_CATEGORIES.every(function (category) {
+      return Number(snapshot.categories[category.id]) === Number(imageQualityCategories[category.id]);
+    });
+  }
+
+  function markQualityPending() {
+    if (!pendingQualitySnapshot) pendingQualitySnapshot = captureQualitySnapshot();
+    if (qualitySnapshotMatchesCurrent(pendingQualitySnapshot)) pendingQualitySnapshot = null;
+  }
+
+  function hasPendingRestart() {
+    var filterPending = !!(pendingActivityFilter &&
+      (pendingActivityFilter.year !== activityFilter.year || pendingActivityFilter.developer !== activityFilter.developer));
+    return !!(pendingQualitySnapshot || filterPending);
+  }
+
+  function showRestartPrompt(message) {
+    if (restartPromptOpen) return false;
+    restartPromptOpen = true;
+    var confirmed = false;
+    try {
+      confirmed = window.confirm(message || '需要重新启动');
+    } finally {
+      restartPromptOpen = false;
+    }
+    return confirmed;
+  }
+
+  function showApplySettingsPrompt() {
+    return showRestartPrompt('是否应用设置');
+  }
+
+  function copyKeybindings(map) {
+    var copy = {};
+    KEYBIND_ACTIONS.forEach(function (action) {
+      copy[action.id] = map && map[action.id] ? map[action.id] : action.defaultKey;
+    });
+    return copy;
+  }
+
+  function captureSettingsSnapshot() {
+    var categories = {};
+    IMAGE_QUALITY_CATEGORIES.forEach(function (category) {
+      categories[category.id] = imageQualityCategories[category.id];
+    });
+    return {
+      brightness: wallpaperDimInput ? wallpaperDimInput.value : 0,
+      blur: cardBlurInput ? cardBlurInput.value : 1,
+      fxLevel: fxLevelInput ? fxLevelInput.value : 3,
+      performance: !!(performanceModeInput && performanceModeInput.checked),
+      imageQuality: imageQualityLevel,
+      categories: categories,
+      mainVolume: audioSettings.mainVolume,
+      minigameVolume: audioSettings.minigameVolume,
+      fontId: currentFontId,
+      keyIconMode: keyIconModeId,
+      keybindings: copyKeybindings(keybindings)
+    };
+  }
+
+  function restoreSettingsSnapshot(snapshot) {
+    if (!snapshot) return;
+    pendingQualitySnapshot = null;
+    IMAGE_QUALITY_CATEGORIES.forEach(function (category) {
+      imageQualityCategories[category.id] = normalizeImageQuality(snapshot.categories[category.id]);
+    });
+    imageQualityLevel = normalizeImageQuality(snapshot.imageQuality);
+    if (performanceModeInput) performanceModeInput.checked = !!snapshot.performance;
+    if (wallpaperDimInput) wallpaperDimInput.value = String(snapshot.brightness);
+    if (cardBlurInput) cardBlurInput.value = String(snapshot.blur);
+    if (fxLevelInput) fxLevelInput.value = String(snapshot.fxLevel);
+    applyThemeSettings(snapshot.brightness, snapshot.blur, snapshot.fxLevel, snapshot.imageQuality, true);
+    audioSettings.mainVolume = normalizeAudioVolume(snapshot.mainVolume);
+    audioSettings.minigameVolume = normalizeAudioVolume(snapshot.minigameVolume);
+    applyAudioSettings(true);
+    applyFont(snapshot.fontId, true);
+    renderFontList();
+    keybindings = copyKeybindings(snapshot.keybindings);
+    saveKeybindings();
+    setKeyIconMode(snapshot.keyIconMode, true);
+    syncKeyIcons();
+    renderKeybindList(true);
+    settingsDirty = false;
+    settingsSnapshot = captureSettingsSnapshot();
+  }
+
+  function handleApplySettingsPrompt(options) {
+    options = options || {};
+    if (showApplySettingsPrompt()) {
+      var applied = applySettingsChanges(options.closeAfterApply !== false);
+      if (applied && typeof options.onApplied === 'function') options.onApplied();
+      return true;
+    }
+    restoreSettingsSnapshot(settingsSnapshot);
+    return false;
+  }
+
+  function resetSettingsDraft() {
+    if (currentSettingsTab === 'interface') {
+      if (wallpaperDimInput) wallpaperDimInput.value = '0';
+      if (cardBlurInput) cardBlurInput.value = '1';
+      if (fxLevelInput) fxLevelInput.value = '3';
+      applyThemeFromControls(false);
+      settingsDirty = true;
+      return;
+    }
+    if (currentSettingsTab === 'display') {
+      pendingQualitySnapshot = null;
+      if (performanceModeInput) performanceModeInput.checked = false;
+      IMAGE_QUALITY_CATEGORIES.forEach(function (category) {
+        imageQualityCategories[category.id] = IMAGE_QUALITY_MAX;
+      });
+      imageQualityLevel = IMAGE_QUALITY_MAX;
+      applyThemeFromControls(false);
+      settingsDirty = true;
+      return;
+    }
+    if (currentSettingsTab === 'control') {
+      setKeyIconMode('auto', false);
+      keybindings = defaultKeybindings();
+      syncKeyIcons();
+      renderKeybindList(true);
+      settingsDirty = true;
+      return;
+    }
+    if (currentSettingsTab === 'audio') {
+      audioSettings.mainVolume = 1;
+      audioSettings.minigameVolume = 1;
+      applyAudioSettings(false);
+      settingsDirty = true;
+      return;
+    }
+    if (currentSettingsTab === 'font') {
+      applyFont('sarasa', false);
+      renderFontList();
+      settingsDirty = true;
+    }
+  }
+
+  function applySettingsChanges(closeAfterApply) {
+    if (pendingQualitySnapshot) {
+      pendingQualitySnapshot = null;
+      applyThemeFromControls(true);
+      applyAudioSettings(true);
+      applyFont(currentFontId, true);
+      saveKeybindings();
+      settingsDirty = false;
+      settingsSnapshot = null;
+      window.location.reload();
+      return false;
+    }
+    applyThemeFromControls(true);
+    applyAudioSettings(true);
+    applyFont(currentFontId, true);
+    saveKeybindings();
+    settingsDirty = false;
+    if (closeAfterApply !== false) {
+      settingsSnapshot = null;
+      if (sidebarPanelOrigin === 'home' || sidebarPanelOrigin === 'hotspot') closeSidebars();
+      else resetSidebarPanelCore();
+      return false;
+    }
+    settingsSnapshot = captureSettingsSnapshot();
+    return true;
+  }
+
+  function resolvePendingRestart() {
+    if (settingsDirty && currentSidebarPanel === 'settings') {
+      handleApplySettingsPrompt();
+      return false;
+    }
+    if (!hasPendingRestart()) return true;
+    if (showRestartPrompt()) {
+      if (pendingActivityFilter) {
+        activityFilter = normalizeActivityFilter(pendingActivityFilter);
+        try { localStorage.setItem(ACTIVITY_FILTER_KEY, JSON.stringify(activityFilter)); } catch (err) {}
+        pendingActivityFilter = null;
+      }
+      if (pendingQualitySnapshot) {
+        pendingQualitySnapshot = null;
+        applyThemeFromControls(true);
+      }
+      window.location.reload();
+      return false;
+    }
+    pendingActivityFilter = null;
+    if (pendingQualitySnapshot) {
+      restoreQualitySnapshot(pendingQualitySnapshot);
+      pendingQualitySnapshot = null;
+    }
+    if (currentSidebarPanel === 'filter') renderFilterPage();
+    return true;
+  }
+
   function setImageQuality(value, persist) {
     var level = normalizeImageQuality(value);
+    var changed = false;
+    IMAGE_QUALITY_CATEGORIES.forEach(function (category) {
+      if (Number(imageQualityCategories[category.id]) !== level) changed = true;
+    });
+    if (persist && changed && !pendingQualitySnapshot) pendingQualitySnapshot = captureQualitySnapshot();
     IMAGE_QUALITY_CATEGORIES.forEach(function (category) {
       imageQualityCategories[category.id] = level;
     });
     imageQualityLevel = level;
     renderQualityControls();
-    applyThemeFromControls(!!persist);
+    applyThemeFromControls(false);
+    if (persist) {
+      markQualityPending();
+      markSettingsDirty();
+    }
+    return true;
   }
 
   function setCategoryImageQuality(categoryId, value, persist) {
     if (!qualityCategoryById(categoryId)) return;
-    imageQualityCategories[categoryId] = normalizeImageQuality(value);
+    var level = normalizeImageQuality(value);
+    var changed = Number(imageQualityCategories[categoryId]) !== level;
+    if (persist && changed && !pendingQualitySnapshot) pendingQualitySnapshot = captureQualitySnapshot();
+    imageQualityCategories[categoryId] = level;
     if (qualityIsUniform()) imageQualityLevel = imageQualityCategories[categoryId];
     renderQualityControls();
-    applyThemeFromControls(!!persist);
+    applyThemeFromControls(false);
+    if (persist) {
+      markQualityPending();
+      markSettingsDirty();
+    }
+    return true;
   }
 
   function syncNonOuterCardBlurLayers() {
@@ -10305,8 +10909,8 @@
     blur = Math.max(0, Math.min(24, Number(blur)));
     level = Math.max(0, Math.min(3, Math.round(Number(level))));
     quality = normalizeImageQuality(quality);
-    if (!isFinite(brightness)) brightness = 65;
-    if (!isFinite(blur)) blur = 0;
+    if (!isFinite(brightness)) brightness = 0;
+    if (!isFinite(blur)) blur = 1;
     if (!isFinite(level)) level = 3;
     var dim = 100 - brightness;
 
@@ -10397,7 +11001,7 @@
       if (raw) saved = JSON.parse(raw);
     } catch (err) {}
     if (performanceModeInput) performanceModeInput.checked = !!(saved && saved.performance);
-    var quality = IMAGE_QUALITY_MIN;
+    var quality = IMAGE_QUALITY_MAX;
     if (saved && Object.prototype.hasOwnProperty.call(saved, 'imageQuality')) {
       quality = saved.imageQuality;
     } else if (saved && saved.superResolution) {
@@ -10424,9 +11028,9 @@
       else if (!saved.glow) level = 1;
       else if (!saved.border) level = 2;
     }
-    var brightness = 65;
+    var brightness = 0;
     if (saved && Object.prototype.hasOwnProperty.call(saved, 'dim')) brightness = 100 - Number(saved.dim);
-    applyThemeSettings(brightness, saved ? saved.blur : 0, level, quality, false);
+    applyThemeSettings(brightness, saved ? saved.blur : 1, level, quality, false);
   }
 
   function fontOptionById(id) {
@@ -10474,6 +11078,7 @@
     }
     if (persist) {
       try { localStorage.setItem(FONT_KEY, opt.id); } catch (err) {}
+      markSettingsDirty();
     }
   }
 
@@ -10548,6 +11153,7 @@
     });
     keybindings[actionId] = key;
     saveKeybindings();
+    markSettingsDirty();
     return true;
   }
 
@@ -10703,9 +11309,15 @@
     });
   }
 
+  function quickEquipDefaultTitle() {
+    var items = titleItems();
+    if (items.length) items[0].click();
+  }
+
   function openTitlePanel() {
     var cur = currentTitle(user.name);
     titlePendingRaw = cur ? cur.raw : null;
+    renderTitleBottomActions();
     renderTitleList();
     showSidebarPanel('titles');
     resetTitleSelection();
@@ -10792,14 +11404,36 @@
   document.getElementById('navBack').addEventListener('click', closeSidebars);
   if (accountLogoutTop) accountLogoutTop.addEventListener('click', logoutInlineAccount);
   if (titleBackTop) titleBackTop.addEventListener('click', resetSidebarPanel);
+  var accountBackBottom = document.getElementById('accountBackBottom');
+  if (accountBackBottom) accountBackBottom.addEventListener('click', resetSidebarPanel);
   if (accountLoginForm) accountLoginForm.addEventListener('submit', doInlineAccountLogin);
   if (accountLoginClear) accountLoginClear.addEventListener('click', clearInlineAccountLogin);
   if (settingsBackBtn) settingsBackBtn.addEventListener('click', resetSidebarPanel);
   var updateBackBtn = document.getElementById('updateBack');
   if (updateBackBtn) updateBackBtn.addEventListener('click', resetSidebarPanel);
+  var filterBackBtn = document.getElementById('filterBack');
+  if (filterBackBtn) filterBackBtn.addEventListener('click', resetSidebarPanel);
+  if (filterYearEl) filterYearEl.addEventListener('change', function () { requestActivityFilterChange('year', this.value); });
+  if (filterDeveloperEl) filterDeveloperEl.addEventListener('change', function () { requestActivityFilterChange('developer', this.value); });
+  var filterYearPrev = document.getElementById('filterYearPrev');
+  var filterYearNext = document.getElementById('filterYearNext');
+  var filterDeveloperPrev = document.getElementById('filterDeveloperPrev');
+  var filterDeveloperNext = document.getElementById('filterDeveloperNext');
+  if (filterYearPrev) filterYearPrev.addEventListener('click', function () { cycleActivityFilter(filterYearEl, 'year', -1); });
+  if (filterYearNext) filterYearNext.addEventListener('click', function () { cycleActivityFilter(filterYearEl, 'year', 1); });
+  if (filterDeveloperPrev) filterDeveloperPrev.addEventListener('click', function () { cycleActivityFilter(filterDeveloperEl, 'developer', -1); });
+  if (filterDeveloperNext) filterDeveloperNext.addEventListener('click', function () { cycleActivityFilter(filterDeveloperEl, 'developer', 1); });
   Array.prototype.forEach.call(settingsTabs, function (tab) {
     tab.addEventListener('click', function () {
-      showSettingsTab(tab.getAttribute('data-settings-tab'));
+      var nextTab = tab.getAttribute('data-settings-tab');
+      if (settingsDirty && currentSidebarPanel === 'settings' && nextTab !== currentSettingsTab) {
+        handleApplySettingsPrompt({
+          closeAfterApply: false,
+          onApplied: function () { showSettingsTab(nextTab); }
+        });
+        return;
+      }
+      showSettingsTab(nextTab);
     });
   });
   if (panelSettings && sponsorOverlay && sponsorImage) {
@@ -10818,6 +11452,7 @@
   }
 
   function applyThemeFromControls(persist) {
+    if (persist) markSettingsDirty();
     applyThemeSettings(
       wallpaperDimInput.value,
       cardBlurInput.value,
@@ -10918,7 +11553,7 @@
       applyThemeFromControls(true);
     });
   }
-  if (imageQualityInput) imageQualityInput.addEventListener('change', function () { applyThemeFromControls(true); });
+  if (imageQualityInput) imageQualityInput.addEventListener('change', function () { setImageQuality(Number(imageQualityInput.value), true); });
   if (imageQualityPrev) imageQualityPrev.addEventListener('click', function () {
     setImageQuality(Number(imageQualityInput.value) - 1, true);
   });
@@ -11073,12 +11708,52 @@
       return;
     }
     if (handleAccountLoginKeydown(event)) return;
+    if (pauseMenu && pauseMenu.classList.contains('open') && currentSidebarPanel === 'titles' && normalizeKeyName(event.key) === 'w') {
+      event.preventDefault();
+      event.stopPropagation();
+      quickEquipDefaultTitle();
+      return;
+    }
+    if (pauseMenu && currentSidebarPanel === 'filter') {
+      if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+        event.preventDefault();
+        event.stopPropagation();
+        moveFilterSelection(event.key === 'ArrowDown' ? 1 : -1);
+        return;
+      }
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        event.preventDefault();
+        event.stopPropagation();
+        adjustFilterSelection(event.key === 'ArrowRight' ? 1 : -1);
+        return;
+      }
+    }
     if (pauseMenu && pauseMenu.classList.contains('is-settings-open')) {
-      // 设置页顶栏两侧显示上/下一个导航的按键提示，按下对应按键时切换设置分页。
       var settingsKey = normalizeKeyName(event.key);
+      if (!event.repeat && settingsKey === 'r') {
+        event.preventDefault();
+        event.stopPropagation();
+        resetSettingsDraft();
+        return;
+      }
+      if (!event.repeat && settingsKey === 'f') {
+        event.preventDefault();
+        event.stopPropagation();
+        applySettingsChanges();
+        return;
+      }
+      // 设置页顶栏两侧显示上/下一个导航的按键提示，按下对应按键时切换设置分页。
       if (settingsKey && (settingsKey === normalizeKeyName(keybindings.prevNav) || settingsKey === normalizeKeyName(keybindings.nextNav))) {
         event.preventDefault();
         event.stopPropagation();
+        if (settingsDirty) {
+          var settingsDelta = settingsKey === normalizeKeyName(keybindings.prevNav) ? -1 : 1;
+          handleApplySettingsPrompt({
+            closeAfterApply: false,
+            onApplied: function () { moveSettingsTab(settingsDelta); }
+          });
+          return;
+        }
         moveSettingsTab(settingsKey === normalizeKeyName(keybindings.prevNav) ? -1 : 1);
         return;
       }
@@ -11139,6 +11814,7 @@
   var settingsStickLastAdjust = 0;
   var pauseMenuSelectionIndex = 0;
   var settingsSelectionIndex = 0;
+  var filterSelectionIndex = 0;
   var titleSelectionIndex = 0;
   var titleStickDirection = 0;
   var titleStickHoldStart = 0;
@@ -11159,6 +11835,7 @@
     }
     updatePauseMenuSelection();
     updateSettingsSelection();
+    updateFilterSelection();
     if (mode === 'gamepad' && cursorGlowEl && pauseMenu && !pauseMenu.classList.contains('open') &&
         !root.classList.contains('ui-hidden')) {
       cursorGlowEl.classList.add('is-visible');
@@ -11262,6 +11939,33 @@
       if (checkbox.checked !== next) checkbox.click();
     }
   }
+  function filterPageItems() {
+    if (!panelFilter) return [];
+    return Array.prototype.slice.call(panelFilter.querySelectorAll('.filter-option-card')).filter(function (el) {
+      return el.offsetParent !== null;
+    });
+  }
+  function updateFilterSelection() {
+    var items = filterPageItems();
+    if (filterSelectionIndex >= items.length) filterSelectionIndex = Math.max(0, items.length - 1);
+    for (var i = 0; i < items.length; i++) {
+      items[i].classList.toggle('is-gamepad-selected', inputMode === 'gamepad' && i === filterSelectionIndex);
+    }
+  }
+  function moveFilterSelection(delta) {
+    var items = filterPageItems();
+    if (!items.length) return;
+    filterSelectionIndex = Math.max(0, Math.min(items.length - 1, filterSelectionIndex + delta));
+    updateFilterSelection();
+    if (items[filterSelectionIndex] && items[filterSelectionIndex].scrollIntoView) {
+      items[filterSelectionIndex].scrollIntoView({ block: 'nearest' });
+    }
+  }
+  function adjustFilterSelection(direction) {
+    if (filterSelectionIndex === 0) cycleActivityFilter(filterYearEl, 'year', direction);
+    else cycleActivityFilter(filterDeveloperEl, 'developer', direction);
+  }
+
   function resetSettingsStickAcceleration() {
     settingsStickDirection = 0;
     settingsStickHoldStart = 0;
@@ -11412,6 +12116,10 @@
       if (typeof el._stopManualScrollAnimation === 'function') el._stopManualScrollAnimation();
       var max = Math.max(0, el.scrollHeight - el.clientHeight);
       el.scrollTop = Math.max(0, Math.min(max, el.scrollTop + dy));
+    }
+    if (pauseMenu && currentSidebarPanel === 'filter' && filterLogoPaneEl) {
+      moveScrollTop(filterLogoPaneEl);
+      return;
     }
     if (pauseMenu && pauseMenu.classList.contains('is-settings-open')) {
       var settingsScroller = panelSettings ? panelSettings.querySelector('.settings-left') : null;
@@ -11597,6 +12305,14 @@
     if (loginOverlay && loginOverlay.classList.contains('show')) return;
     if (pauseMenu && pauseMenu.classList.contains('is-settings-open') &&
         (actionId === 'prevNav' || actionId === 'nextNav')) {
+      if (settingsDirty) {
+        var gamepadSettingsDelta = actionId === 'prevNav' ? -1 : 1;
+        handleApplySettingsPrompt({
+          closeAfterApply: false,
+          onApplied: function () { moveSettingsTab(gamepadSettingsDelta); }
+        });
+        return;
+      }
       moveSettingsTab(actionId === 'prevNav' ? -1 : 1);
       return;
     }
@@ -11709,11 +12425,23 @@
           else if (b === 0) submitAccountLoginFromGamepad();
           else if (b === 1) gamepadBackAction();
         }
+        else if (b === 0 && pauseMenu && currentSidebarPanel === 'titles') quickEquipDefaultTitle();
         else if (b === 0) gamepadPrimaryAction();
         else if (b === 1) gamepadBackAction();
         else if (b === 8 || (b === 17 && !isSwitchGamepad(pad))) runGamepadAction('pauseBack');
         else if (isSwitchGamepad(pad) && b === 16) runGamepadAction('pauseBack');
         else if (b === 9) runGamepadAction('openSettings');
+        else if (b === 10 && homeFilterActionAvailable()) runGamepadAction('openFilter');
+        else if (pauseMenu && pauseMenu.classList.contains('is-settings-open') && (b === 2 || b === 3)) {
+          if (b === 2) resetSettingsDraft();
+          else applySettingsChanges();
+        }
+        else if (pauseMenu && currentSidebarPanel === 'filter' && (b === 12 || b === 13)) {
+          moveFilterSelection(b === 13 ? 1 : -1);
+        }
+        else if (pauseMenu && currentSidebarPanel === 'filter' && (b === 14 || b === 15)) {
+          adjustFilterSelection(b === 15 ? 1 : -1);
+        }
         else if (b === 12) runGamepadDirection(-1);
         else if (b === 13) runGamepadDirection(1);
         else if ((b === 14 || b === 15) && pauseMenu && pauseMenu.classList.contains('is-settings-open')) {
@@ -13045,6 +13773,7 @@
   // 数据应用到界面（播放器曲名/封面、卡片统计），并同步底栏活动列表
   function applyCoreData() {
     var meta = document.getElementById('coreMeta');
+    normalizeActivityFilterAgainstCore();
     var core = (dataStore && dataStore.core) || [];
     var infoCount = core.filter(function (row) {
       return !!(row && (row.developer || row.publisher || row.releaseDate || (row.tags && row.tags.length)));
@@ -13058,6 +13787,8 @@
     // 核心数据到位后刷新页面描述（列表未变化时 syncDockWithData 会提前返回）
     applyPageMeta(LOGOS[state.index]);
     refreshPlayerMedia();
+    renderHomeFilterHint();
+    if (currentSidebarPanel === 'filter') renderFilterPage();
   }
 
   // 导出：自包含 js 备份文件。
@@ -15772,6 +16503,7 @@
       topbar.classList.remove('entering');
       if (dockWrap) dockWrap.classList.remove('entering');
       if (bottomKeyHintsEl) bottomKeyHintsEl.classList.remove('entering');
+      if (homeFilterHintEl) homeFilterHintEl.classList.remove('entering');
       syncLiquidGlassRenderer(true);
       return;
     }
@@ -15780,6 +16512,7 @@
     topbar.classList.remove('entering');
     if (dockWrap) dockWrap.classList.remove('entering');
     if (bottomKeyHintsEl) bottomKeyHintsEl.classList.remove('entering');
+    if (homeFilterHintEl) homeFilterHintEl.classList.remove('entering');
     void pagesWrap.offsetWidth;
     pagesWrap.classList.add('entering');
     animateSectionCardContents(pagesWrap.querySelector('.page.active .page-section.active'));
@@ -15791,12 +16524,17 @@
         void bottomKeyHintsEl.offsetWidth;
         bottomKeyHintsEl.classList.add('entering');
       }
+      if (homeFilterHintEl) {
+        void homeFilterHintEl.offsetWidth;
+        homeFilterHintEl.classList.add('entering');
+      }
     }
     interfaceAnimationTimer = setTimeout(function () {
       pagesWrap.classList.remove('entering');
       topbar.classList.remove('entering');
       if (dockWrap) dockWrap.classList.remove('entering');
       if (bottomKeyHintsEl) bottomKeyHintsEl.classList.remove('entering');
+      if (homeFilterHintEl) homeFilterHintEl.classList.remove('entering');
       syncLiquidGlassRenderer(true);
       interfaceAnimationTimer = 0;
     }, 800);
@@ -15804,6 +16542,9 @@
 
   // 设置页 / 更新日志页：把滚动条放在分割线上（中心对齐）
   function initDividerScrollbars() {
+    var filterLayout = document.querySelector('#panelFilter .filter-layout');
+    var filterScroll = document.querySelector('#panelFilter .filter-logo-pane');
+    if (filterLayout && filterScroll) attachManualScroll(filterScroll, filterLayout);
     var settingsLayout = document.querySelector('#panelSettings .settings-layout');
     var settingsScroll = document.querySelector('#panelSettings .settings-left');
     if (settingsLayout && settingsScroll) attachManualScroll(settingsScroll, settingsLayout);
@@ -15820,6 +16561,8 @@
     initCursorGlow();
     initGamepadControls();
     renderBottomKeyHints();
+    renderHomeFilterHint();
+    renderSettingsBottomActions();
     initDividerScrollbars();
     syncAdminCornerButtons();
     readSlotSize();
@@ -15918,7 +16661,27 @@
     }
   }
 
-  window.addEventListener('resize', syncViewportMetrics, { passive: true });
+  var viewportRestartPromptTimer = 0;
+  var viewportRestartPromptMutedUntil = 0;
+
+  function scheduleViewportRestartPrompt() {
+    if (!startupEntryComplete || document.hidden) return;
+    if (viewportRestartPromptTimer) window.clearTimeout(viewportRestartPromptTimer);
+    viewportRestartPromptTimer = window.setTimeout(function () {
+      viewportRestartPromptTimer = 0;
+      if (Date.now() < viewportRestartPromptMutedUntil) return;
+      if (showRestartPrompt()) {
+        window.location.reload();
+      } else {
+        viewportRestartPromptMutedUntil = Date.now() + 800;
+      }
+    }, 5000);
+  }
+
+  window.addEventListener('resize', function () {
+    syncViewportMetrics();
+    scheduleViewportRestartPrompt();
+  }, { passive: true });
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', syncViewportMetrics, { passive: true });
   }
