@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
  * 底栏 logo 刻度槽切换
  * - 滚轮切换 / 鼠标长按拖动 / 移动端拖动 / 点击两侧槽位
  * - 每个 logo 对应一个页面（页面唯一标识 = logo 名）
@@ -33,7 +33,7 @@
 
   // 站点名：网页标题默认值，并作为各活动页标题的后缀（便于搜索引擎分别收录各活动）
   var SITE_NAME = '探索的猪仔官方网站';
-  var SITE_DESCRIPTION = '探索的猪仔官方网站：收录 2026 糖豆人拜年纪、奥林PIG运动会、煎炸镇步行街等活动的预告、说明、成就、日程、测评与实绩资料。';
+  var SITE_DESCRIPTION = '探索的猪仔官方网站：收录 糖豆人拜年纪系列、奥林PIG运动会系列、煎炸镇系列等活动的预告、说明、成就、日程、测评与实绩资料。';
 
   var IMAGE_QUALITY_MIN = 1;
   var IMAGE_QUALITY_MAX = 5;
@@ -498,10 +498,90 @@
   var filterYearValEl = document.getElementById('filterYearVal');
   var filterDeveloperValEl = document.getElementById('filterDeveloperVal');
 
+  function i18nTr(text, params) {
+    var api = window.FgexpigI18n;
+    return (api && api.tr) ? api.tr(text, params) : text;
+  }
+
+  // 新标签打开外链，当前页面保持不动
+  function openExternalLink(url) {
+    if (!url) return;
+    var link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+
+  // 糖豆人官网（Epic 商店），lang 参数跟随界面语言
+  var FALL_GUYS_STORE_LANG = {
+    'zh-Hans': 'zh-CN', 'zh-Hant': 'zh-TW', 'ja': 'ja', 'en': 'en-US', 'fr': 'fr', 'it': 'it',
+    'de': 'de', 'es-ES': 'es-ES', 'ar': 'ar', 'ko': 'ko', 'pt-BR': 'pt-BR', 'ru': 'ru', 'pl': 'pl'
+  };
+
+  function fallGuysStoreUrl() {
+    var api = window.FgexpigI18n;
+    var lang = (api && api.getLanguage) ? api.getLanguage() : 'en';
+    var code = FALL_GUYS_STORE_LANG[lang] || 'en-US';
+    return 'https://store.epicgames.com/p/fall-guys?lang=' + code;
+  }
+
+  function i18nT(key, fallback, params) {
+    var api = window.FgexpigI18n;
+    return (api && api.t) ? api.t(key, fallback, params) : (fallback || '');
+  }
+
+  function i18nLocalizeDate(value) {
+    var api = window.FgexpigI18n;
+    return (api && api.localizeDate) ? api.localizeDate(value) : value;
+  }
+
+  // 标签是固定枚举（艺术/轻松/合作…），按语言翻译后用本地化分隔符连接
+  function i18nTagList(tags) {
+    if (!tags || !tags.length) return '';
+    return tags.map(function (tag) { return i18nTr(tag); }).join(i18nTr('；'));
+  }
+
+  // 资源页内容数据：优先使用 resources-strings.csv 的专属 key，避免与商店/成就同名词条冲突
+  function i18nResourceText(text) {
+    var source = text == null ? '' : String(text);
+    var index = window.FGEXPIG_I18N_INDEX;
+    var key = index && index.resourceByZh && index.resourceByZh[source];
+    return key ? i18nT(key, source) : i18nTr(source);
+  }
+
+  // 热点页内容数据：关键字、帖子标题、评论人名使用 hotspot-strings.csv 的专属 key
+  function i18nHotspotText(text) {
+    var source = text == null ? '' : String(text);
+    var index = window.FGEXPIG_I18N_INDEX;
+    var key = index && index.hotspotByZh && index.hotspotByZh[source];
+    return key ? i18nT(key, source) : i18nTr(source);
+  }
+
+  // 称号：优先使用 title-strings.csv 的专属 key，已存在的成就称号回退到 ui-strings.csv
+  function i18nTitleText(text) {
+    var source = text == null ? '' : String(text);
+    var index = window.FGEXPIG_I18N_INDEX;
+    var key = index && index.titleByZh && index.titleByZh[source];
+    return key ? i18nT(key, source) : i18nTr(source);
+  }
+
+  // 语言变化时重刷以数据为源、需要本地化的值（发行日、标签）
+  function relocalizeDataValues(root) {
+    var scope = root || document;
+    var dates = scope.querySelectorAll('dd[data-raw-date]');
+    for (var i = 0; i < dates.length; i++) dates[i].textContent = i18nLocalizeDate(dates[i].dataset.rawDate);
+    var tagNodes = scope.querySelectorAll('dd[data-raw-tags]');
+    for (var j = 0; j < tagNodes.length; j++) tagNodes[j].textContent = i18nTagList(tagNodes[j].dataset.rawTags.split('\u0001'));
+  }
+
   function activityFilterDisplayText() {
-    var year = activityFilter.year === 'all' ? '全部年份' : activityFilter.year;
-    var developer = activityFilter.developer === 'all' ? '全部开发商' : activityFilter.developer;
-    return year + '｜' + developer + '｜活动中心';
+    var year = activityFilter.year === 'all' ? i18nTr('全部年份') : activityFilter.year;
+    var developer = activityFilter.developer === 'all' ? i18nTr('全部开发商') : activityFilter.developer;
+    var sep = i18nTr('｜');
+    return year + sep + developer + sep + i18nTr('活动中心');
   }
 
   function renderHomeFilterHint() {
@@ -1764,6 +1844,16 @@
     return SECTIONS.concat([['settings', '设置']]);
   }
 
+  var topbarIdentityFrame = 0;
+
+  function scheduleTopbarIdentityLayout() {
+    if (topbarIdentityFrame) return;
+    topbarIdentityFrame = requestAnimationFrame(function () {
+      topbarIdentityFrame = 0;
+      try { layoutTopbarIdentity(); } catch (err) {}
+    });
+  }
+
   function buildNav(logo) {
     var itemsForLayout = navItemsForLayout();
     var hasActive = itemsForLayout.some(function (item) { return item[0] === activeNavKey; });
@@ -1772,7 +1862,9 @@
       active: hasActive ? activeNavKey : itemsForLayout[0][0]
     };
     renderNav(logo);
-    layoutTopbarIdentity();
+    // 初次构建立即量取；活动切换等重建时延后一帧，避免量到重建中的临时宽度导致按键闪跳。
+    if (document.readyState === 'loading') layoutTopbarIdentity();
+    else scheduleTopbarIdentityLayout();
   }
 
   var sectionCardSnapTimer = 0;
@@ -2614,6 +2706,7 @@
   }
 
   function appendHotspotCommentContent(parent, value) {
+    parent.setAttribute('data-i18n-skip', '1');
     var text = String(value == null ? '' : value);
     var emoji = hotspotStandaloneEmoji(text);
     if (!emoji) {
@@ -2691,6 +2784,7 @@
   function renderHotspotRichText(value) {
     var root = document.createElement('div');
     root.className = 'hotspot-rich-text';
+    root.setAttribute('data-i18n-skip', '1');
     var line = document.createElement('div');
     line.className = 'hotspot-rich-line';
     root.appendChild(line);
@@ -2954,8 +3048,9 @@
         var selected = (state.selectedKeywords || []).indexOf(keyword) >= 0;
         var pill = document.createElement('button');
         pill.type = 'button';
+        pill.setAttribute('data-i18n-skip', '1');
         pill.className = 'hotspot-keyword-pill' + (isPlaceholder ? ' is-placeholder' : '') + (selected ? ' is-selected' : '');
-        pill.textContent = keyword;
+        pill.textContent = i18nHotspotText(keyword);
         pill.setAttribute('aria-pressed', selected ? 'true' : 'false');
         if (isPlaceholder) {
           pill.disabled = true;
@@ -3278,7 +3373,7 @@
     row.className = 'hotspot-reply';
     var name = document.createElement('span');
     name.className = 'hotspot-reply-name';
-    name.textContent = (comment.name || '匿名') + '：';
+    name.textContent = i18nHotspotText(comment.name || '匿名') + '：';
     row.appendChild(name);
     appendHotspotCommentContent(row, comment.text || '');
     return row;
@@ -3294,7 +3389,7 @@
     main.className = 'hotspot-comment-main';
     var name = document.createElement('div');
     name.className = 'hotspot-comment-name';
-    name.textContent = comment.name || '匿名';
+    name.textContent = i18nHotspotText(comment.name || '匿名');
     var text = document.createElement('div');
     text.className = 'hotspot-comment-text';
     appendHotspotCommentContent(text, comment.text || '');
@@ -3340,15 +3435,16 @@
     main.className = 'hotspot-comment-main';
     var name = document.createElement('div');
     name.className = 'hotspot-comment-name';
-    name.textContent = comment.name || '匿名';
+    name.textContent = i18nHotspotText(comment.name || '匿名');
     var text = document.createElement('div');
     text.className = 'hotspot-comment-text';
     if (parentName) {
       var replyWord = document.createElement('span');
-      replyWord.textContent = '回复';
+      replyWord.className = 'hotspot-reply-word';
+      replyWord.textContent = i18nT('news.comments.reply', '回复');
       var target = document.createElement('span');
       target.className = 'hotspot-reply-target';
-      target.textContent = parentName;
+      target.textContent = i18nHotspotText(parentName);
       var colon = document.createElement('span');
       colon.textContent = '：';
       text.appendChild(replyWord);
@@ -3366,6 +3462,7 @@
   }
 
   function renderHotspotCommentDetail(id, section, comment, keepScrollTop) {
+    if (section && section._hotspot && section._hotspot.id) id = section._hotspot.id;
     if (section._hotspot.sortBtn) section._hotspot.sortBtn.hidden = true;
     if (section._hotspot.sortModeBtn) section._hotspot.sortModeBtn.hidden = true;
     updateHotspotCommentSortButton(section);
@@ -3385,7 +3482,7 @@
 
   function showHotspotCommentDetail(id, section, comment) {
     if (!section || !section._hotspot || !comment) return;
-    id = id || section._hotspot.id;
+    id = section._hotspot.id || id;
     var outerMode = document.documentElement.classList.contains('outer-screen-layout');
     section._hotspot.commentsOverviewScrollTop = outerMode ? section.scrollTop : section._hotspot.commentsBody.scrollTop;
     section._hotspot.commentsView = 'detail';
@@ -3398,7 +3495,7 @@
 
   function showHotspotCommentsOverview(id, section) {
     if (!section || !section._hotspot) return;
-    id = id || section._hotspot.id;
+    id = section._hotspot.id || id;
     var outerMode = document.documentElement.classList.contains('outer-screen-layout');
     var overviewTop = section._hotspot.commentsOverviewScrollTop || 0;
     section._hotspot.commentsView = 'overview';
@@ -3414,25 +3511,42 @@
     notice.className = 'guest-comment-notice';
     var line = document.createElement('span');
     line.className = 'guest-comment-notice-line';
-    line.appendChild(document.createTextNode('请 '));
+    // 用整句模板按语言拼装：{login} 处插入可点击、带下划线的“登录”
+    var template = String(i18nT('news.guest.loginHint', '请{login}后查看所有评论'));
+    var parts = template.split('{login}');
+    var before = parts.length ? parts[0] : '';
+    var after = parts.length > 1 ? parts.slice(1).join('{login}') : '';
+    if (before) line.appendChild(document.createTextNode(before));
     var login = document.createElement('button');
     login.type = 'button';
     login.className = 'guest-comment-login';
-    login.textContent = '登录';
-    login.setAttribute('aria-label', '登录后查看所有评论');
+    login.textContent = i18nT('news.guest.loginLink', '登录');
+    login.setAttribute('aria-label', i18nT('news.guest.loginAria', '登录后查看所有评论'));
     login.addEventListener('click', function (event) {
       event.preventDefault();
       event.stopPropagation();
       openGuestLoginPage();
     });
     line.appendChild(login);
-    line.appendChild(document.createTextNode(' 后查看所有评论'));
+    if (after) line.appendChild(document.createTextNode(after));
     notice.appendChild(line);
     return notice;
   }
 
+  // 语言切换后就地重刷访客评论提示（整句要按新语言重新拼）
+  function refreshGuestCommentNotices() {
+    if (!isGuestUser()) return;
+    var notices = document.querySelectorAll('.guest-comment-notice');
+    for (var i = 0; i < notices.length; i++) {
+      var parent = notices[i].parentNode;
+      if (!parent) continue;
+      parent.replaceChild(makeGuestCommentNotice(), notices[i]);
+    }
+  }
+
   function renderHotspotComments(id, section, keepScrollTop) {
     if (!section || !section._hotspot) return;
+    if (section._hotspot.id) id = section._hotspot.id;
     if (isGuestUser()) {
       section._hotspot.commentsView = 'overview';
       section._hotspot.activeComment = null;
@@ -3490,9 +3604,10 @@
     var title = section._hotspot.contentTitle;
     var titleLabel = section._hotspot.contentTitleLabel;
     var body = section._hotspot.contentBody;
-    if (titleLabel) titleLabel.textContent = post ? post.title : '内容';
-    else title.textContent = post ? post.title : '内容';
-    title.title = post ? post.title : '';
+    var displayTitle = post ? i18nHotspotText(post.title) : i18nT('news.card.content', '内容');
+    if (titleLabel) titleLabel.textContent = displayTitle;
+    else title.textContent = displayTitle;
+    title.title = post ? displayTitle : '';
     body.innerHTML = '';
     if (post) {
       var rich = renderHotspotRichText(post.content || '');
@@ -3533,7 +3648,7 @@
           item.setAttribute('aria-pressed', post.id === state.selectedId ? 'true' : 'false');
           var postTitle = document.createElement('div');
           postTitle.className = 'hotspot-post-title';
-          postTitle.textContent = post.title;
+          postTitle.textContent = i18nHotspotText(post.title);
           var meta = document.createElement('div');
           meta.className = 'hotspot-post-meta';
           var time = document.createElement('span');
@@ -3541,7 +3656,7 @@
           time.textContent = formatHotspotTime(post.time);
           var count = document.createElement('span');
           count.className = 'hotspot-post-count';
-          count.textContent = hotspotPostCommentCount(post) + '评论';
+          count.textContent = i18nTr('{count}评论', { count: hotspotPostCommentCount(post) });
           meta.appendChild(time);
           meta.appendChild(count);
           item.appendChild(postTitle);
@@ -4069,19 +4184,21 @@
     var card = document.createElement('button');
     card.type = 'button';
     card.className = 'hotspot-post-item resource-preview-card' + (selectedFile === item.file ? ' is-selected' : '');
-    card.setAttribute('aria-label', '选择资源 ' + (item.title || item.file));
+    var displayTitle = i18nResourceText(item.title || item.file);
+    card.setAttribute('aria-label', i18nT('files.resource.select', '选择资源 {name}', { name: displayTitle }));
+    card.setAttribute('data-i18n-skip', '1');
     card._resourceFile = item.file;
 
     var title = document.createElement('div');
     title.className = 'hotspot-post-title';
-    title.textContent = item.title || item.file;
+    title.textContent = displayTitle;
     card.appendChild(title);
     if (item.category) {
       var meta = document.createElement('div');
       meta.className = 'hotspot-post-meta';
       var category = document.createElement('span');
       category.className = 'hotspot-post-time';
-      category.textContent = item.category;
+      category.textContent = i18nResourceText(item.category);
       meta.appendChild(category);
       card.appendChild(meta);
     }
@@ -4368,15 +4485,17 @@
     var button = document.createElement('button');
     button.type = 'button';
     button.className = 'hotspot-post-item resource-game-entry';
-    button.setAttribute('aria-label', id === 'JFES110' ? '进入打地鼠小游戏' : '进入小游戏');
+    button.setAttribute('data-i18n-skip', '1');
+    var gameTitle = id === 'JFES110' ? '打地鼠' : '迷你游戏';
+    button.setAttribute('aria-label', id === 'JFES110' ? i18nT('minigame.enter.whack', '进入打地鼠小游戏') : i18nT('minigame.enter', '进入小游戏'));
     var title = document.createElement('div');
     title.className = 'hotspot-post-title';
-    title.textContent = id === 'JFES110' ? '打地鼠' : '迷你游戏';
+    title.textContent = i18nResourceText(gameTitle);
     var meta = document.createElement('div');
     meta.className = 'hotspot-post-meta';
     var category = document.createElement('span');
     category.className = 'hotspot-post-time';
-    category.textContent = '迷你游戏';
+    category.textContent = i18nResourceText('迷你游戏');
     meta.appendChild(category);
     button.appendChild(title);
     button.appendChild(meta);
@@ -4471,13 +4590,14 @@
   function makeResourceDaySchedule(rows) {
     var schedule = document.createElement('div');
     schedule.className = 'resource-day-schedule';
+    schedule.setAttribute('data-i18n-skip', '1');
     resourceSortedScheduleRows(rows).forEach(function (row) {
       if (!row.text) return;
       var item = document.createElement('div');
       item.className = 'hotspot-post-item resource-day-schedule-item';
       var title = document.createElement('div');
       title.className = 'hotspot-post-title';
-      title.textContent = row.text;
+      title.textContent = i18nResourceText(row.text);
       var meta = document.createElement('div');
       meta.className = 'hotspot-post-meta';
       var date = document.createElement('span');
@@ -4485,9 +4605,10 @@
       date.textContent = row.date;
       var relative = document.createElement('span');
       relative.className = 'hotspot-post-count';
-      var relativeText = resourceRelativeDayText(row.date);
+      var relativeRaw = resourceRelativeDayText(row.date);
+      var relativeText = i18nTr(relativeRaw);
       relative.textContent = relativeText;
-      if (/^(今天|[1-7]天后)$/.test(relativeText)) item.classList.add('is-upcoming');
+      if (/^(今天|[1-7]天后)$/.test(relativeRaw)) item.classList.add('is-upcoming');
       meta.appendChild(date);
       meta.appendChild(relative);
       item.appendChild(title);
@@ -4508,7 +4629,7 @@
     var viewer = document.createElement('div');
     viewer.className = 'resource-viewer';
     var image = document.createElement('img');
-    image.alt = selected.title || selected.file;
+    image.alt = i18nResourceText(selected.title || selected.file);
     image.decoding = 'async';
     image.loading = 'eager';
     image.draggable = false;
@@ -4536,10 +4657,11 @@
     var overlay = document.createElement('div');
     overlay.className = 'resource-image-overlay';
     overlay.setAttribute('role', 'dialog');
-    overlay.setAttribute('aria-label', selected.title || '浏览图片');
+    var selectedTitle = i18nResourceText(selected.title || selected.file);
+    overlay.setAttribute('aria-label', selected.title ? selectedTitle : i18nT('files.image.viewer', '浏览图片'));
     var image = document.createElement('img');
     image.className = 'resource-image-overlay-img';
-    image.alt = selected.title || selected.file;
+    image.alt = selectedTitle;
     image.decoding = 'async';
     image.loading = 'eager';
     image.draggable = false;
@@ -5889,12 +6011,17 @@
   var curNavLogo = null; // 当前导航对应的 logo
   var thumbX = 0;        // 白色滑动胶囊当前 translateX
   var thumbW = 0;        // 白色滑动胶囊当前宽
-  var navDrag = null;    // 导航拖动状态
+  // 选中条在文字左右各延伸 10px
+  var NAV_THUMB_SIDE_PADDING = 10;
+  var NAV_DRAG_DISABLED = true;
+  var navDrag = null;    // 导航按压状态（不响应长按拖动）
   var navThumbAnimFrame = 0;
   var navDragFollowFrame = 0;
   var navDragFollowTime = 0;
   var navColorOverlay = null;
   var navColorItems = [];
+  var navTextObserver = null;
+  var navTextResyncFrame = 0;
 
   // 液体玻璃高光跟随指针移动；仅内屏模式的样式会使用这两个变量。
   function updateNavGlassPointer(e) {
@@ -6025,12 +6152,38 @@
     return navEl.querySelectorAll('.topnav-item');
   }
 
-  function innerNavThumbWidth(btns) {
-    var width = 54;
-    for (var i = 0; i < btns.length; i++) {
-      width = Math.max(width, Math.round(btns[i].offsetWidth));
-    }
-    return width;
+  function ensureNavTextObserver() {
+    if (!navEl || !window.MutationObserver || navTextObserver) return;
+    navTextObserver = new MutationObserver(function () {
+      if (navTextResyncFrame) return;
+      navTextResyncFrame = requestAnimationFrame(function () {
+        navTextResyncFrame = 0;
+        try { resyncTopNavThumb(); } catch (err) {}
+        try { layoutTopbarIdentity(); } catch (err) {}
+      });
+    });
+    navTextObserver.observe(navEl, { childList: true, subtree: true, characterData: true });
+  }
+
+  function navContentLeft() {
+    var rect = navEl.getBoundingClientRect();
+    var style = getComputedStyle(navEl);
+    return rect.left + (parseFloat(style.borderLeftWidth) || 0);
+  }
+
+  function navLabelRect(btn) {
+    var label = btn && btn.querySelector('.topnav-item-label');
+    return (label || btn).getBoundingClientRect();
+  }
+
+  function navItemCenterX(btn) {
+    var rect = navLabelRect(btn);
+    return rect.left - navContentLeft() + rect.width / 2;
+  }
+
+  function navThumbWidthFor(btn) {
+    var rect = navLabelRect(btn);
+    return Math.max(1, Math.round(rect.width + NAV_THUMB_SIDE_PADDING * 2));
   }
 
   function applyNavThumbPosition() {
@@ -6102,11 +6255,10 @@
     var btns = navItems();
     for (var i = 0; i < btns.length; i++) {
       if (btns[i].dataset.key === key) {
-        // 选中层与当前项目等宽，短指示条始终居中于文字
-        var nextW = innerScreenLayoutActive
-          ? innerNavThumbWidth(btns)
-          : Math.max(54, Math.round(btns[i].offsetWidth));
-        var nextX = Math.round(btns[i].offsetLeft + btns[i].offsetWidth / 2 - nextW / 2);
+        // 选中条按文字实际宽度缩放，并以文字中心定位
+        var nextW = navThumbWidthFor(btns[i]);
+        var centerX = navItemCenterX(btns[i]);
+        var nextX = Math.round(centerX - nextW / 2);
         if (animate && innerScreenLayoutActive && liquidGlass) {
           animateNavThumbTo(nextX, nextW);
           break;
@@ -6181,14 +6333,13 @@
     }
   }
 
-  // 选中层中心所覆盖的项（拖动时实时更新选中态）
+  // 选中层中心所覆盖的项；统一按文字中心计算，避免按钮内边距造成偏移
   function hitKeyAt(centerX) {
     var btns = navItems();
     for (var i = 0; i < btns.length; i++) {
-      var l = btns[i].offsetLeft;
-      if (centerX >= l && centerX < l + btns[i].offsetWidth) {
-        return btns[i].dataset.key;
-      }
+      var c = navItemCenterX(btns[i]);
+      var half = navThumbWidthFor(btns[i]) / 2;
+      if (centerX >= c - half && centerX < c + half) return btns[i].dataset.key;
     }
     return null;
   }
@@ -6199,7 +6350,7 @@
     var best = null;
     var bestD = Infinity;
     for (var i = 0; i < btns.length; i++) {
-      var c = btns[i].offsetLeft + btns[i].offsetWidth / 2;
+      var c = navItemCenterX(btns[i]);
       var d = Math.abs(c - centerX);
       if (d < bestD) {
         bestD = d;
@@ -6228,6 +6379,14 @@
 
     ensureSections(logo);
     curNavLogo = logo;
+    ensureNavTextObserver();
+    var previousNavLabels = {};
+    var previousNavItems = navEl.querySelectorAll('.topnav-item');
+    for (var previousNavIndex = 0; previousNavIndex < previousNavItems.length; previousNavIndex++) {
+      var previousNavButton = previousNavItems[previousNavIndex];
+      var previousNavLabel = previousNavButton.querySelector('.topnav-item-label');
+      if (previousNavButton.dataset.key && previousNavLabel) previousNavLabels[previousNavButton.dataset.key] = previousNavLabel.textContent;
+    }
     navEl.classList.remove('empty');
     navEl.classList.remove('liquid-glass-ready');
     navEl.innerHTML = '';
@@ -6271,7 +6430,7 @@
         }
         var text = document.createElement('span');
         text.className = 'topnav-item-label';
-        text.textContent = label;
+        text.textContent = previousNavLabels[key] || i18nTr(label);
         content.appendChild(text);
         btn.appendChild(effect);
         btn.appendChild(content);
@@ -6288,7 +6447,7 @@
     syncLiquidGlassRenderer(true);
   }
 
-  /* 顶部导航交互：轻点切换（下划线滑动过去），按住左右拖动（下划线跟手，松手吸附最近项） */
+  /* 顶部导航交互：轻点切换；首页顶栏不允许长按拖动选中条 */
   navEl.addEventListener('pointerdown', function (e) {
     if (!curNavLogo) return;
     stopNavDragFollow();
@@ -6299,15 +6458,10 @@
     var pressTargetX = thumbX;
     if (btn && btn.dataset.key) {
       var btns = navItems();
-      var targetW = innerScreenLayoutActive
-        ? innerNavThumbWidth(btns)
-        : Math.max(54, Math.round(btn.offsetWidth));
-      var navRect = navEl.getBoundingClientRect();
-      var borderLeft = parseFloat(getComputedStyle(navEl).borderLeftWidth) || 0;
-      var pointerX = e.clientX - navRect.left - borderLeft;
-      var firstC = btns[0].offsetLeft + btns[0].offsetWidth / 2;
-      var lastC = btns[btns.length - 1].offsetLeft + btns[btns.length - 1].offsetWidth / 2;
-      pressTargetX = Math.max(firstC - targetW / 2, Math.min(lastC - targetW / 2, pointerX - targetW / 2));
+      var targetW = navThumbWidthFor(btn);
+      var firstC = navItemCenterX(btns[0]);
+      var lastC = navItemCenterX(btns[btns.length - 1]);
+      pressTargetX = Math.max(firstC - targetW / 2, Math.min(lastC - targetW / 2, navItemCenterX(btn) - targetW / 2));
       animateNavThumbTo(pressTargetX, targetW);
       for (var i = 0; i < btns.length; i++) {
         btns[i].classList.toggle('active', btns[i] === btn);
@@ -6328,7 +6482,7 @@
   });
 
   navEl.addEventListener('pointermove', function (e) {
-    if (!navDrag || !curNavLogo) return;
+    if (NAV_DRAG_DISABLED || !navDrag || !curNavLogo) return;
     var dx = e.clientX - navDrag.startX;
 
     if (!navDrag.moved) {
@@ -9648,8 +9802,19 @@
     layoutTopbarEdges();
     if (!userTitleEl || !userPillNameEl || !navEl) return;
     var navRect = navEl.getBoundingClientRect();
-    if (!navRect.width) return;
+    if (!navRect.width || navRect.width < 100) return;
     document.documentElement.style.setProperty('--topnav-half-width', (navRect.width / 2).toFixed(2) + 'px');
+    // 顶栏左右按键直接按最新导航边界写内联位置，避免活动切换重建导航时短暂回落到 CSS 默认值。
+    var topbarRect = document.getElementById('topbar') ? document.getElementById('topbar').getBoundingClientRect() : null;
+    var leftIcon = document.querySelector('.topbar-key-icon-left');
+    var rightIcon = document.querySelector('.topbar-key-icon-right');
+    if (topbarRect && topbarRect.width > 0 && leftIcon && rightIcon) {
+      var iconGap = 14;
+      leftIcon.style.left = 'auto';
+      leftIcon.style.right = (topbarRect.right - (navRect.left - iconGap)).toFixed(2) + 'px';
+      rightIcon.style.right = 'auto';
+      rightIcon.style.left = ((navRect.right + iconGap) - topbarRect.left).toFixed(2) + 'px';
+    }
     userPillNameEl.classList.remove('is-collision-hidden');
     var nameRect = userPillNameEl.getBoundingClientRect();
     var titleRect = userTitleEl.classList.contains('is-hidden') ? null : userTitleEl.getBoundingClientRect();
@@ -9671,7 +9836,7 @@
       return;
     }
     userTitleEl.classList.add('t-lv-' + t.lv);
-    userTitleEl.textContent = '⁓' + formatTitleText(t.text) + '⁓';
+    userTitleEl.textContent = '⁓' + formatTitleText(i18nTitleText(t.text)) + '⁓';
     layoutTopbarIdentity();
   }
 
@@ -10152,6 +10317,7 @@
   var titleListEl = document.getElementById('titleList');
   var titleBackTop = document.getElementById('titleBackTop');
   var fontListEl = document.getElementById('fontList');
+  var languageListEl = document.getElementById('languageList');
   var keybindListEl = document.getElementById('keybindList');
   var wallpaperDimInput = document.getElementById('wallpaperDim');
   var cardBlurInput = document.getElementById('cardBlur');
@@ -10265,7 +10431,8 @@
     },
     audio: { title: '音频', text: '调整网页主音量和小游戏音量。音量设置会自动保存到本机。' },
     font: { title: '字体', text: '选择网页使用的字体。切换后会立即应用，并自动保存到本机。' },
-    sponsor: { title: '赞助', text: '选择微信或支付宝向网页开发者捐赠。' },
+    language: { title: '语言', text: '选择网页界面语言。切换后会立即应用，并自动保存到本机。' },
+    sponsor: { title: '赞助', text: '选择微信、支付宝或贝宝向网页开发者捐赠，注意此捐赠仅面向网页开发工作，不接收对于第三方引用资源的付款。' },
     interface: {
       title: '界面',
       text: '调整亮度、模糊和沉浸光效。性能模式开启时，沉浸光效会暂时禁用。',
@@ -10509,6 +10676,8 @@
       settingsDescriptionExtra.textContent = desc.extra || '';
     }
     if (currentSettingsTab === 'control') renderKeybindList();
+    if (currentSettingsTab === 'language') renderLanguageList();
+    if (currentSettingsTab === 'font') renderFontList();
     settingsSelectionIndex = 0;
     resetSettingsStickAcceleration();
     updateSettingsSelection();
@@ -10553,6 +10722,8 @@
     settingsSnapshot = captureSettingsSnapshot();
     renderFontList();
     renderKeybindList();
+    renderLanguageList();
+    syncFontTabVisibility();
     Array.prototype.forEach.call(settingsTabs, function (tab) {
       var effect = tab.querySelector('.topnav-item-effect');
       if (effect && !effect.getAttribute('data-asset-original')) bindResponsiveAsset(effect, 'logo/choose.png');
@@ -10813,6 +10984,21 @@
       applyFont('sarasa', false);
       renderFontList();
       settingsDirty = true;
+      return;
+    }
+    if (currentSettingsTab === 'language') {
+      var langApi = i18nApi();
+      if (!langApi) return;
+      var defaultLang = langApi.defaultId || 'en';
+      if (langApi.getLanguage() === defaultLang) {
+        langApi.saveLanguage('');
+        return;
+      }
+      // 重置为默认语言（英语）：同样要确认后重启
+      if (!showRestartPrompt()) return;
+      langApi.saveLanguage('');
+      window.location.reload();
+      return;
     }
   }
 
@@ -11063,6 +11249,41 @@
     }).filter(function (p) { return !!p; });
   }
 
+  var FONT_LANG_SUPPORT = {
+    'zh-Hans': ['sarasa', 'kaiti', 'mengya-bear', 'shanhai-summer'],
+    'en': ['sarasa', 'kaiti', 'mengya-bear', 'shanhai-summer'],
+    'zh-Hant': ['sarasa', 'kaiti'],
+    'ja': ['sarasa', 'kaiti']
+  };
+
+  function supportedFontIds() {
+    var api = i18nApi();
+    var lang = api ? api.getLanguage() : 'zh-Hans';
+    return FONT_LANG_SUPPORT[lang] || ['sarasa'];
+  }
+
+  function syncFontTabVisibility() {
+    if (!settingsTabs || !settingsTabs.length) return;
+    var fontTab = null;
+    for (var i = 0; i < settingsTabs.length; i++) {
+      if (settingsTabs[i].getAttribute('data-settings-tab') === 'font') { fontTab = settingsTabs[i]; break; }
+    }
+    if (!fontTab) return;
+    var show = supportedFontIds().length > 1;
+    fontTab.hidden = !show;
+    // 同时写内联样式，避免 .topnav-item 的 display:inline-flex 覆盖 hidden
+    fontTab.style.display = show ? '' : 'none';
+    if (!show && currentSettingsTab === 'font') showSettingsTab('interface');
+  }
+
+  function clampFontToLanguage() {
+    var allowed = supportedFontIds();
+    var preferred = null;
+    try { preferred = localStorage.getItem(FONT_KEY); } catch (err) {}
+    var target = (preferred && allowed.indexOf(preferred) >= 0) ? preferred : allowed[0];
+    if (currentFontId !== target) applyFont(target, false);
+  }
+
   function applyFont(id, persist) {
     var opt = fontOptionById(id);
     currentFontId = opt.id;
@@ -11097,8 +11318,10 @@
   }
 
   function renderFontList() {
+    if (!fontListEl) return;
+    var allowed = supportedFontIds();
     fontListEl.innerHTML = '';
-    FONT_OPTIONS.forEach(function (opt) {
+    FONT_OPTIONS.filter(function (opt) { return allowed.indexOf(opt.id) >= 0; }).forEach(function (opt) {
       var item = document.createElement('div');
       item.className = 'font-item' + (opt.id === currentFontId ? ' is-active' : '');
       item.dataset.fontId = opt.id;
@@ -11149,6 +11372,152 @@
         renderFontList();
       });
       fontListEl.appendChild(item);
+    });
+  }
+
+  /* ---------- 语言 ---------- */
+  var LANGUAGE_OPTIONS = (window.FgexpigI18n && window.FgexpigI18n.languages) ? window.FgexpigI18n.languages.slice().filter(function (opt) { return opt.id !== 'ar'; }) : [];
+  var currentLanguageId = window.FgexpigI18n ? window.FgexpigI18n.getLanguage() : 'zh-Hans';
+
+  function i18nApi() { return window.FgexpigI18n || null; }
+
+  // 文字被翻译/字体加载后宽度会变，这里按最新文字重新对位顶部导航选中条
+  function resyncTopNavThumb() {
+    if (curNavLogo && navCache[curNavLogo]) moveThumb(navCache[curNavLogo].active, false);
+    syncNavColorOverlay();
+  }
+
+  // 语言不做热切换：确认「需要重新启动」后写入偏好并重启；取消则保持当前语言
+  function applyLanguage(id, persist) {
+    var api = i18nApi();
+    if (!api) return;
+    if (id === api.getLanguage()) {
+      renderLanguageList();
+      return;
+    }
+    if (!showRestartPrompt()) {
+      renderLanguageList();
+      return;
+    }
+    if (persist !== false) api.saveLanguage(id);
+    window.location.reload();
+  }
+
+  // 模板里捕获到的活动中文名：中文界面保留，其他语言换成核心数据里的英文名
+  function translateActivityNameValue(text) {
+    var api = i18nApi();
+    if (!api) return text;
+    var lang = api.getLanguage();
+    if (lang === 'zh-Hans' || lang === 'zh-Hant') return text;
+    var core = (typeof dataStore !== 'undefined' && dataStore && dataStore.core) || [];
+    for (var i = 0; i < core.length; i++) {
+      var row = core[i];
+      if (row && row.name === text && row.englishName) return row.englishName;
+    }
+    return text;
+  }
+
+  var pendingHomeRelocalize = false;
+
+  function relocalizeActiveHomeData() {
+    var activePage = pagesWrap && pagesWrap.querySelector('.page.active');
+    var activeLogo = activePage && activePage.dataset.logo;
+    if (!activeLogo) {
+      pendingHomeRelocalize = true;
+      return;
+    }
+    pendingHomeRelocalize = false;
+    if (typeof fillHomeSection === 'function') fillHomeSection(activeLogo);
+  }
+
+  function relocalizeActiveResourcePage() {
+    var filesSection = document.querySelector('.page.active .page-section[data-section="files"].active');
+    if (!filesSection || !filesSection._filesId || typeof renderFilesPage !== 'function') return;
+    renderFilesPage(filesSection._filesId, filesSection);
+  }
+
+  function relocalizeActiveHotspotPage() {
+    var hotspotSection = document.querySelector('.page.active .page-section[data-section="news"].active');
+    if (!hotspotSection || !hotspotSection._hotspot || !hotspotSection._hotspot.id || typeof renderHotspotSection !== 'function') return;
+    hotspotSection._hotspot.postListSignature = null;
+    hotspotSection._hotspot.keywordSignature = null;
+    renderHotspotSection(hotspotSection._hotspot.id, hotspotSection);
+  }
+
+  function initLanguageSetting() {
+    var api = i18nApi();
+    if (!api) return;
+    if (api.setValueTranslator) api.setValueTranslator(translateActivityNameValue);
+    currentLanguageId = api.getLanguage();
+    api.onChange(function (id) {
+      currentLanguageId = id;
+      renderLanguageList();
+      clampFontToLanguage();
+      renderFontList();
+      syncFontTabVisibility();
+      // 重新生成由代码拼好的文案（首页右下角筛选提示、左下角键位提示等）
+      try { renderBottomKeyHints(); } catch (err) {}
+      try { renderHomeFilterHint(); } catch (err) {}
+      try { renderTitleBottomActions(); } catch (err) {}
+      try { renderSettingsBottomActions(); } catch (err) {}
+      try { applyUserTitle(); } catch (err) {}
+      try { if (currentSidebarPanel === 'titles') renderTitleList(); } catch (err) {}
+      try { resyncTopNavThumb(); } catch (err) {}
+      try { relocalizeDataValues(document); } catch (err) {}
+      try { relocalizeActiveResourcePage(); } catch (err) {}
+      try { relocalizeActiveHotspotPage(); } catch (err) {}
+      try { if (state.index != null) applyPageMeta(LOGOS[state.index]); } catch (err) {}
+      try { initLineMarquees(document); } catch (err) {}
+      // 语言包可能晚于首页数据渲染完成：重绘当前首页，避免首屏成就/商店数据残留旧语言
+      setTimeout(function () {
+        try { relocalizeActiveHomeData(); } catch (err) {}
+      }, 0);
+      try { refreshGuestCommentNotices(); } catch (err) {}
+    });
+  }
+
+  function renderLanguageList() {
+    if (!languageListEl) return;
+    var api = i18nApi();
+    if (!api) return;
+    currentLanguageId = api.getLanguage();
+    languageListEl.innerHTML = '';
+    var langs = (LANGUAGE_OPTIONS.length ? LANGUAGE_OPTIONS : api.languages).filter(function (opt) { return opt.id !== 'ar'; });
+    langs.forEach(function (opt) {
+      var item = document.createElement('div');
+      item.className = 'font-item' + (opt.id === currentLanguageId ? ' is-active' : '');
+      item.dataset.languageId = opt.id;
+      item.setAttribute('role', 'button');
+      item.tabIndex = 0;
+      item.setAttribute('aria-pressed', opt.id === currentLanguageId ? 'true' : 'false');
+
+      var mainEl = document.createElement('span');
+      mainEl.className = 'font-item-main';
+      var nameEl = document.createElement('span');
+      nameEl.className = 'font-item-name';
+      nameEl.textContent = opt.native;
+      mainEl.appendChild(nameEl);
+
+      var toggle = document.createElement('input');
+      toggle.type = 'checkbox';
+      toggle.className = 'theme-toggle font-item-toggle';
+      toggle.checked = opt.id === currentLanguageId;
+      toggle.setAttribute('aria-label', opt.native);
+
+      item.appendChild(mainEl);
+      item.appendChild(toggle);
+      toggle.addEventListener('click', function (event) { event.stopPropagation(); });
+      toggle.addEventListener('change', function () {
+        if (!toggle.checked) { toggle.checked = true; return; }
+        applyLanguage(opt.id, true);
+      });
+      item.addEventListener('click', function () { applyLanguage(opt.id, true); });
+      item.addEventListener('keydown', function (event) {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        applyLanguage(opt.id, true);
+      });
+      languageListEl.appendChild(item);
     });
   }
 
@@ -11299,7 +11668,7 @@
 
       var badge = document.createElement('span');
       badge.className = 'title-badge t-lv-' + levelClass;
-      badge.textContent = formatTitleText(t.text);
+      badge.textContent = formatTitleText(i18nTitleText(t.text));
 
       item.appendChild(badge);
       if (!special) item.addEventListener('click', function () {
@@ -11448,6 +11817,11 @@
     panelSettings.addEventListener('click', function (event) {
       var option = event.target.closest ? event.target.closest('.sponsor-option') : null;
       if (!option) return;
+      var link = option.getAttribute('data-sponsor-link');
+      if (link) {
+        openExternalLink(link);
+        return;
+      }
       var src = option.getAttribute('data-sponsor-image');
       if (!src) return;
       sponsorImage.src = src;
@@ -12500,6 +12874,56 @@
     if (e.target === loginOverlay) closeLogin();
   });
 
+  /* ---------- 管理员密码：只存加盐 SHA-256，不存明文 ----------
+     换密码：node tools/make-password-hash.js 新密码，把 hash 填到下面。
+     注意：前端校验只能防"明文直接被看到"，不能防有心人离线爆破。 */
+  var ADMIN_SALT = 'fgexpig::admin::v1';
+  var ADMIN_PASS_HASH = 'dcd9e8f2928e98a61204b7f888b032c5a2e9b461cb37a2171fba3bf603678b26';
+
+  function sha256Hex(input) {
+    function rr(v, a) { return (v >>> a) | (v << (32 - a)); }
+    var K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+             0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+             0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+             0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+             0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+             0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+             0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+             0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+    var H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+    var str = unescape(encodeURIComponent(String(input)));
+    var bytes = [];
+    for (var i = 0; i < str.length; i++) bytes.push(str.charCodeAt(i) & 0xff);
+    var bitLen = bytes.length * 8;
+    bytes.push(0x80);
+    while (bytes.length % 64 !== 56) bytes.push(0);
+    for (var k = 7; k >= 0; k--) bytes.push(Math.floor(bitLen / Math.pow(2, k * 8)) & 0xff);
+    var w = new Array(64);
+    for (var off = 0; off < bytes.length; off += 64) {
+      for (var j = 0; j < 16; j++) {
+        w[j] = (bytes[off + j * 4] << 24) | (bytes[off + j * 4 + 1] << 16) | (bytes[off + j * 4 + 2] << 8) | bytes[off + j * 4 + 3];
+      }
+      for (j = 16; j < 64; j++) {
+        var s0 = rr(w[j - 15], 7) ^ rr(w[j - 15], 18) ^ (w[j - 15] >>> 3);
+        var s1 = rr(w[j - 2], 17) ^ rr(w[j - 2], 19) ^ (w[j - 2] >>> 10);
+        w[j] = (w[j - 16] + s0 + w[j - 7] + s1) | 0;
+      }
+      var a = H[0], b = H[1], c = H[2], d = H[3], e = H[4], f = H[5], g = H[6], h = H[7];
+      for (j = 0; j < 64; j++) {
+        var S1 = rr(e, 6) ^ rr(e, 11) ^ rr(e, 25);
+        var ch = (e & f) ^ (~e & g);
+        var t1 = (h + S1 + ch + K[j] + w[j]) | 0;
+        var S0 = rr(a, 2) ^ rr(a, 13) ^ rr(a, 22);
+        var maj = (a & b) ^ (a & c) ^ (b & c);
+        var t2 = (S0 + maj) | 0;
+        h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
+      }
+      H[0] = (H[0] + a) | 0; H[1] = (H[1] + b) | 0; H[2] = (H[2] + c) | 0; H[3] = (H[3] + d) | 0;
+      H[4] = (H[4] + e) | 0; H[5] = (H[5] + f) | 0; H[6] = (H[6] + g) | 0; H[7] = (H[7] + h) | 0;
+    }
+    return H.map(function (x) { return ('00000000' + (x >>> 0).toString(16)).slice(-8); }).join('');
+  }
+
   function performLogin(username, password, errorEl) {
     var u = String(username || '').trim();
     var p = String(password || '');
@@ -12515,7 +12939,7 @@
       updateUserUI();
       return true;
     }
-    if (u === 'admin' && p === 'root') {
+    if (u === 'admin' && sha256Hex(ADMIN_SALT + p) === ADMIN_PASS_HASH) {
       user.name = 'admin';
       user.isAdmin = true;
       user.media = '';
@@ -12659,6 +13083,7 @@
       return {
         id: info.id,
         name: info.name || '',
+        englishName: info.englishName || '',
         developer: info.developer || '',
         publisher: info.publisher || '',
         releaseDate: info.releaseDate || '',
@@ -12673,16 +13098,29 @@
     return info ? (info.name ? info.name : id) : id;
   }
 
-  // 网页标题固定为站点名
-  function pageTitle() {
-    return SITE_NAME;
+  function localizedSiteName() {
+    return i18nT('common.site.name', SITE_NAME);
   }
 
-  // 网页描述：活动数据已知时带上活动名，便于搜索引擎生成摘要
+  function localizedSiteDescription() {
+    return i18nT('common.site.description', SITE_DESCRIPTION);
+  }
+
+  // 网页标题固定为站点名，并跟随界面语言
+  function pageTitle() {
+    return localizedSiteName();
+  }
+
+  // 网页描述：中文带活动名；其他语言使用已本地化的站点描述
   function pageDescription(id) {
     var info = infoOf(id);
     var name = info && info.name ? info.name : '';
-    return name ? (name + '（' + SITE_NAME + '）：活动预告、说明、成就、日程、测评与实绩资料。') : SITE_DESCRIPTION;
+    var api = i18nApi();
+    var lang = api && api.getLanguage ? api.getLanguage() : 'zh-Hans';
+    if (name && (lang === 'zh-Hans' || lang === 'zh-Hant')) {
+      return name + '（' + localizedSiteName() + '）：活动预告、说明、成就、日程、测评与实绩资料。';
+    }
+    return localizedSiteDescription();
   }
 
   // 同步 <title> 与 description / og:title / og:description
@@ -13324,16 +13762,27 @@
     ownedBar.type = 'button';
     ownedBar.className = 'shop-owned-bar ' + (owned ? 'is-owned' : 'is-unowned');
     var guest = isGuestUser();
-    ownedBar.disabled = guest;
-    ownedBar.tabIndex = guest ? -1 : 0;
-    ownedBar.setAttribute('aria-disabled', guest ? 'true' : 'false');
-    if (guest) ownedBar.classList.add('is-guest-disabled');
+    ownedBar.disabled = false;
+    ownedBar.tabIndex = 0;
+    ownedBar.setAttribute('aria-disabled', 'false');
+    if (guest) ownedBar.classList.add('is-guest');
     var ownedText = document.createElement('span');
     ownedText.className = 'shop-owned-text';
-    ownedText.textContent = owned
-      ? '您已拥有' + versions.join('、')
-      : '您尚未拥有此项目';
+    ownedText.textContent = guest
+      ? i18nTr('在糖豆人中游玩')
+      : (owned
+        ? '您已拥有' + versions.join('、')
+        : '您尚未拥有此项目');
     ownedBar.appendChild(ownedText);
+    if (guest) {
+      // 访客：点击跳到糖豆人官网（新标签）
+      ownedBar.setAttribute('aria-label', i18nTr('在糖豆人中游玩'));
+      ownedBar.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        openExternalLink(fallGuysStoreUrl());
+      });
+    }
     return ownedBar;
   }
 
@@ -14849,6 +15298,7 @@
   function pauseLeaderboardChartNumber(value) {
     var number = Number(value) || 0;
     var absolute = Math.abs(number);
+    if (window.FgexpigI18n) return window.FgexpigI18n.formatNumber(number);
     if (absolute >= 100000000) return (number / 100000000).toFixed(absolute >= 1000000000 ? 1 : 2).replace(/\.0+$|\.(\d*[1-9])0+$/, '$1') + '亿';
     if (absolute >= 10000) return (number / 10000).toFixed(absolute >= 100000 ? 1 : 2).replace(/\.0+$|\.(\d*[1-9])0+$/, '$1') + '万';
     if (Math.abs(number - Math.round(number)) < 0.000001) {
@@ -15326,7 +15776,10 @@
     entries.forEach(function (entry) {
       var el = entry.target;
       el.dataset.outerAutoMarqueeInView = entry.isIntersecting ? '1' : '0';
-      if (!document.documentElement.classList.contains('outer-screen-layout')) {
+      if (
+        !document.documentElement.classList.contains('outer-screen-layout') &&
+        !document.documentElement.classList.contains('inner-screen-layout')
+      ) {
         stopLineMarquee(el);
         return;
       }
@@ -15351,7 +15804,7 @@
       stopLineMarquee(el);
     } else if (
       el.matches(':hover') ||
-      (document.documentElement.classList.contains('outer-screen-layout') && el.dataset.outerAutoMarqueeInView === '1')
+      ((document.documentElement.classList.contains('outer-screen-layout') || document.documentElement.classList.contains('inner-screen-layout')) && el.dataset.outerAutoMarqueeInView === '1')
     ) {
       startLineMarquee(el);
     }
@@ -15476,7 +15929,9 @@
     var row = document.createElement('button');
     row.className = 'achv-group-row';
     row.type = 'button';
-    row.setAttribute('aria-label', '打开' + category + '奖杯组 ' + group.name);
+    var displayGroupName = i18nTr(group.name);
+    var displayCategory = i18nTr(category);
+    row.setAttribute('aria-label', i18nT('achv.group.open', '打开{category}奖杯组 {name}', { category: displayCategory, name: displayGroupName }));
 
     var icon = document.createElement('span');
     icon.className = 'achv-group-icon';
@@ -15486,10 +15941,11 @@
     info.className = 'achv-group-info';
     var name = document.createElement('span');
     name.className = 'achv-group-name';
+    // 奖杯组名交给 i18n DOM 翻译，确保语言包晚加载时也会更新
     name.textContent = group.name;
     var desc = document.createElement('span');
     desc.className = 'achv-group-desc';
-    desc.textContent = category;
+    desc.textContent = displayCategory;
     info.appendChild(name); info.appendChild(desc);
 
     row.appendChild(icon); row.appendChild(info);
@@ -15789,6 +16245,7 @@
         var text = reviewTextOf(review);
         var excerpt = document.createElement('div');
         excerpt.className = 'review-item-text' + (text ? '' : ' is-empty');
+        if (text) excerpt.setAttribute('data-i18n-skip', '1');
         excerpt.textContent = text || '暂无评测内容';
         item.appendChild(excerpt);
 
@@ -15911,6 +16368,7 @@
         view.appendChild(head);
         var text = document.createElement('div');
         text.className = 'review-detail-text';
+        if (reviewTextOf(review)) text.setAttribute('data-i18n-skip', '1');
         var body = reviewTextOf(review) || '暂无评测内容';
         // 首行缩进条件：段落数 ≥ 2，且至少有一段 ≥ 120 个汉字（1 汉字 = 2 字母）
         // 不满足时按原样显示（换行仍然保留，只是不缩进）
@@ -16060,6 +16518,14 @@
     detailTitleEl.appendChild(detailBackBtn);
     var detailOverviewScrollTop = 0;
 
+    // 《》里的活动名跟随语言：中文界面用中文名，其他语言用英文名（英文名与评测卡片同源）
+    function ownedVersionLabel(versionName) {
+      var langId = (window.FgexpigI18n && window.FgexpigI18n.getLanguage) ? window.FgexpigI18n.getLanguage() : 'zh-Hans';
+      var chinese = (langId === 'zh-Hans' || langId === 'zh-Hant');
+      var displayName = chinese ? activityName : ((info && info.englishName) || activityName);
+      return i18nTr('拥有《{activity}》{name}', { activity: displayName, name: i18nTr(versionName) });
+    }
+
     function makeLibraryOwners() {
       var view = document.createElement('div');
       view.className = 'shop-detail shop-library-owners';
@@ -16067,11 +16533,11 @@
       list.className = 'shop-detail-list';
       var ownerItems = ((shop && shop.versions) || []).slice().reverse().map(function (version) {
         var name = libraryText(version.name);
-        return name ? { name: name, label: '拥有《' + activityName + '》' + name, kind: 'version' } : null;
+        return name ? { name: name, label: ownedVersionLabel(name), kind: 'version' } : null;
       }).filter(Boolean);
       var dlcItems = ((shop && shop.dlcs) || []).map(function (dlc) {
         var name = libraryText(dlc.name);
-        return name ? { name: name, label: '持有 ' + name, kind: 'dlc', item: dlc } : null;
+        return name ? { name: name, label: i18nT('shop.owned.label.dlc', '持有 {name}', { name: i18nTr(name) }), kind: 'dlc', item: dlc } : null;
       }).filter(Boolean);
       if (!ownerItems.length && !dlcItems.length) {
         var fallbackNames = [];
@@ -16083,7 +16549,7 @@
           fallbackNames.push(entry.version);
         });
         ownerItems = fallbackNames.reverse().map(function (name) {
-          return { name: name, label: '拥有《' + activityName + '》' + name, kind: 'version' };
+          return { name: name, label: ownedVersionLabel(name), kind: 'version' };
         });
       }
       ownerItems = ownerItems.concat(dlcItems);
@@ -16138,7 +16604,7 @@
         var value = shopText(price).replace(/^￥\s*/, '');
         if (!value) return '￥--';
         var number = Number(value);
-        if (isFinite(number) && number === 0) return '免费';
+        if (isFinite(number) && number === 0) return i18nTr('免费');
         return '￥' + value;
       }
 
@@ -16152,10 +16618,16 @@
           var head = document.createElement('div');
           head.className = 'shop-purchase-head';
           var name = document.createElement('div');
-          name.className = 'shop-version-name';
+          name.className = 'shop-version-name' + ((document.documentElement.classList.contains('outer-screen-layout') || document.documentElement.classList.contains('inner-screen-layout')) ? ' outer-auto-marquee' : '');
+          var actionText = i18nTr(purchaseLabel);
+          var versionText = i18nTr(item.name);
+          var langId = (window.FgexpigI18n && window.FgexpigI18n.getLanguage) ? window.FgexpigI18n.getLanguage() : 'zh-Hans';
+          var titleName = (langId === 'zh-Hans' || langId === 'zh-Hant')
+            ? activityName
+            : ((info && info.englishName) || activityName);
           var fullName = compactName
-            ? purchaseLabel + ' ' + item.name
-            : purchaseLabel + '《' + activityName + '》' + item.name;
+            ? actionText + ' ' + versionText
+            : i18nTr('{action}《{name}》{version}', { action: actionText, name: titleName, version: versionText });
           name.textContent = fullName;
           name.title = fullName;
           head.appendChild(name);
@@ -16165,9 +16637,12 @@
           var statusKey = compactName
             ? (isOwned ? 'owned' : 'unowned')
             : (isIncluded ? 'included' : (isOwned ? 'owned' : 'unowned'));
-          var statusText = compactName
-            ? (isOwned ? '已持有' : '未持有')
-            : (isIncluded ? '已包含' : (isOwned ? '已拥有' : '未拥有'));
+          var guest = isGuestUser();
+          var statusText = guest
+            ? i18nTr('查看')
+            : (compactName
+              ? (isOwned ? '已持有' : '未持有')
+              : (isIncluded ? '已包含' : (isOwned ? '已拥有' : '未拥有')));
 
           var actions = document.createElement('div');
           actions.className = 'shop-version-actions';
@@ -16175,10 +16650,12 @@
           priceTag.className = 'shop-price-tag';
           priceTag.textContent = shopPriceText(item.price);
           var statusButton = document.createElement('button');
-          statusButton.className = 'shop-status-button is-' + statusKey;
+          statusButton.className = 'shop-status-button is-' + statusKey + (guest ? ' is-guest' : '');
           statusButton.type = 'button';
           statusButton.textContent = statusText;
-          statusButton.setAttribute('aria-label', '查看' + item.name + '详情，当前' + statusText);
+          statusButton.setAttribute('aria-label', guest
+            ? statusText + ' ' + versionText
+            : i18nT('shop.detail.status', '查看{name}详情，当前{status}', { name: versionText, status: statusText }));
           statusButton.onclick = function () {
             rememberMergedOverviewPosition();
             showShopVersion(item);
@@ -16225,7 +16702,7 @@
           item.className = 'shop-content-item';
           var contentName = document.createElement('div');
           contentName.className = 'shop-content-name';
-          contentName.textContent = content;
+          contentName.textContent = i18nTr(content);
           var code = document.createElement('div');
           code.className = 'shop-content-code';
           var codeValue = shopText(shop && shop.codes && shop.codes[content]);
@@ -16302,14 +16779,15 @@
         if (info.name) { var dtName = document.createElement('dt'); dtName.dataset.field = 'name'; dtName.textContent = '中文名'; var ddName = document.createElement('dd'); ddName.dataset.field = 'name'; ddName.textContent = info.name; grid.appendChild(dtName); grid.appendChild(ddName); }
         if (info.developer) { var dt = document.createElement('dt'); dt.dataset.field = 'developer'; dt.textContent = '开发商'; var dd = document.createElement('dd'); dd.dataset.field = 'developer'; dd.textContent = info.developer; grid.appendChild(dt); grid.appendChild(dd); }
         if (info.publisher) { var dt2 = document.createElement('dt'); dt2.dataset.field = 'publisher'; dt2.textContent = '发行商'; var dd2 = document.createElement('dd'); dd2.dataset.field = 'publisher'; dd2.textContent = info.publisher; grid.appendChild(dt2); grid.appendChild(dd2); }
-        if (info.releaseDate) { var dt3 = document.createElement('dt'); dt3.dataset.field = 'release'; dt3.textContent = '发行日'; var dd3 = document.createElement('dd'); dd3.dataset.field = 'release'; dd3.textContent = info.releaseDate; grid.appendChild(dt3); grid.appendChild(dd3); }
+        if (info.releaseDate) { var dt3 = document.createElement('dt'); dt3.dataset.field = 'release'; dt3.textContent = '发行日'; var dd3 = document.createElement('dd'); dd3.dataset.field = 'release'; dd3.dataset.rawDate = info.releaseDate; dd3.textContent = i18nLocalizeDate(info.releaseDate); grid.appendChild(dt3); grid.appendChild(dd3); }
         if (info.tags && info.tags.length) {
           var dtTags = document.createElement('dt');
           dtTags.dataset.field = 'tags';
           dtTags.textContent = '标签类';
           var ddTags = document.createElement('dd');
           ddTags.dataset.field = 'tags';
-          ddTags.textContent = info.tags.join('；');
+          ddTags.dataset.rawTags = info.tags.join('\u0001');
+          ddTags.textContent = i18nTagList(info.tags);
           grid.appendChild(dtTags);
           grid.appendChild(ddTags);
         }
@@ -16322,6 +16800,9 @@
         ddVersions.textContent = String(versionCount);
         grid.appendChild(dtVersions);
         grid.appendChild(ddVersions);
+        // 详情卡里的“值”是内容数据，不参与界面翻译
+        var detailValues = grid.querySelectorAll('dd');
+        for (var dv = 0; dv < detailValues.length; dv++) detailValues[dv].setAttribute('data-i18n-skip', '1');
         infoCard.appendChild(grid);
       } else {
         infoCard.appendChild(document.createTextNode('暂无活动详情'));
@@ -16564,6 +17045,14 @@
   function init() {
     initStartupOverlay();
     initFontSetting();
+    initLanguageSetting();
+    clampFontToLanguage();
+    syncFontTabVisibility();
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(function () {
+        try { resyncTopNavThumb(); } catch (err) {}
+      });
+    }
     initThemeSettings();
     initAudioSettings();
     initCursorGlow();
@@ -16602,7 +17091,8 @@
     initRuntimeAssetCache();
     playInterfaceAnimation(true);
     initData();
-    fillHomeSection(LOGOS[initial]);
+    if (pendingHomeRelocalize) relocalizeActiveHomeData();
+    else fillHomeSection(LOGOS[initial]);
     render();
     syncNonOuterCardBlurLayers();
     setTimeout(syncNonOuterCardBlurLayers, 0);

@@ -1,0 +1,1231 @@
+﻿key,位置,简体中文,日语,英语,法语,意大利语,德语,西班牙语（西班牙）,阿拉伯语,韩语,葡萄牙语（巴西）,俄语,繁体中文,波兰语,备注
+common.site.name,全站-网页标题、顶栏网站名,探索的猪仔官方网站,探索の子豚公式,FGEXPIG Official,FGEXPIG Official,FGEXPIG Official,FGEXPIG Official,FGEXPIG Official,FGEXPIG Official,탐험하는 아기 돼지 공식,FGEXPIG Official,FGEXPIG Official,探索的豬仔官方網站,FGEXPIG Official,已真人确认
+common.site.description,全站-网页描述（搜索结果/分享）,探索的猪仔官方网站：收录 糖豆人拜年纪系列、奥林PIG运动会系列、煎炸镇系列等活动的预告、说明、成就、日程、测评与实绩资料。,探索の子豚公式：FGCNYANシリーズ、Olympigシリーズ、JZTシリーズなどのイベントの予告、説明、実績、日程、レビュー、記録を収録。,"FGEXPIG Official: previews, descriptions, achievements, schedules, reviews and records for event series such as FGCNYAN, Olympig and JZT.","FGEXPIG Official : aperçus, descriptions, succès, calendriers, critiques et archives des séries d'événements telles que FGCNYAN, Olympig et JZT.","FGEXPIG Official: anteprime, descrizioni, obiettivi, calendari, recensioni e resoconti delle serie di eventi come FGCNYAN, Olympig e JZT.","FGEXPIG Official: Vorschauen, Beschreibungen, Erfolge, Zeitpläne, Reviews und Aufzeichnungen zu Event-Reihen wie FGCNYAN, Olympig und JZT.","FGEXPIG Official: avances, descripciones, logros, calendarios, análisis y registros de series de eventos como FGCNYAN, Olympig y JZT.",FGEXPIG Official: عروض وأوصاف وإنجازات وجداول ومراجعات وسجلات لسلاسل الفعاليات مثل FGCNYAN وOlympig وJZT.,"탐험하는 아기 돼지 공식: FGCNYAN, Olympig, JZT 등의 이벤트 시리즈 예고, 설명, 업적, 일정, 평가 자료를 수록.","FGEXPIG Official: prévias, descrições, conquistas, agendas, análises e registros de séries de eventos como FGCNYAN, Olympig e JZT.","FGEXPIG Official: анонсы, описания, достижения, расписания, обзоры и записи о сериях событий, таких как FGCNYAN, Olympig и JZT.",探索的豬仔官方網站：收錄 糖豆人拜年紀系列、奧林PIG運動會系列、煎炸鎮系列等活動的預告、說明、成就、日程、測評與實績資料。,"FGEXPIG Official: zapowiedzi, opisy, osiągnięcia, harmonogramy, recenzje i materiały z serii wydarzeń, takich jak FGCNYAN, Olympig i JZT.",已真人确认
+common.back,二级页-左上角返回；设置/称号/用户切换/活动中心/更新日志-左下角,返回,戻る,Back,Retour,Indietro,Zurück,Volver,رجوع,뒤로,Voltar,Назад,返回,Wstecz,
+common.cancel,登录弹窗/重启弹窗-取消,取消,キャンセル,Cancel,Annuler,Annulla,Abbrechen,Cancelar,إلغاء,취소,Cancelar,Отмена,取消,Anuluj,
+common.confirm,登录弹窗/重启弹窗-确定,确认,OK,OK,OK,OK,OK,Aceptar,موافق,확인,OK,OK,確認,OK,
+common.login,登录页-登录；热点评论-登录链接,登录,ログイン,Log In,Connexion,Accedi,Anmelden,Iniciar sesión,تسجيل الدخول,로그인,Entrar,Войти,登入,Zaloguj,
+common.logout,用户切换页-退出登录,退出登录,ログアウト,Log Out,Déconnexion,Esci,Abmelden,Cerrar sesión,تسجيل الخروج,로그아웃,Sair,Выйти,登出,Wyloguj,
+common.guest,顶栏/用户切换页-访客用户名,访客用户,ゲスト,Guest,Invité,Ospite,Gast,Invitado,زائر,게스트,Visitante,Гость,訪客,Gość,
+common.anonymous,热点评论-匿名用户名,匿名,匿名,Anonymous,Anonyme,Anonimo,Anonym,Anónimo,مجهول,익명,Anônimo,Аноним,匿名,Anonimowy,
+common.notLoaded,各卡片-加载状态,未加载,未読み込み,Not loaded,Non chargé,Non caricato,Nicht geladen,Sin cargar,غير محمَّل,로드되지 않음,Não carregado,Не загружено,未載入,Niezaładowane,
+common.on,设置页-开关开启状态,开启,オン,On,Activé,Attivo,An,Activado,مفعّل,켜기,Ativado,Вкл.,開啟,Wł.,
+common.off,设置页-开关关闭状态,关闭,オフ,Off,Désactivé,Disattivato,Aus,Desactivado,معطّل,끄기,Desativado,Выкл.,關閉,Wył.,
+common.all,热点-全部关键词,全部,すべて,All,Tout,Tutti,Alle,Todos,الكل,전체,Todos,Все,全部,Wszystkie,
+common.none,数据-空值占位,无,なし,None,Aucun,Nessuno,Keine,Ninguno,لا يوجد,없음,Nenhum,Нет,無,Brak,
+common.more,热点评论-展开更多回复,共 {count} 条回复,返信 {count} 件,"one|{count} reply
+other|{count} replies","one|{count} réponse
+other|{count} réponses","one|{count} risposta
+other|{count} risposte","one|{count} Antwort
+other|{count} Antworten","one|{count} respuesta
+other|{count} respuestas","zero|{count} ردود
+one|{count} ردّ
+two|{count} ردّان
+few|{count} ردود
+many|{count} ردًّا
+other|{count} ردّ",답글 {count}개,"one|{count} resposta
+other|{count} respostas","one|{count} ответ
+few|{count} ответа
+many|{count} ответов
+other|{count} ответа",共 {count} 則回覆,"one|{count} odpowiedź
+few|{count} odpowiedzi
+many|{count} odpowiedzi
+other|{count} odpowiedzi",占位符 {count} 各语言保持一致；复数变体
+topbar.nav.shop,首页/底栏-商店导航,商店,ショップ,Shop,Boutique,Negozio,Shop,Tienda,المتجر,상점,Loja,Магазин,商店,Sklep,
+topbar.nav.resources,首页/底栏-资源导航,资源,リソース,Resources,Ressources,Risorse,Ressourcen,Recursos,الموارد,리소스,Recursos,Ресурсы,資源,Zasoby,
+topbar.nav.news,首页/底栏-热点导航,热点,ホット,News,Tendances,Tendenze,Hot,Tendencias,الأكثر تداولاً,핫,Em alta,Горячее,熱點,Na czasie,
+topbar.nav.settings,首页/底栏-设置导航,设置,設定,Settings,Paramètres,Impostazioni,Einstellungen,Ajustes,الإعدادات,설정,Configurações,Настройки,設定,Ustawienia,
+topbar.pageActions,顶栏-右侧按钮 aria-label,页面操作,ページ操作,Page actions,Actions de page,Azioni pagina,Seitenaktionen,Acciones de página,إجراءات الصفحة,페이지 작업,Ações da página,Действия страницы,頁面操作,Akcje strony,
+topbar.selectActivity,顶栏/底栏-活动按钮 aria-label,选择活动,アクティビティを選択,Select activity,Choisir une activité,Seleziona attività,Aktivität wählen,Seleccionar actividad,اختيار النشاط,활동 선택,Selecionar atividade,Выбрать событие,選擇活動,Wybierz wydarzenie,
+topbar.music.idle,顶栏-音乐名占位文字,未播放,停止中,Not playing,Aucune lecture,Nessuna riproduzione,Keine Wiedergabe,Sin reproducción,لا يُشغَّل,재생 안 함,Sem reprodução,Не воспроизводится,未播放,Nie odtwarzane,
+topbar.music.hint,顶栏-音乐封面 title 提示,播放/暂停；点边缘圆环拖动进度,再生/一時停止；外周リングをドラッグでシーク,Play/pause; drag the outer ring to seek,Lecture/pause ; faites glisser l'anneau pour avancer,Riproduci/pausa; trascina l'anello per scorrere,Wiedergabe/Pause; äußeren Ring zum Spulen ziehen,Reproducir/pausar; arrastra el anillo para avanzar,تشغيل/إيقاف؛ اسحب الحلقة الخارجية للتنقل,재생/일시정지; 바깥 링을 드래그해 이동,Reproduzir/pausar; arraste o anel externo para avançar,Воспроизведение/пауза; перетащите кольцо для перемотки,播放/暫停；拖曳外圈可調整進度,"Odtwarzaj/pauzuj; przeciągnij pierścień, aby przewinąć",
+topbar.sidebar,顶栏-头像按钮 aria-label,打开侧边栏,サイドバーを開く,Open sidebar,Ouvrir le panneau,Apri barra laterale,Seitenleiste öffnen,Abrir panel lateral,فتح الشريط الجانبي,사이드바 열기,Abrir barra lateral,Открыть боковую панель,開啟側邊欄,Otwórz panel boczny,
+topbar.activityLogo,顶栏-活动标志 alt,活动 Logo,イベントロゴ,Event logo,Logo de l'activité,Logo evento,Event-Logo,Logo del evento,شعار الفعالية,이벤트 로고,Logo do evento,Логотип события,活動標誌,Logo wydarzenia,
+topbar.pagination,顶栏-分页区域 aria-label,页面分页,ページ送り,Pagination,Pagination,Paginazione,Seitennavigation,Paginación,ترقيم الصفحات,페이지 넘김,Paginação,Постраничная навигация,頁面分頁,Stronicowanie,
+startup.playVideo,开屏-Landing 点击播放提示,点击播放视频,クリックで動画を再生,Click to play video,Cliquez pour lire la vidéo,Clicca per riprodurre il video,"Klicken, um das Video abzuspielen",Haz clic para reproducir el vídeo,انقر لتشغيل الفيديو,클릭하여 영상 재생,Clique para reproduzir o vídeo,"Нажмите, чтобы воспроизвести видео",點擊播放影片,"Kliknij, aby odtworzyć wideo",
+login.title,登录弹窗-标题,账号登录,アカウントログイン,Account Login,Connexion au compte,Accesso account,Konto-Anmeldung,Inicio de sesión,تسجيل الدخول إلى الحساب,계정 로그인,Login da conta,Вход в аккаунт,帳號登入,Logowanie konta,
+login.account,登录弹窗-账号输入框 placeholder,账号,アカウント,Account,Compte,Account,Konto,Cuenta,الحساب,계정,Conta,Аккаунт,帳號,Konto,
+login.password,登录弹窗-密码输入框 placeholder,密码,パスワード,Password,Mot de passe,Password,Passwort,Contraseña,كلمة المرور,비밀번호,Senha,Пароль,密碼,Hasło,
+login.error,登录弹窗-错误提示,账号或密码错误,アカウントまたはパスワードが違います,Incorrect account or password,Compte ou mot de passe incorrect,Account o password errati,Konto oder Passwort falsch,Cuenta o contraseña incorrectos,الحساب أو كلمة المرور غير صحيحة,계정 또는 비밀번호 오류,Conta ou senha incorretos,Неверный аккаунт или пароль,帳號或密碼錯誤,Nieprawidłowe konto lub hasło,
+dock.hint.pause,首页-左下角键位提示-音乐,暂停,一時停止,Pause,Pause,Pausa,Pause,Pausa,إيقاف,일시정지,Pausar,Пауза,暫停,Pauza,
+dock.hint.rewind,首页-左下角键位提示-音乐,回退,巻き戻し,Rewind,Rembobiner,Riavvolgi,Zurückspulen,Rebobinar,إرجاع,되감기,Retroceder,Перемотка назад,倒轉,Przewiń wstecz,
+dock.hint.forward,首页-左下角键位提示-音乐,快进,早送り,Forward,Avancer,Avanti veloce,Vorspulen,Avanzar,تقديم,빨리 감기,Avançar,Перемотка вперёд,快轉,Przewiń dalej,
+dock.hint.show,首页-左下角键位提示-界面,显示,表示,Show,Afficher,Mostra,Anzeigen,Mostrar,إظهار,표시,Mostrar,Показать,顯示,Pokaż,
+home.filter.centerSuffix,首页-右下角筛选提示第三段,｜活动中心,｜アクティビティセンター,| Activity Center,| Centre d'activités,| Centro attività,| Aktivitätszentrum,| Centro de actividades,| مركز الفعاليات,| 활동 센터,| Central de atividades,| Центр событий,｜活動中心,| Centrum wydarzeń,原文用全角竖线，译文沿用
+pause.keyhint.quickEquip,称号页-左下角键位提示,快捷佩戴,クイック装備,Quick Equip,Équiper rapidement,Equipaggia rapido,Schnell ausrüsten,Equipar rápido,تجهيز سريع,빠른 장착,Equipar rápido,Быстро надеть,快速佩戴,Szybkie założenie,
+settings.keyhint.reset,设置页-左下角键位提示,重置设置,設定をリセット,Reset Settings,Réinitialiser,Reimposta,Zurücksetzen,Restablecer,إعادة ضبط الإعدادات,설정 초기화,Redefinir,Сбросить настройки,重設設定,Resetuj ustawienia,
+settings.keyhint.apply,设置页-左下角键位提示,应用设置,設定を適用,Apply Settings,Appliquer,Applica,Übernehmen,Aplicar,تطبيق الإعدادات,설정 적용,Aplicar,Применить настройки,套用設定,Zastosuj ustawienia,
+keybind.prevNav,设置-控制页-按键列表,上一个导航,前のナビ,Previous Tab,Onglet précédent,Scheda precedente,Vorheriger Tab,Pestaña anterior,علامة التبويب السابقة,이전 탭,Aba anterior,Предыдущая вкладка,上一個導覽,Poprzednia zakładka,
+keybind.nextNav,设置-控制页-按键列表,下一个导航,次のナビ,Next Tab,Onglet suivant,Scheda successiva,Nächster Tab,Pestaña siguiente,علامة التبويب التالية,다음 탭,Próxima aba,Следующая вкладка,下一個導覽,Następna zakładka,
+keybind.prevActivity,设置-控制页-按键列表,上一个活动,前のイベント,Previous Event,Événement précédent,Evento precedente,Vorheriges Event,Evento anterior,الفعالية السابقة,이전 이벤트,Evento anterior,Предыдущее событие,上一個活動,Poprzednie wydarzenie,
+keybind.nextActivity,设置-控制页-按键列表,下一个活动,次のイベント,Next Event,Événement suivant,Evento successivo,Nächstes Event,Evento siguiente,الفعالية التالية,다음 이벤트,Próximo evento,Следующее событие,下一個活動,Następne wydarzenie,
+keybind.toggleMusic,设置-控制页-按键列表,音乐暂停,音楽の再生/一時停止,Pause Music,Pause musique,Pausa musica,Musik pausieren,Pausar música,إيقاف الموسيقى,음악 일시정지,Pausar música,Пауза музыки,音樂暫停,Pauza muzyki,
+keybind.rewindMusic,设置-控制页-按键列表,音乐回退,音楽を巻き戻す,Rewind Music,Reculer la musique,Riavvolgi musica,Musik zurückspulen,Rebobinar música,إرجاع الموسيقى,음악 되감기,Retroceder música,Перемотка музыки назад,音樂倒轉,Przewiń muzykę wstecz,
+keybind.forwardMusic,设置-控制页-按键列表,音乐快进,音楽を早送り,Fast-forward Music,Avancer la musique,Avanza musica,Musik vorspulen,Avanzar música,تقديم الموسيقى,음악 빨리 감기,Avançar música,Перемотка музыки вперёд,音樂快轉,Przewiń muzykę dalej,
+keybind.toggleUi,设置-控制页-按键列表,隐藏/显示HUD,HUDの表示/非表示,Hide/Show HUD,Afficher/masquer l'interface,Mostra/nascondi HUD,HUD ein/ausblenden,Mostrar/ocultar HUD,إظهار/إخفاء الواجهة,HUD 숨기기/표시,Mostrar/ocultar HUD,Показать/скрыть интерфейс,隱藏/顯示 HUD,Pokaż/ukryj HUD,
+keybind.openSettings,设置-控制页-按键列表,设置页,設定,Settings,Paramètres,Impostazioni,Einstellungen,Ajustes,الإعدادات,설정,Configurações,Настройки,設定,Ustawienia,
+keybind.openFilter,设置-控制页-按键列表；首页-右下角,活动中心,アクティビティセンター,Activity Center,Centre d'activités,Centro attività,Aktivitätszentrum,Centro de actividades,مركز الفعاليات,활동 센터,Central de atividades,Центр событий,活動中心,Centrum wydarzeń,
+keybind.openUpdateLog,设置-控制页-按键列表；暂停菜单-左下角,更新日志,更新履歴,Update Log,Journal des mises à jour,Registro aggiornamenti,Update-Protokoll,Registro de cambios,سجل التحديثات,업데이트 로그,Registro de atualizações,Журнал обновлений,更新日誌,Dziennik zmian,
+keybind.unset,设置-控制页-按键框-未绑定,未设置,未設定,Not Set,Non défini,Non assegnato,Nicht belegt,Sin asignar,غير محدد,미설정,Não definido,Не назначено,未設定,Nieprzypisane,
+keybind.pressKey,设置-控制页-按键框-等待输入,请按键…,キーを押してください…,Press a key…,Appuyez sur une touche…,Premi un tasto…,Taste drücken…,Pulsa una tecla…,اضغط زرًا…,키를 누르세요…,Pressione uma tecla…,Нажмите клавишу…,請按鍵…,Naciśnij klawisz…,
+keybind.iconMode,设置-控制页-按键图标选项标签,按键图标,ボタンアイコン,Button Icons,Icônes de bouton,Icone pulsanti,Tasten-Icons,Iconos de botón,أيقونات الأزرار,버튼 아이콘,Ícones de botão,Значки кнопок,按鍵圖示,Ikony przycisków,
+keybind.prevIconMode,设置-控制页-按键图标选项 aria,上一个按键图标方案,前のボタンアイコン,Previous Button Icon Set,Jeu d'icônes précédent,Set icone precedente,Vorheriges Icon-Set,Juego de iconos anterior,مجموعة الأيقونات السابقة,이전 버튼 아이콘,Conjunto anterior,Предыдущий набор значков,上一個按鍵圖示,Poprzedni zestaw ikon,
+keybind.nextIconMode,设置-控制页-按键图标选项 aria,下一个按键图标方案,次のボタンアイコン,Next Button Icon Set,Jeu d'icônes suivant,Set icone successivo,Nächstes Icon-Set,Juego de iconos siguiente,مجموعة الأيقونات التالية,다음 버튼 아이콘,Próximo conjunto,Следующий набор значков,下一個按鍵圖示,Następny zestaw ikon,
+keybind.autoDetect,设置-控制页-按键图标-自动选项,自动识别,自動判別,Auto Detect,Détection auto,Rilevamento auto,Automatisch,Detección automática,كشف تلقائي,자동 감지,Detecção automática,Автоопределение,自動辨識,Automatyczne,
+settings.tab.interface,设置页-左侧分类/标题,界面,インターフェース,Interface,Interface,Interfaccia,Oberfläche,Interfaz,الواجهة,인터페이스,Interface,Интерфейс,介面,Interfejs,
+settings.tab.display,设置页-左侧分类/标题,显示,表示,Display,Affichage,Schermo,Anzeige,Pantalla,العرض,화면,Exibição,Экран,顯示,Obraz,
+settings.tab.control,设置页-左侧分类/标题,控制,操作,Controls,Commandes,Comandi,Steuerung,Controles,التحكم,조작,Controles,Управление,操作,Sterowanie,
+settings.tab.audio,设置页-左侧分类/标题,音频,オーディオ,Audio,Audio,Audio,Audio,Audio,الصوت,오디오,Áudio,Звук,音訊,Dźwięk,
+settings.tab.font,设置页-左侧分类/标题,字体,フォント,Font,Police,Carattere,Schriftart,Fuente,الخط,글꼴,Fonte,Шрифт,字型,Czcionka,
+settings.tab.sponsor,设置页-左侧分类/标题,赞助,支援,Sponsor,Soutenir,Sostieni,Unterstützen,Patrocinio,الدعم,후원,Apoie,Поддержать,贊助,Wsparcie,
+settings.desc.interface,设置页-界面页说明,调整亮度、模糊和沉浸光效。性能模式开启时，沉浸光效会暂时禁用。,明るさ、ぼかし、没入光エフェクトを調整します。パフォーマンスモード中は没入光エフェクトが無効になります。,"Adjust brightness, blur and immersive light. Immersive light is disabled in Performance Mode.","Réglez la luminosité, le flou et l'effet lumineux immersif. Il est désactivé en mode Performance.","Regola luminosità, sfocatura ed effetto luce immersivo. È disattivato in modalità Prestazioni.","Helligkeit, Unschärfe und Immersivlicht anpassen. Im Leistungsmodus ist es deaktiviert.","Ajusta brillo, desenfoque y luz inmersiva. Se desactiva en el modo Rendimiento.",اضبط السطوع والضبابية والإضاءة الغامرة. تُعطَّل في وضع الأداء.,"밝기, 흐림, 몰입 광효과를 조정합니다. 성능 모드에서는 비활성화됩니다.","Ajuste brilho, desfoque e luz imersiva. É desativada no Modo Desempenho.","Яркость, размытие и иммерсивный свет. В режиме производительности отключается.",調整亮度、模糊與沉浸光效。效能模式開啟時會暫時停用沉浸光效。,"Dostosuj jasność, rozmycie i efekt immersyjny. W trybie wydajności jest wyłączony.",
+settings.desc.display,设置页-显示页说明,调整性能模式和画质。性能模式会关闭网页动画并禁用沉浸光效。,パフォーマンスモードと画質を調整します。パフォーマンスモードではアニメーションが停止し、没入光エフェクトが無効になります。,Adjust Performance Mode and image quality. Performance Mode turns off animations and immersive light.,Réglez le mode Performance et la qualité. Il coupe les animations et l'effet lumineux immersif.,Regola modalità Prestazioni e qualità. Disattiva animazioni ed effetto luce immersivo.,Leistungsmodus und Bildqualität. Der Leistungsmodus deaktiviert Animationen und Immersivlicht.,Ajusta el modo Rendimiento y la calidad. Desactiva animaciones y luz inmersiva.,اضبط وضع الأداء وجودة الصورة. يوقف الوضع الرسوم المتحركة والإضاءة الغامرة.,성능 모드와 화질을 조정합니다. 성능 모드에서는 애니메이션과 몰입 광효과가 꺼집니다.,Ajuste o Modo Desempenho e a qualidade. Ele desativa animações e a luz imersiva.,Режим производительности и качество. Отключает анимацию и иммерсивный свет.,調整效能模式與畫質。效能模式會關閉網頁動畫並停用沉浸光效。,Dostosuj tryb wydajności i jakość. Wyłącza animacje i efekt immersyjny.,
+settings.desc.control,设置页-控制页说明,点击右侧按键框后按下新按键即可修改。重复按键会与其他功能交换。,右側のボタンをクリックして新しいキーを押すと変更できます。重複したキーは他の機能と入れ替わります。,"Click a button box, then press a new key. Duplicate keys are swapped with the other action.",Cliquez sur une case puis appuyez sur une touche. Les doublons sont échangés avec l'autre action.,Clicca un pulsante e premi un tasto. I tasti duplicati vengono scambiati.,Klicken Sie das Feld an und drücken Sie eine Taste. Doppelte Tasten werden getauscht.,Haz clic en una casilla y pulsa una tecla. Las teclas repetidas se intercambian.,انقر على مربع الزر ثم اضغط زرًا جديدًا. تُستبدل الأزرار المكررة تلقائيًا.,버튼 상자를 클릭한 뒤 새 키를 누르세요. 중복 키는 다른 기능과 교환됩니다.,Clique em um botão e pressione uma tecla. Teclas repetidas são trocadas.,Нажмите поле и клавишу. Повторяющиеся клавиши меняются местами.,點擊右側按鍵框後按下新按鍵即可修改。重複按鍵會與其他功能交換。,Kliknij pole i naciśnij klawisz. Zduplikowane klawisze są zamieniane.,
+settings.desc.audio,设置页-音频页说明,调整网页主音量和小游戏音量。音量设置会自动保存到本机。,ウェブの主音量とミニゲーム音量を調整します。設定は自動的に保存されます。,Adjust page volume and minigame volume. Settings are saved on this device.,Réglez le volume principal et celui des mini-jeux. Les réglages sont enregistrés localement.,Regola volume principale e mini-giochi. Le impostazioni vengono salvate localmente.,Haupt- und Minispiel-Lautstärke. Einstellungen werden lokal gespeichert.,Ajusta el volumen principal y el de minijuegos. Se guardan en este dispositivo.,اضبط مستوى الصوت الرئيسي وصوت الألعاب المصغرة. تُحفظ الإعدادات محليًا.,웹페이지 주 음량과 미니게임 음량을 조정합니다. 설정은 기기에 자동 저장됩니다.,Ajuste o volume principal e o dos minijogos. As configurações são salvas no dispositivo.,Основная громкость и громкость мини-игр. Сохраняется на устройстве.,調整網頁主音量與小遊戲音量。音量設定會自動儲存到本機。,Głośność główna i minigier. Ustawienia zapisują się lokalnie.,
+settings.desc.font,设置页-字体页说明,选择网页使用的字体。切换后会立即应用，并自动保存到本机。,使用するフォントを選択します。切り替えると即時反映され、自動的に保存されます。,Choose the page font. Changes apply instantly and are saved on this device.,Choisissez la police. Elle s'applique immédiatement et est enregistrée localement.,Scegli il carattere. Si applica subito e viene salvato localmente.,Schriftart wählen. Änderungen gelten sofort und werden lokal gespeichert.,Elige la fuente. Se aplica al instante y se guarda en este dispositivo.,اختر خط الصفحة. يُطبَّق فورًا ويُحفظ محليًا.,사용할 글꼴을 선택합니다. 즉시 적용되고 기기에 자동 저장됩니다.,Escolha a fonte. A alteração é aplicada e salva no dispositivo.,Выберите шрифт. Применяется сразу и сохраняется на устройстве.,選擇網頁使用的字型。切換後立即套用並自動儲存到本機。,Wybierz czcionkę. Zmiany działają od razu i zapisują się lokalnie.,
+settings.desc.sponsor,设置页-赞助页说明,选择微信、支付宝或贝宝向网页开发者捐赠，注意此捐赠仅面向网页开发工作，不接收对于第三方引用资源的付款。,WeChat、Alipay または PayPal で開発者に支援できます。なお、この支援はウェブ開発の活動のみを対象とし、第三者リソースの支払いは受け付けません。,"Donate to the developer via WeChat, Alipay or PayPal. This donation only supports web development work and does not cover payments for third-party resources.","Soutenez le développeur via WeChat, Alipay ou PayPal. Ce don ne concerne que le travail de développement web et ne couvre pas les paiements de ressources tierces.","Sostieni lo sviluppatore con WeChat, Alipay o PayPal. Questa donazione riguarda solo il lavoro di sviluppo web e non copre il pagamento di risorse di terze parti.","Unterstütze den Entwickler per WeChat, Alipay oder PayPal. Diese Spende gilt nur für Webentwicklungsarbeit und deckt keine Zahlungen für Ressourcen Dritter ab.","Dona al desarrollador con WeChat, Alipay o PayPal. Esta donación solo se destina al desarrollo web y no cubre pagos por recursos de terceros.",ادعم المطور عبر WeChat أو Alipay أو PayPal. هذا التبرع مخصص لتطوير الويب فقط ولا يغطي مدفوعات موارد الطرف الثالث.,"WeChat, Alipay 또는 PayPal로 개발자를 후원하세요. 이 후원은 웹 개발 작업에만 사용되며 제3자 리소스 결제는 받지 않습니다.","Apoie o desenvolvedor via WeChat, Alipay ou PayPal. Esta doação destina-se apenas ao desenvolvimento web e não cobre pagamentos de recursos de terceiros.","Поддержите разработчика через WeChat, Alipay или PayPal. Это пожертвование предназначено только для веб-разработки и не покрывает оплату сторонних ресурсов.",選擇微信、支付寶或貝寶向網頁開發者捐贈，注意此捐贈僅面向網頁開發工作，不接收對於第三方引用資源的付款。,"Wesprzyj autora przez WeChat, Alipay lub PayPal. Ta darowizna dotyczy wyłącznie prac nad stroną i nie obejmuje płatności za zasoby osób trzecich.",含第三方资源免责说明
+settings.interface.brightness,设置-界面页-亮度选项,亮度,明るさ,Brightness,Luminosité,Luminosità,Helligkeit,Brillo,السطوع,밝기,Brilho,Яркость,亮度,Jasność,
+settings.interface.blur,设置-界面页-模糊度选项,模糊度,ぼかし,Blur,Flou,Sfocatura,Unschärfe,Desenfoque,الضبابية,흐림,Desfoque,Размытие,模糊度,Rozmycie,
+settings.interface.fx,设置-界面页-沉浸光效选项,沉浸光效,没入光エフェクト,Immersive Light,Effet lumineux immersif,Effetto luce immersivo,Immersivlicht,Luz inmersiva,الإضاءة الغامرة,몰입 광효과,Luz imersiva,Иммерсивный свет,沉浸光效,Efekt immersyjny,
+settings.interface.fxLevel,设置-界面页-光效等级值,{level}级,レベル{level},Level {level},Niveau {level},Livello {level},Stufe {level},Nivel {level},المستوى {level},{level}단계,Nível {level},Уровень {level},{level}級,Poziom {level},占位符 {level} 保持一致
+settings.interface.fxSubtitle,设置-界面页-光效副标题,沉浸光感,没入光感,Immersive Feel,Sensation immersive,Sensazione immersiva,Immersives Gefühl,Sensación inmersiva,إحساس غامر,몰입감,Sensação imersiva,Иммерсивность,沉浸光感,Wrażenie immersji,
+settings.interface.fxExtra,设置-界面页-光效说明,"0级使用默认鼠标指针
+1级使用称号等级鼠标指针
+2级增加沉浸光感
+3级增加边框描边","レベル0：既定のカーソル
+レベル1：称号ランクのカーソル
+レベル2：没入光感を追加
+レベル3：枠線を追加","Level 0: default pointer
+Level 1: title-rank pointer
+Level 2: adds immersive feel
+Level 3: adds border outline","Niveau 0 : curseur par défaut
+Niveau 1 : curseur du rang de titre
+Niveau 2 : sensation immersive
+Niveau 3 : contour de bordure","Livello 0: cursore predefinito
+Livello 1: cursore del grado titolo
+Livello 2: sensazione immersiva
+Livello 3: bordo","Stufe 0: Standardzeiger
+Stufe 1: Zeiger des Titelrangs
+Stufe 2: immersives Gefühl
+Stufe 3: Rahmenkontur","Nivel 0: cursor predeterminado
+Nivel 1: cursor del rango de título
+Nivel 2: sensación inmersiva
+Nivel 3: contorno de borde","المستوى 0: المؤشر الافتراضي
+المستوى 1: مؤشر رتبة اللقب
+المستوى 2: إحساس غامر
+المستوى 3: إطار محيطي","0단계: 기본 포인터
+1단계: 칭호 등급 포인터
+2단계: 몰입감 추가
+3단계: 테두리 추가","Nível 0: cursor padrão
+Nível 1: cursor do grau de título
+Nível 2: sensação imersiva
+Nível 3: contorno de borda","Уровень 0: обычный курсор
+Уровень 1: курсор ранга титула
+Уровень 2: иммерсивность
+Уровень 3: контур рамки","0級：預設滑鼠指標
+1級：稱號等級滑鼠指標
+2級：增加沉浸光感
+3級：增加邊框描邊","Poziom 0: domyślny kursor
+Poziom 1: kursor rangi tytułu
+Poziom 2: efekt immersyjny
+Poziom 3: obramowanie",
+settings.display.performance,设置-显示页-性能模式选项,性能模式,パフォーマンスモード,Performance Mode,Mode Performance,Modalità Prestazioni,Leistungsmodus,Modo Rendimiento,وضع الأداء,성능 모드,Modo Desempenho,Режим производительности,效能模式,Tryb wydajności,
+settings.display.quality,设置-显示页-画质选项,画质,画質,Image Quality,Qualité d'image,Qualità immagine,Bildqualität,Calidad de imagen,جودة الصورة,화질,Qualidade de imagem,Качество изображения,畫質,Jakość obrazu,
+settings.quality.level1,设置-显示页-画质档位,极低,最低,Very Low,Très basse,Molto bassa,Sehr niedrig,Muy baja,منخفضة جدًا,매우 낮음,Muito baixa,Очень низкое,極低,Bardzo niska,
+settings.quality.level2,设置-显示页-画质档位,低,低,Low,Basse,Bassa,Niedrig,Baja,منخفضة,낮음,Baixa,Низкое,低,Niska,
+settings.quality.level3,设置-显示页-画质档位,中,中,Medium,Moyenne,Media,Mittel,Media,متوسطة,보통,Média,Среднее,中,Średnia,
+settings.quality.level4,设置-显示页-画质档位,高,高,High,Haute,Alta,Hoch,Alta,عالية,높음,Alta,Высокое,高,Wysoka,
+settings.quality.level5,设置-显示页-画质档位,极高,最高,Very High,Très haute,Molto alta,Sehr hoch,Muy alta,عالية جدًا,매우 높음,Muito alta,Очень высокое,極高,Bardzo wysoka,
+settings.quality.custom,设置-显示页-画质档位（不一致时）,自定义,カスタム,Custom,Personnalisée,Personalizzata,Benutzerdefiniert,Personalizada,مخصّصة,사용자 지정,Personalizada,Настраиваемое,自訂,Niestandardowa,
+settings.quality.decrease,设置-显示页-画质左右箭头 aria-label,降低{category}画质,{category}の画質を下げる,Lower {category} quality,Baisser la qualité : {category},Riduci qualità {category},{category}-Qualität verringern,Bajar calidad de {category},خفض جودة {category},{category} 화질 낮추기,Diminuir qualidade de {category},Понизить качество: {category},降低{category}畫質,Obniż jakość: {category},原文由“降低”+分类名+“画质”拼接
+settings.quality.increase,设置-显示页-画质左右箭头 aria-label,提高{category}画质,{category}の画質を上げる,Raise {category} quality,Augmenter la qualité : {category},Aumenta qualità {category},{category}-Qualität erhöhen,Subir calidad de {category},رفع جودة {category},{category} 화질 높이기,Aumentar qualidade de {category},Повысить качество: {category},提高{category}畫質,Podnieś jakość: {category},原文由“提高”+分类名+“画质”拼接
+settings.quality.aria,设置-显示页-画质区域 aria-label,画质,画質,Image quality,Qualité d'image,Qualità immagine,Bildqualität,Calidad de imagen,جودة الصورة,화질,Qualidade de imagem,Качество изображения,畫質,Jakość obrazu,
+settings.audio.mainVolume,设置-音频页-主音量,主音量,メイン音量,Main Volume,Volume principal,Volume principale,Hauptlautstärke,Volumen principal,مستوى الصوت الرئيسي,주 음량,Volume principal,Основная громкость,主音量,Głośność główna,
+settings.audio.minigameVolume,设置-音频页-小游戏音量,迷你游戏音量,ミニゲーム音量,Minigame Volume,Volume des mini-jeux,Volume minigiochi,Minispiel-Lautstärke,Volumen de minijuegos,صوت الألعاب المصغرة,미니게임 음량,Volume dos minijogos,Громкость мини-игр,小遊戲音量,Głośność minigier,
+settings.font.name.sarasa,设置-字体页-字体名称,等距更纱黑体（默认）,Sarasa Gothic（既定）,Sarasa Gothic (Default),Sarasa Gothic (par défaut),Sarasa Gothic (predefinito),Sarasa Gothic (Standard),Sarasa Gothic (predeterminada),Sarasa Gothic (افتراضي),Sarasa Gothic (기본),Sarasa Gothic (padrão),Sarasa Gothic (по умолчанию),等距更紗黑體（預設）,Sarasa Gothic (domyślna),字体名保留原名
+settings.font.name.kaiti,设置-字体页-字体名称,楷体,楷体,Kaiti,Kaiti,Kaiti,Kaiti,Kaiti,Kaiti,Kaiti,Kaiti,Кайти,楷體,Kaiti,字体名保留原名
+settings.font.name.mengyaBear,设置-字体页-字体名称,萌芽熊体,萌芽熊体,Mengya Bear,Mengya Bear,Mengya Bear,Mengya Bear,Mengya Bear,Mengya Bear,Mengya Bear,Mengya Bear,Mengya Bear,萌芽熊體,Mengya Bear,字体名保留原名
+settings.font.name.shanhai,设置-字体页-字体名称,山海仲夏夜物语,山海仲夏夜物語,Shanhai Summer Night Tale,Conte d'une nuit d'été de Shanhai,Racconto di una notte d'estate di Shanhai,Shanhai-Sommernachtgeschichte,Relato de una noche de verano de Shanhai,حكاية ليلة صيف شانهاي,산하 한여름 밤 이야기,Conto de uma noite de verão de Shanhai,Сказка летней ночи Шаньхай,山海仲夏夜物語,Opowieść o letniej nocy Shanhai,字体名保留原名，此处为意译
+settings.sponsor.wechat,设置-赞助页-按钮,使用微信支付,WeChat で支払う,Pay with WeChat,Payer avec WeChat,Paga con WeChat,Mit WeChat bezahlen,Pagar con WeChat,الدفع عبر WeChat,WeChat으로 결제,Pagar com WeChat,Оплатить через WeChat,使用微信支付,Zapłać przez WeChat,
+settings.sponsor.alipay,设置-赞助页-按钮,使用支付宝支付,Alipay で支払う,Pay with Alipay,Payer avec Alipay,Paga con Alipay,Mit Alipay bezahlen,Pagar con Alipay,الدفع عبر Alipay,Alipay로 결제,Pagar com Alipay,Оплатить через Alipay,使用支付寶支付,Zapłać przez Alipay,
+settings.restartPrompt,设置页/活动中心-离页弹窗,需要重新启动,再起動が必要です,Restart required,Redémarrage requis,Riavvio necessario,Neustart erforderlich,Es necesario reiniciar,يلزم إعادة التشغيل,재시작 필요,Reinicialização necessária,Требуется перезапуск,需要重新啟動,Wymagany restart,
+settings.applyPrompt,设置页-离页弹窗,是否应用设置,設定を適用しますか,Apply settings?,Appliquer les paramètres ?,Applicare le impostazioni?,Einstellungen übernehmen?,¿Aplicar los ajustes?,هل تريد تطبيق الإعدادات؟,설정을 적용할까요?,Aplicar as configurações?,Применить настройки?,是否套用設定,Zastosować ustawienia?,
+pause.tab.userSwitch,暂停菜单-左侧选项,用户切换,アカウント切替,Switch Account,Changer de compte,Cambia account,Konto wechseln,Cambiar de cuenta,تبديل الحساب,계정 전환,Trocar conta,Сменить аккаунт,切換帳號,Zmień konto,
+pause.tab.titles,暂停菜单-左侧选项；设置-个人页,称号,称号,Titles,Titres,Titoli,Titel,Títulos,الألقاب,칭호,Títulos,Титулы,稱號,Tytuły,
+pause.tab.opensource,暂停菜单-左侧选项,开源,オープンソース,Open Source,Open Source,Open Source,Open Source,Código abierto,مفتوح المصدر,오픈 소스,Código aberto,Открытый исходный код,開源,Open Source,
+pause.tab.rank,暂停菜单-左侧选项；设置页,排名,ランキング,Ranking,Classement,Classifica,Rangliste,Clasificación,الترتيب,순위,Ranking,Рейтинг,排名,Ranking,
+pause.tab.personal,暂停菜单-左侧选项；设置页,个人,プロフィール,Profile,Profil,Profilo,Profil,Perfil,الملف الشخصي,프로필,Perfil,Профиль,個人,Profil,
+pause.lb.level.name,暂停菜单-排行榜-标题,老登等级榜,ベテラン等級ランキング,Veteran Level Ranking,Classement des niveaux vétérans,Classifica livelli veterani,Veteranen-Level-Rangliste,Clasificación de nivel veterano,ترتيب مستوى المخضرمين,베테랑 레벨 순위,Ranking de nível veterano,Рейтинг уровня ветеранов,老手等級排行榜,Ranking poziomu weterana,
+pause.lb.level.t1,暂停菜单-排行榜-等级名,初来乍到,新参者,Newcomer,Nouveau venu,Nuovo arrivato,Neuling,Recién llegado,وافد جديد,새내기,Novato,Новичок,初來乍到,Nowicjusz,
+pause.lb.level.t2,暂停菜单-排行榜-等级名,小试牛刀,駆け出し,Dabbler,Débutant,Principiante,Anfänger,Aprendiz,مبتدئ,초보,Iniciante,Первые шаги,小試身手,Debiutant,
+pause.lb.level.t3,暂停菜单-排行榜-等级名,崭露头角,頭角を現す,Rising Star,Étoile montante,Stella nascente,Aufsteiger,Promesa,نجم صاعد,신예,Destaque,Восходящая звезда,嶄露頭角,Wschodząca gwiazda,
+pause.lb.level.t4,暂停菜单-排行榜-等级名,老当益壮,益々盛ん,Veteran,Vétéran aguerri,Veterano,Erfahrener Hase,Veterano,محترف,노장,Veterano,Опытный ветеран,老當益壯,Doświadczony,
+pause.lb.level.t5,暂停菜单-排行榜-等级名,登峰造极,絶頂,Peak,Au sommet,Vetta,Gipfel,Cúspide,القمة,정점,Auge,На вершине,登峰造極,Szczyt,
+pause.lb.level.t6,暂停菜单-排行榜-等级名,傲视群雄,群雄を凌ぐ,Peerless,Sans égal,Senza pari,Konkurrenzlos,Sin igual,لا مثيل له,군계일학,Sem igual,Вне конкуренции,傲視群雄,Bez równych,
+pause.lb.value.name,暂停菜单-排行榜-标题,全勤价值榜,皆勤価値ランキング,Attendance Value Ranking,Classement de la valeur de participation,Classifica valore presenze,Teilnahme-Wert-Rangliste,Clasificación de valor de asistencia,ترتيب قيمة الحضور,개근 가치 순위,Ranking de valor de presença,Рейтинг ценности участия,全勤價值排行榜,Ranking wartości obecności,
+pause.lb.value.t1,暂停菜单-排行榜-等级名,白手起家,ゼロからの出発,From Scratch,Partir de rien,Da zero,Von null an,Desde cero,من الصفر,무일푼 시작,Do zero,С нуля,白手起家,Od zera,
+pause.lb.value.t2,暂停菜单-排行榜-等级名,积少成多,塵も積もれば,Penny Saver,Petit à petit,Poco alla volta,Sparsam,Ahorrador,مدّخر,티끌 모아,Poupador,Копилка,積少成多,Oszczędny,
+pause.lb.value.t3,暂停菜单-排行榜-等级名,日进斗金,日々金運,Daily Earner,Gros revenus,Guadagno quotidiano,Tagesverdiener,Ingreso diario,دخل يومي,일일 수익,Ganho diário,Ежедневный доход,日進斗金,Dzienny zarobek,
+pause.lb.value.t4,暂停菜单-排行榜-等级名,富甲一方,地元の富豪,Local Tycoon,Riche local,Magnate locale,Lokaler Tycoon,Magnate local,ثري محلي,지역 부호,Magnata local,Местный магнат,富甲一方,Lokalny magnat,
+pause.lb.value.t5,暂停菜单-排行榜-等级名,腰缠万贯,大金持ち,Wealthy,Fortuné,Facoltoso,Vermögend,Adinerado,ثري جدًا,거부,Abastado,Богач,腰纏萬貫,Bogacz,
+pause.lb.value.t6,暂停菜单-排行榜-等级名,富可敌国,国家級の富,Filthy Rich,Fortune colossale,Ricchissimo,Steinreich,Inmensamente rico,ثري فاحش,재력가,Riquíssimo,Несметное богатство,富可敵國,Fortuna,
+pause.lb.comment.name,暂停菜单-排行榜-标题,水军发言榜,投稿数ランキング,Comment Count Ranking,Classement des commentaires,Classifica commenti,Kommentar-Rangliste,Clasificación de comentarios,ترتيب التعليقات,댓글 순위,Ranking de comentários,Рейтинг комментариев,發言數排行榜,Ranking komentarzy,
+pause.lb.comment.t1,暂停菜单-排行榜-等级名,潜水摸鱼,ROM専,Lurker,Observateur,Osservatore,Mitleser,Observador,متفرج,눈팅족,Observador,Наблюдатель,潛水族,Obserwator,
+pause.lb.comment.t2,暂停菜单-排行榜-等级名,侃侃而谈,おしゃべり,Chatterbox,Bavard,Chiacchierone,Plaudertasche,Charlatán,ثرثار,수다쟁이,Tagarela,Болтун,侃侃而談,Gaduła,
+pause.lb.comment.t3,暂停菜单-排行榜-等级名,滔滔不绝,止まらない話,Motormouth,Moulin à paroles,Logorroico,Quasselstrippe,Locuaz,كثير الكلام,말 많은 사람,Falador,Речевой поток,滔滔不絕,Mówiący bez przerwy,
+pause.lb.comment.t4,暂停菜单-排行榜-等级名,口若悬河,弁舌爽やか,Silver Tongue,Langue dorée,Lingua d'argento,Silberzunge,Lengua de plata,لسان فصيح,달변가,Língua de prata,Красноречие,口若懸河,Srebrny język,
+pause.lb.comment.t5,暂停菜单-排行榜-等级名,覆水难收,取り返しがつかない,Point of No Return,Irréversible,Irreversibile,Kein Zurück,Sin retorno,لا رجعة,돌이킬 수 없음,Sem volta,Обратного пути нет,覆水難收,Bez odwrotu,
+pause.lb.comment.t6,暂停菜单-排行榜-等级名,龙王驾到,王の登場,Dragon King,Roi dragon,Re drago,Drachenkönig,Rey dragón,ملك التنين,용왕 강림,Rei dragão,Повелитель драконов,龍王駕到,Król smoków,
+pause.metric.experience,暂停菜单-排行榜-数值单位,经验,経験値,EXP,EXP,ESP,EXP,EXP,خبرة,경험치,EXP,Опыт,經驗,EXP,
+pause.metric.currency,暂停菜单-排行榜-数值单位,猪元,JZY,JZY,JZY,JZY,JZY,JZY,JZY,JZY,JZY,JZY,豬元,JZY,中文保留猪元/豬元，其余语言统一 JZY
+pause.metric.characters,暂停菜单-排行榜-数值单位,字符,文字,Characters,Caractères,Caratteri,Zeichen,Caracteres,أحرف,글자,Caracteres,Символы,字元,Znaki,
+pause.chart.aria,暂停菜单-排行榜-图表 aria-label,排行榜横向条形图,ランキング横棒グラフ,Ranking bar chart,Diagramme à barres du classement,Grafico a barre classifica,Balkendiagramm der Rangliste,Gráfico de barras de clasificación,مخطط أعمدة الترتيب,순위 막대 그래프,Gráfico de barras do ranking,Гистограмма рейтинга,排行榜橫向條形圖,Wykres słupkowy rankingu,
+pause.titles.empty,称号页-空状态,暂无可使用的称号,使用可能な称号がありません,No titles available,Aucun titre disponible,Nessun titolo disponibile,Keine Titel verfügbar,No hay títulos disponibles,لا توجد ألقاب متاحة,사용 가능한 칭호 없음,Nenhum título disponível,Нет доступных титулов,暫無可使用的稱號,Brak dostępnych tytułów,
+shop.card.detail,商店-首页分页/卡片标题,详情,詳細,Details,Détails,Dettagli,Details,Detalles,التفاصيل,상세,Detalhes,Подробности,詳情,Szczegóły,
+shop.card.achievements,商店-首页分页/卡片标题,实绩,実績,Achievements,Succès,Obiettivi,Erfolge,Logros,الإنجازات,업적,Conquistas,Достижения,實績,Osiągnięcia,
+shop.card.reviews,商店-首页分页/卡片标题,测评,レビュー,Reviews,Critiques,Recensioni,Reviews,Análisis,المراجعات,평가,Análises,Обзоры,測評,Recenzje,
+shop.nav.home,商店-顶部二分页,首页,ホーム,Home,Accueil,Home,Start,Inicio,الرئيسية,홈,Início,Главная,首頁,Główna,
+shop.nav.achv,商店-顶部二分页,实绩,実績,Achievements,Succès,Obiettivi,Erfolge,Logros,الإنجازات,업적,Conquistas,Достижения,實績,Osiągnięcia,与 shop.card.achievements 同词，位置不同
+shop.detail.releaseDate,商店-详情卡片-字段名,发行日,発売日,Release Date,Date de sortie,Data di uscita,Veröffentlichung,Fecha de lanzamiento,تاريخ الإصدار,출시일,Data de lançamento,Дата выхода,發行日,Data wydania,
+shop.detail.tags,商店-详情卡片-字段名,标签类,タグ,Tags,Mots-clés,Tag,Tags,Etiquetas,الوسوم,태그,Tags,Теги,標籤類,Tagi,
+shop.detail.versionCount,商店-详情卡片-字段名,版本数,バージョン数,Versions,Versions,Versioni,Versionen,Versiones,الإصدارات,버전 수,Versões,Версии,版本數,Wersje,
+shop.detail.empty,商店-详情卡片-空状态,暂无活动详情,イベント詳細がありません,No event details,Aucun détail d'événement,Nessun dettaglio evento,Keine Event-Details,Sin detalles del evento,لا توجد تفاصيل للفعالية,이벤트 상세 없음,Sem detalhes do evento,Нет подробностей о событии,暫無活動詳情,Brak szczegółów wydarzenia,
+shop.detail.back,商店-详情二级页-返回 aria-label,返回活动详情,イベント詳細に戻る,Back to event details,Retour aux détails,Torna ai dettagli evento,Zurück zu den Event-Details,Volver a los detalles,العودة إلى التفاصيل,이벤트 상세로 돌아가기,Voltar aos detalhes,Вернуться к деталям,返回活動詳情,Wróć do szczegółów,
+shop.purchase.preorder,商店-购买按钮,预购,予約購入,Pre-order,Réserver,Preordina,Bestellen,Reservar,طلب مسبق,예약 구매,Reservar,Предзаказ,預購,Rezerwuj,按钮文案精简至不超过10字符
+shop.purchase.buy,商店-购买按钮,购买,購入,Buy,Acheter,Acquista,Kaufen,Comprar,شراء,구매,Comprar,Купить,購買,Kup,
+shop.owned.owned,商店-购买状态,已持有,所持済み,Owned,Possédé,Posseduto,Im Besitz,Poseído,مملوك,보유 중,Possuído,В наличии,已持有,Posiadane,按钮文案精简至不超过10字符
+shop.owned.notOwned,商店-购买状态,未持有,未所持,Not owned,Non obtenu,Non tuo,Fehlt,No poseído,غير مملوك,미보유,Não possui,Не куплено,未持有,Brak,按钮文案精简至不超过10字符
+shop.owned.included,商店-购买状态,已包含,含まれる,Included,Inclus,Incluso,Enthalten,Incluido,مضمَّن,포함됨,Incluído,Включено,已包含,W zestawie,按钮文案：方块字语言不超过5字
+shop.owned.have,商店-购买状态,已拥有,所有済み,Owned,Possédé,Posseduto,Im Besitz,Poseído,مملوك,보유 중,Possuído,В наличии,已擁有,Posiadane,与 shop.owned.owned 同词，语境不同；按钮文案精简至不超过10字符
+shop.owned.notHave,商店-购买状态,未拥有,未所有,Not owned,Non obtenu,Non tuo,Fehlt,No poseído,غير مملوك,미보유,Não possui,Не куплено,未擁有,Brak,按钮文案精简至不超过10字符
+shop.owned.youHave,商店-购买卡片-已拥有版本提示,您已拥有{list},{list}を所持しています,You own {list},Vous possédez {list},Possiedi {list},Sie besitzen {list},Posees {list},تملك {list},{list} 보유 중,Você possui {list},У вас есть {list},您已擁有{list},Posiadasz {list},占位符 {list} 保持一致
+shop.owned.youDontHave,商店-购买卡片-未拥有提示,您尚未拥有此项目,このアイテムは未所持です,You do not own this item,Vous ne possédez pas cet élément,Non possiedi questo elemento,Sie besitzen diesen Artikel nicht,No posees este artículo,لا تملك هذا العنصر,이 항목을 보유하고 있지 않습니다,Você não possui este item,У вас нет этого предмета,您尚未擁有此項目,Nie posiadasz tego przedmiotu,
+shop.purchase.empty,商店-购买卡片-空状态,暂无购买信息,購入情報がありません,No purchase information,Aucune information d'achat,Nessuna informazione di acquisto,Keine Kaufinformationen,Sin información de compra,لا توجد معلومات شراء,구매 정보 없음,Sem informações de compra,Нет информации о покупке,暫無購買資訊,Brak informacji o zakupie,
+shop.includes.empty,商店-购买卡片-空状态,暂无包含内容,含まれる内容がありません,No included content,Aucun contenu inclus,Nessun contenuto incluso,Keine enthaltenen Inhalte,Sin contenido incluido,لا يوجد محتوى مضمَّن,포함된 콘텐츠 없음,Sem conteúdo incluído,Нет включённого контента,暫無包含內容,Brak zawartości,
+shop.code.none,商店-购买卡片-内容代码占位,无代码,コードなし,No code,Aucun code,Nessun codice,Kein Code,Sin código,لا يوجد رمز,코드 없음,Sem código,Нет кода,無代碼,Brak kodu,
+shop.code.copy,商店-购买卡片-复制代码 aria-label,复制代码 {code},コード {code} をコピー,Copy code {code},Copier le code {code},Copia codice {code},Code {code} kopieren,Copiar código {code},نسخ الرمز {code},코드 {code} 복사,Copiar código {code},Скопировать код {code},複製代碼 {code},Skopiuj kod {code},占位符 {code} 保持一致
+shop.code.copyHint,商店-购买卡片-代码 title 提示,点击复制代码,クリックでコードをコピー,Click to copy code,Cliquez pour copier le code,Clicca per copiare il codice,Zum Kopieren des Codes klicken,Haz clic para copiar el código,انقر لنسخ الرمز,클릭하여 코드 복사,Clique para copiar o código,"Нажмите, чтобы скопировать код",點擊複製代碼,"Kliknij, aby skopiować kod",
+shop.code.copied,商店-购买卡片-复制反馈,已复制,コピーしました,Copied,Copié,Copiato,Kopiert,Copiado,تم النسخ,복사됨,Copiado,Скопировано,已複製,Skopiowano,
+shop.code.copyFailed,商店-购买卡片-复制反馈,复制失败,コピーに失敗しました,Copy failed,Échec de la copie,Copia non riuscita,Kopieren fehlgeschlagen,Error al copiar,فشل النسخ,복사 실패,Falha ao copiar,Не удалось скопировать,複製失敗,Kopiowanie nie powiodło się,
+shop.detail.status,商店-购买卡片-详情按钮 aria-label,查看{name}详情，当前{status},{name}の詳細を表示、現在{status},"View {name} details, currently {status}","Voir les détails de {name}, actuellement {status}","Vedi dettagli {name}, attualmente {status}","{name}-Details anzeigen, aktuell {status}","Ver detalles de {name}, actualmente {status}",عرض تفاصيل {name}، الحالة {status},"{name} 상세 보기, 현재 {status}","Ver detalhes de {name}, atualmente {status}","Подробнее о {name}, сейчас {status}",查看{name}詳情，目前{status},"Zobacz szczegóły {name}, obecnie {status}",占位符 {name}/{status} 保持一致
+shop.version.fullGame,商店-购买卡片-分类名,完整版游戏,完全版ゲーム,Full Game,Jeu complet,Gioco completo,Vollversion,Juego completo,اللعبة الكاملة,완전판 게임,Jogo completo,Полная игра,完整版遊戲,Pełna gra,
+shop.version.addon,商店-购买卡片-分类名,追加内容,追加コンテンツ,Additional Content,Contenu additionnel,Contenuto aggiuntivo,Zusätzliche Inhalte,Contenido adicional,محتوى إضافي,추가 콘텐츠,Conteúdo adicional,Дополнительный контент,追加內容,Dodatkowa zawartość,
+shop.owned.label.version,商店-购买卡片-拥有版本标签,拥有《{activity}》{name},「 {activity} 」{name}を所持,Own {name} for {activity},Possède {name} pour {activity},Possiedi {name} per {activity},Besitzt {name} für {activity},Posee {name} de {activity},تملك {name} لـ {activity},{activity} {name} 보유,Possui {name} de {activity},Владеет {name} для {activity},擁有《{activity}》{name},Posiada {name} dla {activity},占位符 {activity}/{name} 保持一致
+shop.owned.label.dlc,商店-购买卡片-持有 DLC 标签,持有 {name},{name}を所持,Own {name},Possède {name},Possiede {name},Besitzt {name},Posee {name},يملك {name},{name} 보유,Possui {name},Владеет {name},持有 {name},Posiada {name},占位符 {name} 保持一致
+review.nextCategory,商店-测评卡片-切换按钮 aria-label,下一类测评,次のレビュー分類,Next review category,Catégorie suivante,Categoria successiva,Nächste Review-Kategorie,Siguiente categoría,فئة المراجعة التالية,다음 평가 분류,Próxima categoria,Следующая категория,下一類測評,Następna kategoria,
+review.prevCategory,商店-测评二级页-返回 aria-label,上一类测评,前のレビュー分類,Previous review category,Catégorie précédente,Categoria precedente,Vorherige Review-Kategorie,Categoría anterior,فئة المراجعة السابقة,이전 평가 분류,Categoria anterior,Предыдущая категория,上一類測評,Poprzednia kategoria,
+review.empty,商店-测评卡片-空状态,暂无评测内容,レビュー内容がありません,No review content,Aucun contenu de critique,Nessun contenuto di recensione,Kein Review-Inhalt,Sin contenido de análisis,لا يوجد محتوى مراجعة,평가 내용 없음,Sem conteúdo de análise,Нет содержания обзора,暫無評測內容,Brak treści recenzji,
+review.viewFull,商店-测评卡片-查看 aria-label,查看{org}的完整测评,{org}のレビュー全文を見る,View the full review by {org},Voir la critique complète de {org},Vedi la recensione completa di {org},Vollständige Review von {org} ansehen,Ver el análisis completo de {org},عرض المراجعة الكاملة من {org},{org} 전체 평가 보기,Ver a análise completa de {org},Читать полный обзор от {org},查看{org}的完整測評,Zobacz pełną recenzję {org},占位符 {org} 保持一致
+review.orgFallback,商店-测评卡片-机构名缺省值,媒体,メディア,Media,Média,Media,Medium,Medio,وسيلة إعلام,미디어,Mídia,СМИ,媒體,Media,
+review.viewFullSuffix,商店-测评卡片-查看 aria-label 后缀,的完整测评,のレビュー全文,full review,critique complète,recensione completa,vollständige Review,análisis completo,المراجعة الكاملة,전체 평가,análise completa,полный обзор,的完整測評,pełna recenzja,原文由前后两段拼接
+review.score.none,商店-测评卡片-评分描述,暂无评分,評価なし,No score,Aucune note,Nessun punteggio,Keine Wertung,Sin puntuación,لا توجد نقاط,점수 없음,Sem nota,Нет оценки,暫無評分,Brak oceny,
+review.score.95,商店-测评卡片-评分描述,普遍赞誉,圧倒的好評,Universal Acclaim,Acclamation universelle,Acclamazione universale,Allgemeiner Beifall,Aclamación universal,إشادة عالمية,압도적 호평,Aclamação universal,Всеобщее признание,普遍讚譽,Powszechny zachwyt,
+review.score.90,商店-测评卡片-评分描述,总体好评,おおむね好評,Generally Favorable,Plutôt favorable,Generalmente favorevole,Überwiegend positiv,Generalmente favorable,تقييم إيجابي عام,대체로 호평,Geralmente favorável,В целом положительно,總體好評,Ogólnie pozytywne,
+review.score.80,商店-测评卡片-评分描述,褒贬不一,賛否両論,Mixed,Avis mitigés,Giudizi contrastanti,Gemischt,Opiniones mixtas,آراء متباينة,호불호 갈림,Opiniões mistas,Смешанные отзывы,褒貶不一,Mieszane opinie,
+review.score.70,商店-测评卡片-评分描述,总体差评,おおむね不評,Generally Unfavorable,Plutôt défavorable,Generalmente sfavorevole,Überwiegend negativ,Generalmente desfavorable,تقييم سلبي عام,대체로 혹평,Geralmente desfavorável,В целом отрицательно,總體差評,Ogólnie negatywne,
+review.score.low,商店-测评卡片-评分描述,极度厌恶,圧倒的不評,Overwhelming Dislike,Rejet massif,Avversione schiacciante,Überwiegende Ablehnung,Rechazo abrumador,رفض ساحق,압도적 혹평,Rejeição avassaladora,Крайне отрицательно,極度厭惡,Zdecydowana niechęć,
+achv.back.group,商店-实绩二级页-返回 aria-label,返回奖杯组,トロフィーグループに戻る,Back to trophy group,Retour au groupe de trophées,Torna al gruppo trofei,Zurück zur Trophäengruppe,Volver al grupo de trofeos,العودة إلى مجموعة الكؤوس,트로피 그룹으로,Voltar ao grupo de troféus,Вернуться к группе трофеев,返回獎盃組,Wróć do grupy trofeów,
+achv.back.review,商店-测评总览-返回 aria-label,返回测评总览,レビュー一覧に戻る,Back to review overview,Retour à l'aperçu des critiques,Torna al riepilogo recensioni,Zurück zur Review-Übersicht,Volver al resumen de análisis,العودة إلى نظرة المراجعات,평가 개요로,Voltar ao resumo das análises,Вернуться к обзорам,返回測評總覽,Wróć do przeglądu recenzji,
+achv.back.detail,商店-详情-返回 aria-label,返回详情,詳細に戻る,Back to details,Retour aux détails,Torna ai dettagli,Zurück zu den Details,Volver a los detalles,العودة إلى التفاصيل,상세로 돌아가기,Voltar aos detalhes,Вернуться к деталям,返回詳情,Wróć do szczegółów,
+achv.group.other,商店-实绩-未分组奖杯名,其他奖杯,その他のトロフィー,Other Trophies,Autres trophées,Altri trofei,Weitere Trophäen,Otros trofeos,كؤوس أخرى,기타 트로피,Outros troféus,Прочие трофеи,其他獎盃,Inne trofea,
+achv.group.open,商店-实绩-奖杯组 aria-label,打开{category}奖杯组 {name},{category}トロフィーグループ {name} を開く,Open {category} trophy group {name},Ouvrir le groupe de trophées {category} {name},Apri gruppo trofei {category} {name},Trophäengruppe {category} {name} öffnen,Abrir grupo de trofeos {category} {name},فتح مجموعة كؤوس {category} {name},{category} 트로피 그룹 {name} 열기,Abrir grupo de troféus {category} {name},Открыть группу трофеев {category} {name},打開{category}獎盃組 {name},Otwórz grupę trofeów {category} {name},占位符 {category}/{name} 保持一致
+achv.group.trophyGroup,商店-实绩-奖杯组标签,奖杯组,トロフィーグループ,Trophy Group,Groupe de trophées,Gruppo trofei,Trophäengruppe,Grupo de trofeos,مجموعة الكؤوس,트로피 그룹,Grupo de troféus,Группа трофеев,獎盃組,Grupa trofeów,
+files.browse,资源页-卡片/分页标题,浏览,閲覧,Browse,Parcourir,Sfoglia,Durchsuchen,Explorar,تصفح,둘러보기,Navegar,Обзор,瀏覽,Przeglądaj,
+files.viewer,资源页-卡片/分页标题,观赏,鑑賞,Viewer,Visionneuse,Visualizzatore,Ansehen,Visor,مشاهدة,감상,Visualizador,Просмотр,觀賞,Podgląd,
+files.schedule,资源页-卡片/分页标题,日程,スケジュール,Schedule,Calendrier,Calendario,Zeitplan,Calendario,الجدول,일정,Agenda,Расписание,日程,Harmonogram,
+files.browse.back,资源页-观赏/日程-返回按钮 aria-label,返回列表,一覧に戻る,Back to list,Retour à la liste,Torna all'elenco,Zurück zur Liste,Volver a la lista,العودة إلى القائمة,목록으로,Voltar à lista,Назад к списку,返回列表,Wróć do listy,
+files.browse.backCard,资源页-日程返回浏览卡片 aria-label,返回浏览卡片,閲覧カードに戻る,Back to browse card,Retour à la carte Parcourir,Torna alla scheda Sfoglia,Zurück zur Durchsuchen-Karte,Volver a la tarjeta Explorar,العودة إلى بطاقة التصفح,둘러보기 카드로,Voltar ao cartão Navegar,Назад к карточке просмотра,返回瀏覽卡片,Wróć do karty Przeglądaj,
+files.schedule.switchToBrowse,资源页-分页按钮 aria-label,当前为日程页，切换到浏览卡片,現在は日程ページです。閲覧カードに切り替えます,Schedule page; switch to the browse card,Page Calendrier ; passer à la carte Parcourir,Pagina Calendario; passa a Sfoglia,Zeitplan-Seite; zur Durchsuchen-Karte wechseln,Página de calendario; cambiar a Explorar,صفحة الجدول؛ التبديل إلى بطاقة التصفح,일정 페이지; 둘러보기 카드로 전환,Página de agenda; mudar para Navegar,Страница расписания; перейти к просмотру,目前為日程頁，切換到瀏覽卡片,Strona harmonogramu; przełącz na Przeglądaj,
+files.browse.switchToSchedule,资源页-分页按钮 aria-label,当前为浏览页，切换到日程卡片,現在は閲覧ページです。日程カードに切り替えます,Browse page; switch to the schedule card,Page Parcourir ; passer à la carte Calendrier,Pagina Sfoglia; passa a Calendario,Durchsuchen-Seite; zur Zeitplan-Karte wechseln,Página Explorar; cambiar a Calendario,صفحة التصفح؛ التبديل إلى بطاقة الجدول,둘러보기 페이지; 일정 카드로 전환,Página Navegar; mudar para Agenda,Страница просмотра; перейти к расписанию,目前為瀏覽頁，切換到日程卡片,Strona Przeglądaj; przełącz na Harmonogram,
+files.resource.select,资源页-资源项 aria-label,选择资源 {name},リソース {name} を選択,Select resource {name},Sélectionner la ressource {name},Seleziona risorsa {name},Ressource {name} auswählen,Seleccionar recurso {name},اختيار المورد {name},리소스 {name} 선택,Selecionar recurso {name},Выбрать ресурс {name},選擇資源 {name},Wybierz zasób {name},占位符 {name} 保持一致
+files.featured.enter,资源页-星标按钮 aria-label,进入精选浏览,特選閲覧に入る,Enter featured browse,Ouvrir la sélection,Apri selezione,Auswahl öffnen,Entrar en destacados,دخول التصفح المميز,추천 둘러보기 진입,Entrar nos destaques,Перейти к избранному,進入精選瀏覽,Wejdź do wyróżnionych,
+files.featured.exit,资源页-星标按钮 aria-label,退出精选浏览,特選閲覧を終了,Exit featured browse,Quitter la sélection,Esci dalla selezione,Auswahl verlassen,Salir de destacados,الخروج من التصفح المميز,추천 둘러보기 종료,Sair dos destaques,Выйти из избранного,退出精選瀏覽,Wyjdź z wyróżnionych,
+files.featured.guestLocked,资源页-星标按钮 aria-label（访客）,登录后可查看精选浏览,ログインすると特選閲覧を利用できます,Log in to view featured browse,Connectez-vous pour voir la sélection,Accedi per vedere la selezione,"Anmelden, um die Auswahl zu sehen",Inicia sesión para ver los destacados,سجّل الدخول لعرض التصفح المميز,로그인 후 추천 둘러보기 이용,Entre para ver os destaques,"Войдите, чтобы смотреть избранное",登入後可查看精選瀏覽,"Zaloguj się, aby zobaczyć wyróżnione",
+files.image.viewer,资源页-图片查看层 aria-label,浏览图片,画像を表示,Image viewer,Visionneuse d'images,Visualizzatore immagini,Bildbetrachter,Visor de imágenes,عارض الصور,이미지 뷰어,Visualizador de imagens,Просмотр изображения,瀏覽圖片,Przeglądarka obrazów,
+files.backToBrowse,资源页-观赏页返回,回到浏览,閲覧に戻る,Back to Browse,Retour à Parcourir,Torna a Sfoglia,Zurück zur Durchsuchen-Ansicht,Volver a Explorar,العودة إلى التصفح,둘러보기로,Voltar para Navegar,Назад к обзору,回到瀏覽,Wróć do Przeglądaj,
+files.backToPersonal,资源页-个人子页返回,返回个人,プロフィールに戻る,Back to Profile,Retour au profil,Torna al profilo,Zurück zum Profil,Volver al perfil,العودة إلى الملف الشخصي,프로필로,Voltar ao perfil,Назад к профилю,返回個人,Wróć do profilu,
+schedule.today,资源页-日程-日期文案,今天,今日,Today,Aujourd'hui,Oggi,Heute,Hoy,اليوم,오늘,Hoje,Сегодня,今天,Dzisiaj,
+schedule.daysAgo,资源页-日程-相对日期,{count}天前,{count}日前,"one|{count} day ago
+other|{count} days ago","one|il y a {count} jour
+other|il y a {count} jours","one|{count} giorno fa
+other|{count} giorni fa","one|vor {count} Tag
+other|vor {count} Tagen","one|hace {count} día
+other|hace {count} días","zero|قبل {count} يوم
+one|قبل {count} يوم
+two|قبل {count} يومين
+few|قبل {count} أيام
+many|قبل {count} يومًا
+other|قبل {count} يوم",{count}일 전,"one|há {count} dia
+other|há {count} dias","one|{count} день назад
+few|{count} дня назад
+many|{count} дней назад
+other|{count} дня назад",{count}天前,"one|{count} dzień temu
+few|{count} dni temu
+many|{count} dni temu
+other|{count} dnia temu",原文为“天数+天+前”拼接；复数变体
+schedule.daysLater,资源页-日程-相对日期,{count}天后,{count}日後,"one|in {count} day
+other|in {count} days","one|dans {count} jour
+other|dans {count} jours","one|tra {count} giorno
+other|tra {count} giorni","one|in {count} Tag
+other|in {count} Tagen","one|dentro de {count} día
+other|dentro de {count} días","zero|بعد {count} يوم
+one|بعد {count} يوم
+two|بعد {count} يومين
+few|بعد {count} أيام
+many|بعد {count} يومًا
+other|بعد {count} يوم",{count}일 후,"one|em {count} dia
+other|em {count} dias","one|через {count} день
+few|через {count} дня
+many|через {count} дней
+other|через {count} дня",{count}天後,"one|za {count} dzień
+few|za {count} dni
+many|za {count} dni
+other|za {count} dnia",原文为“天数+天+后”拼接；复数变体
+files.meta.loadedResources,资源页-浏览卡片-加载状态,已加载 {count} 条资源,{count} 件のリソースを読み込みました,"one|Loaded {count} resource
+other|Loaded {count} resources","one|{count} ressource chargée
+other|{count} ressources chargées","one|Caricata {count} risorsa
+other|Caricate {count} risorse","one|{count} Ressource geladen
+other|{count} Ressourcen geladen","one|{count} recurso cargado
+other|{count} recursos cargados","zero|تم تحميل {count} مورد
+one|تم تحميل {count} مورد
+two|تم تحميل {count} موردان
+few|تم تحميل {count} موارد
+many|تم تحميل {count} موردًا
+other|تم تحميل {count} مورد",리소스 {count}개 로드됨,"one|{count} recurso carregado
+other|{count} recursos carregados","one|Загружен {count} ресурс
+few|Загружено {count} ресурса
+many|Загружено {count} ресурсов
+other|Загружено {count} ресурса",已載入 {count} 條資源,"one|Załadowano {count} zasób
+few|Załadowano {count} zasoby
+many|Załadowano {count} zasobów
+other|Załadowano {count} zasobu",占位符 {count} 保持一致；复数变体
+files.meta.loadedFeatured,资源页-浏览卡片-精选数量后缀,，{count} 条精选,、特選 {count} 件,"one|, {count} featured
+other|, {count} featured","one|, {count} en vedette
+other|, {count} en vedette","one|, {count} in evidenza
+other|, {count} in evidenza","one|, {count} ausgewählt
+other|, {count} ausgewählt","one|, {count} destacado
+other|, {count} destacados","zero|, {count} مميز
+one|, {count} مميز
+two|, {count} مميزان
+few|, {count} مميزة
+many|, {count} مميزًا
+other|, {count} مميز",，추천 {count}개,"one|, {count} em destaque
+other|, {count} em destaque","one|, избранное: {count}
+few|, избранных: {count}
+many|, избранных: {count}
+other|, избранных: {count}",，{count} 條精選,"one|, {count} wyróżniony
+few|, {count} wyróżnione
+many|, {count} wyróżnionych
+other|, {count} wyróżnionego",原文拼接在资源数量之后；复数变体
+files.meta.loadedSchedule,资源页-日程卡片-加载状态,已加载 {count} 条日程,{count} 件の予定を読み込みました,"one|Loaded {count} schedule item
+other|Loaded {count} schedule items","one|{count} événement chargé
+other|{count} événements chargés","one|Caricato {count} evento
+other|Caricati {count} eventi","one|{count} Termin geladen
+other|{count} Termine geladen","one|{count} evento cargado
+other|{count} eventos cargados","zero|تم تحميل {count} جدول
+one|تم تحميل {count} جدول
+two|تم تحميل {count} جدولان
+few|تم تحميل {count} جداول
+many|تم تحميل {count} جدولًا
+other|تم تحميل {count} جدول",일정 {count}개 로드됨,"one|{count} evento carregado
+other|{count} eventos carregados","one|Загружено {count} событие
+few|Загружено {count} события
+many|Загружено {count} событий
+other|Загружено {count} события",已載入 {count} 條日程,"one|Załadowano {count} pozycję
+few|Załadowano {count} pozycje
+many|Załadowano {count} pozycji
+other|Załadowano {count} pozycji",占位符 {count} 保持一致；复数变体
+files.meta.loadedActivitySchedule,资源页-日程卡片-加载状态,已加载 {count} 个活动日程,{count} 件のイベント予定を読み込みました,"one|Loaded {count} event schedule
+other|Loaded {count} event schedules","one|{count} calendrier d'événement chargé
+other|{count} calendriers d'événements chargés","one|Caricato {count} calendario eventi
+other|Caricati {count} calendari eventi","one|{count} Event-Zeitplan geladen
+other|{count} Event-Zeitpläne geladen","one|{count} calendario de evento cargado
+other|{count} calendarios de eventos cargados","zero|تم تحميل {count} جدول فعالية
+one|تم تحميل {count} جدول فعالية
+two|تم تحميل {count} جدولان لفعاليتين
+few|تم تحميل {count} جداول فعاليات
+many|تم تحميل {count} جدولًا للفعاليات
+other|تم تحميل {count} جدول فعالية",이벤트 일정 {count}개 로드됨,"one|{count} agenda de evento carregada
+other|{count} agendas de eventos carregadas","one|Загружено {count} расписание события
+few|Загружено {count} расписания событий
+many|Загружено {count} расписаний событий
+other|Загружено {count} расписания событий",已載入 {count} 個活動日程,"one|Załadowano {count} harmonogram wydarzenia
+few|Załadowano {count} harmonogramy wydarzeń
+many|Załadowano {count} harmonogramów wydarzeń
+other|Załadowano {count} harmonogramu wydarzeń",占位符 {count} 保持一致；复数变体
+news.card.titles,热点页-卡片标题,标题,タイトル,Titles,Titres,Titoli,Titel,Títulos,العناوين,제목,Títulos,Заголовки,標題,Tytuły,与“称号”同中文，语境不同
+news.card.content,热点页-内容/评论分页,内容,内容,Content,Contenu,Contenuto,Inhalt,Contenido,المحتوى,내용,Conteúdo,Содержание,內容,Treść,
+news.card.comments,热点页-内容/评论分页,评论,コメント,Comments,Commentaires,Commenti,Kommentare,Comentarios,التعليقات,댓글,Comentários,Комментарии,評論,Komentarze,
+news.search.placeholder,热点页-搜索框 placeholder,键入以搜索... 或快捷选择关键字,入力して検索… またはキーワードを選択,Type to search… or pick a keyword,Tapez pour rechercher… ou choisissez un mot-clé,Digita per cercare… o scegli una parola chiave,Tippen zum Suchen… oder Stichwort wählen,Escribe para buscar… o elige una palabra clave,اكتب للبحث… أو اختر كلمة مفتاحية,검색어 입력… 또는 키워드 선택,Digite para buscar… ou escolha uma palavra-chave,Введите запрос… или выберите ключевое слово,鍵入以搜尋… 或快速選擇關鍵字,"Wpisz, aby szukać… lub wybierz słowo kluczowe",
+news.search.aria,热点页-搜索框 aria-label,搜索热点帖子,ホット投稿を検索,Search hot posts,Rechercher des posts,Cerca post hot,Hot-Beiträge suchen,Buscar publicaciones,البحث في المنشورات,핫 게시물 검색,Buscar publicações,Поиск горячих постов,搜尋熱點帖子,Szukaj postów,
+news.comments.sort.heat,热点页-评论排序-模式名,热度,人気,Popularity,Popularité,Popolarità,Beliebtheit,Popularidad,الشعبية,인기,Popularidade,Популярность,熱度,Popularność,
+news.comments.sort.time,热点页-评论排序-模式名,时间,時間,Time,Date,Data,Zeit,Tiempo,الوقت,시간,Tempo,Время,時間,Czas,
+news.comments.sort.desc,热点页-评论排序-方向,降序,降順,Descending,Décroissant,Decrescente,Absteigend,Descendente,تنازلي,내림차순,Decrescente,По убыванию,降序,Malejąco,
+news.comments.sort.asc,热点页-评论排序-方向,升序,昇順,Ascending,Croissant,Crescente,Aufsteigend,Ascendente,تصاعدي,오름차순,Crescente,По возрастанию,升序,Rosnąco,
+news.comments.sortToggle,热点页-评论排序按钮 aria-label,切换评论排序,コメントの並び替えを切替,Toggle comment sorting,Changer le tri des commentaires,Cambia ordinamento commenti,Kommentarsortierung umschalten,Cambiar orden de comentarios,تبديل ترتيب التعليقات,댓글 정렬 전환,Alternar ordenação dos comentários,Переключить сортировку комментариев,切換評論排序,Przełącz sortowanie komentarzy,
+news.comments.sortModeHeat,热点页-评论排序模式按钮 aria-label,切换为热度排序,人気順に切り替え,Switch to heat sorting,Trier par popularité,Passa a ordinamento per popolarità,Nach Beliebtheit sortieren,Ordenar por popularidad,الترتيب حسب الشعبية,인기순으로 전환,Ordenar por popularidade,Сортировать по популярности,切換為熱度排序,Sortuj według popularności,
+news.comments.sortModeTime,热点页-评论排序模式按钮 aria-label,切换为时间排序,時間順に切り替え,Switch to time sorting,Trier par date,Passa a ordinamento per data,Nach Zeit sortieren,Ordenar por tiempo,الترتيب حسب الوقت,시간순으로 전환,Ordenar por tempo,Сортировать по времени,切換為時間排序,Sortuj według czasu,
+news.comments.sortDirHeat,热点页-评论排序方向按钮 aria-label,切换评论热度排序方向,コメントの人気順の向きを切替,Toggle comment heat direction,Inverser le tri par popularité,Inverti direzione popolarità,Richtung der Beliebtheit umschalten,Cambiar dirección de popularidad,عكس اتجاه الترتيب حسب الشعبية,댓글 인기 정렬 방향 전환,Inverter direção da popularidade,Сменить направление по популярности,切換評論熱度排序方向,Zmień kierunek popularności,
+news.comments.sortDirTime,热点页-评论排序方向按钮 aria-label,切换评论时间排序方向,コメントの時間順の向きを切替,Toggle comment time direction,Inverser le tri par date,Inverti direzione data,Richtung der Zeitsortierung umschalten,Cambiar dirección de tiempo,عكس اتجاه الترتيب حسب الوقت,댓글 시간 정렬 방향 전환,Inverter direção do tempo,Сменить направление по времени,切換評論時間排序方向,Zmień kierunek czasu,
+news.comments.backList,热点页-评论项返回 aria-label,返回评论列表,コメント一覧に戻る,Back to comment list,Retour à la liste des commentaires,Torna all'elenco commenti,Zurück zur Kommentarliste,Volver a la lista de comentarios,العودة إلى قائمة التعليقات,댓글 목록으로,Voltar à lista de comentários,Назад к списку комментариев,返回評論列表,Wróć do listy komentarzy,
+news.comments.backTitleList,热点页-评论返回标题列表 aria-label,返回标题列表,タイトル一覧に戻る,Back to title list,Retour à la liste des titres,Torna all'elenco titoli,Zurück zur Titelliste,Volver a la lista de títulos,العودة إلى قائمة العناوين,제목 목록으로,Voltar à lista de títulos,Назад к списку заголовков,返回標題列表,Wróć do listy tytułów,
+news.posts.backList,热点页-帖子返回列表 aria-label,返回帖子列表,投稿一覧に戻る,Back to post list,Retour à la liste des posts,Torna all'elenco post,Zurück zur Beitragsliste,Volver a la lista de publicaciones,العودة إلى قائمة المنشورات,게시물 목록으로,Voltar à lista de publicações,Назад к списку постов,返回帖子列表,Wróć do listy postów,
+news.comments.back,热点页-回复页返回评论,返回评论,コメントに戻る,Back to comments,Retour aux commentaires,Torna ai commenti,Zurück zu den Kommentaren,Volver a los comentarios,العودة إلى التعليقات,댓글로,Voltar aos comentários,Назад к комментариям,返回評論,Wróć do komentarzy,
+news.comments.sortLabel,热点页-评论排序 aria-label,当前评论排序：{mode}，点击切换,現在の並び順：{mode}、クリックで切替,"Current sort: {mode}, click to change","Tri actuel : {mode}, cliquez pour changer","Ordine attuale: {mode}, clicca per cambiare","Aktuelle Sortierung: {mode}, klicken zum Ändern","Orden actual: {mode}, haz clic para cambiar",الترتيب الحالي: {mode}، انقر للتغيير,"현재 정렬: {mode}, 클릭하여 변경","Ordenação atual: {mode}, clique para alterar","Текущая сортировка: {mode}, нажмите для смены",目前評論排序：{mode}，點擊切換,"Bieżące sortowanie: {mode}, kliknij, aby zmienić",占位符 {mode} 保持一致
+news.comments.reply,热点页-评论-回复标记,回复,返信,Reply,Réponse,Risposta,Antwort,Respuesta,رد,답글,Resposta,Ответ,回覆,Odpowiedź,
+news.comments.original,热点页-评论-原评论占位,原评论,元のコメント,Original comment,Commentaire d'origine,Commento originale,Ursprünglicher Kommentar,Comentario original,التعليق الأصلي,원 댓글,Comentário original,Исходный комментарий,原評論,Komentarz oryginalny,
+news.guest.loginHint,热点页-访客评论提示（整句，{login} 为登录链接）,请{login}后查看所有评论,すべてのコメントを見るには{login}してください,Please {login} to view all comments,Veuillez {login} pour voir tous les commentaires,{login} per vedere tutti i commenti,"Bitte {login}, um alle Kommentare zu sehen",{login} para ver todos los comentarios,يرجى {login} لعرض جميع التعليقات,모든 댓글을 보려면 {login}하세요,{login} para ver todos os comentários,"Пожалуйста, {login}, чтобы увидеть все комментарии",請{login}後查看所有評論,"{login}, aby zobaczyć wszystkie komentarze",整句文案，{login} 由 news.guest.loginLink 填充
+news.guest.loginLink,热点页-访客评论提示-登录链接文字,登录,ログイン,Log In,vous connecter,Accedi,anmelden,Inicia sesión,تسجيل الدخول,로그인,Entre,войдите,登入,Zaloguj się,仅用于 news.guest.loginHint，可与 common.login 不同
+news.guest.loginAria,热点页-访客评论提示 aria-label,登录后查看所有评论,ログイン後にすべてのコメントを表示,Log in to view all comments,Connectez-vous pour voir tous les commentaires,Accedi per vedere tutti i commenti,"Anmelden, um alle Kommentare zu sehen",Inicia sesión para ver todos los comentarios,سجّل الدخول لعرض جميع التعليقات,로그인 후 모든 댓글 보기,Entre para ver todos os comentários,"Войдите, чтобы увидеть все комментарии",登入後查看所有評論,"Zaloguj się, aby zobaczyć wszystkie komentarze",
+news.comments.replies,热点页-评论-回复数量,共 {count} 条回复,返信 {count} 件,"one|{count} reply
+other|{count} replies","one|{count} réponse
+other|{count} réponses","one|{count} risposta
+other|{count} risposte","one|{count} Antwort
+other|{count} Antworten","one|{count} respuesta
+other|{count} respuestas","zero|{count} ردود
+one|{count} ردّ
+two|{count} ردّان
+few|{count} ردود
+many|{count} ردًّا
+other|{count} ردّ",답글 {count}개,"one|{count} resposta
+other|{count} respostas","one|{count} ответ
+few|{count} ответа
+many|{count} ответов
+other|{count} ответа",共 {count} 則回覆,"one|{count} odpowiedź
+few|{count} odpowiedzi
+many|{count} odpowiedzi
+other|{count} odpowiedzi",与 common.more 同词，位置不同；复数变体
+news.meta.posts,热点页-标题卡片-加载状态,已加载 {posts} 个帖子 · {comments} 条评论,投稿 {posts} 件・コメント {comments} 件を読み込みました,"base|Loaded {posts} · {comments}
+posts.one|{posts} post
+posts.other|{posts} posts
+comments.one|{comments} comment
+comments.other|{comments} comments","base|{posts} · {comments} chargés
+posts.one|{posts} post
+posts.other|{posts} posts
+comments.one|{comments} commentaire
+comments.other|{comments} commentaires","base|Caricati: {posts} · {comments}
+posts.one|{posts} post
+posts.other|{posts} post
+comments.one|{comments} commento
+comments.other|{comments} commenti","base|{posts} · {comments} geladen
+posts.one|{posts} Beitrag
+posts.other|{posts} Beiträge
+comments.one|{comments} Kommentar
+comments.other|{comments} Kommentare","base|Cargados: {posts} · {comments}
+posts.one|{posts} publicación
+posts.other|{posts} publicaciones
+comments.one|{comments} comentario
+comments.other|{comments} comentarios","base|تم تحميل {posts} · {comments}
+posts.zero|{posts} منشور
+posts.one|{posts} منشور
+posts.two|{posts} منشوران
+posts.few|{posts} منشورات
+posts.many|{posts} منشورًا
+posts.other|{posts} منشور
+comments.zero|{comments} تعليق
+comments.one|{comments} تعليق
+comments.two|{comments} تعليقان
+comments.few|{comments} تعليقات
+comments.many|{comments} تعليقًا
+comments.other|{comments} تعليق",게시물 {posts}개 · 댓글 {comments}개 로드됨,"base|{posts} · {comments} carregados
+posts.one|{posts} publicação
+posts.other|{posts} publicações
+comments.one|{comments} comentário
+comments.other|{comments} comentários","base|Загружено: {posts} · {comments}
+posts.one|{posts} пост
+posts.few|{posts} поста
+posts.many|{posts} постов
+posts.other|{posts} поста
+comments.one|{comments} комментарий
+comments.few|{comments} комментария
+comments.many|{comments} комментариев
+comments.other|{comments} комментария",已載入 {posts} 個帖子 · {comments} 條評論,"base|Załadowano: {posts} · {comments}
+posts.one|{posts} post
+posts.few|{posts} posty
+posts.many|{posts} postów
+posts.other|{posts} postu
+comments.one|{comments} komentarz
+comments.few|{comments} komentarze
+comments.many|{comments} komentarzy
+comments.other|{comments} komentarza",占位符 {posts}/{comments} 保持一致；复数变体（base+占位符片段）
+news.meta.keywords,热点页-搜索-关键词加载状态,已加载 {count} 个关键词,キーワード {count} 件を読み込みました,"one|Loaded {count} keyword
+other|Loaded {count} keywords","one|{count} mot-clé chargé
+other|{count} mots-clés chargés","one|Caricata {count} parola chiave
+other|Caricate {count} parole chiave","one|{count} Stichwort geladen
+other|{count} Stichwörter geladen","one|{count} palabra clave cargada
+other|{count} palabras clave cargadas","zero|تم تحميل {count} كلمة مفتاحية
+one|تم تحميل {count} كلمة مفتاحية
+two|تم تحميل {count} كلمتان مفتاحيتان
+few|تم تحميل {count} كلمات مفتاحية
+many|تم تحميل {count} كلمة مفتاحية
+other|تم تحميل {count} كلمة مفتاحية",키워드 {count}개 로드됨,"one|{count} palavra-chave carregada
+other|{count} palavras-chave carregadas","one|Загружено {count} ключевое слово
+few|Загружено {count} ключевых слова
+many|Загружено {count} ключевых слов
+other|Загружено {count} ключевых слова",已載入 {count} 個關鍵字,"one|Załadowano {count} słowo kluczowe
+few|Załadowano {count} słowa kluczowe
+many|Załadowano {count} słów kluczowych
+other|Załadowano {count} słowa kluczowego",占位符 {count} 保持一致；复数变体
+minigame.name,小游戏-音乐名/通用名,小游戏,ミニゲーム,Minigame,Mini-jeu,Minigioco,Minispiel,Minijuego,لعبة مصغرة,미니게임,Minijogo,Мини-игра,小遊戲,Minigra,
+minigame.whack.title,小游戏-打地鼠-标题,打地鼠,モグラたたき,Whack-a-Mole,Tape-taupe,Acchiappa la talpa,Whack-a-Mole,Golpea al topo,اضرب الخلد,두더지 잡기,Bata na Toupeira,Ударь крота,打地鼠,Kret,
+minigame.enter.whack,首页-小游戏按钮 aria-label,进入打地鼠小游戏,モグラたたきを開始,Enter Whack-a-Mole,Lancer Tape-taupe,Avvia Acchiappa la talpa,Whack-a-Mole starten,Entrar en Golpea al topo,دخول لعبة اضرب الخلد,두더지 잡기 시작,Entrar em Bata na Toupeira,Начать «Ударь крота»,進入打地鼠小遊戲,Uruchom grę w kreta,
+minigame.enter,首页-小游戏按钮 aria-label（通用）,进入小游戏,ミニゲームを開始,Enter minigame,Lancer le mini-jeu,Avvia minigioco,Minispiel starten,Entrar al minijuego,دخول اللعبة المصغرة,미니게임 시작,Entrar no minijogo,Начать мини-игру,進入小遊戲,Uruchom minigrę,
+minigame.aria.dialog,小游戏-弹窗 aria-label,打地鼠小游戏,モグラたたきゲーム,Whack-a-Mole minigame,Mini-jeu Tape-taupe,Minigioco Acchiappa la talpa,Whack-a-Mole-Minispiel,Minijuego Golpea al topo,لعبة اضرب الخلد المصغرة,두더지 잡기 미니게임,Minijogo Bata na Toupeira,Мини-игра «Ударь крота»,打地鼠小遊戲,Minigra w kreta,
+minigame.aria.board,小游戏-游戏区域 aria-label,打地鼠游戏区域,モグラたたきエリア,Whack-a-Mole area,Zone de jeu Tape-taupe,Area Acchiappa la talpa,Whack-a-Mole-Bereich,Zona de Golpea al topo,منطقة لعبة اضرب الخلد,두더지 잡기 영역,Área do Bata na Toupeira,Игровое поле «Ударь крота»,打地鼠遊戲區域,Obszar gry w kreta,
+minigame.exit,小游戏-退出按钮 aria-label,退出游戏,ゲームを終了,Exit game,Quitter le jeu,Esci dal gioco,Spiel beenden,Salir del juego,الخروج من اللعبة,게임 종료,Sair do jogo,Выйти из игры,退出遊戲,Wyjdź z gry,
+minigame.time,小游戏-计时卡片 aria-label,倒计时,カウントダウン,Countdown,Compte à rebours,Conto alla rovescia,Countdown,Cuenta atrás,العد التنازلي,카운트다운,Contagem regressiva,Обратный отсчёт,倒數計時,Odliczanie,
+minigame.retry,小游戏-结果卡片 aria-label,再来一局,もう一度,Play again,Rejouer,Gioca ancora,Nochmal spielen,Jugar de nuevo,العب مرة أخرى,다시 하기,Jogar novamente,Играть снова,再玩一局,Zagraj ponownie,
+minigame.waiting,小游戏-目标 aria-label,等待角色出现,キャラクターの出現を待機,Waiting for a character,En attente d'un personnage,In attesa di un personaggio,Warte auf eine Figur,Esperando a un personaje,بانتظار ظهور شخصية,캐릭터 등장 대기,Aguardando um personagem,Ожидание персонажа,等待角色出現,Czekaj na postać,
+minigame.appeared,小游戏-目标 aria-label,{name}出现了,{name}が出現,{name} appeared,{name} apparaît,{name} è apparso,{name} ist erschienen,{name} ha aparecido,ظهر {name},{name} 등장,{name} apareceu,Появился {name},{name}出現了,Pojawił się {name},占位符 {name} 保持一致
+minigame.score,小游戏-结果分数,{score}分,{score}点,{score} pts,{score} pts,{score} punti,{score} Punkte,{score} pts,{score} نقطة,{score}점,{score} pts,{score} очк.,{score}分,{score} pkt,占位符 {score} 保持一致
+minigame.result,小游戏-结果标题,恭喜你获得,おめでとう！獲得,"Congratulations, you earned","Félicitations, vous obtenez","Complimenti, hai ottenuto","Glückwunsch, du erhältst","Enhorabuena, has obtenido",مبروك، لقد حصلت على,"축하합니다, 획득","Parabéns, você ganhou","Поздравляем, вы получили",恭喜你獲得,"Gratulacje, zdobyłeś",
+sponsor.overlay.aria,赞助页-二维码弹层 aria-label,捐赠,寄付,Donate,Faire un don,Dona,Spenden,Donar,تبرّع,후원,Doar,Донат,捐贈,Wesprzyj,
+sponsor.wechat.alt,赞助页-微信二维码 alt,微信捐赠,WeChat で支援,Donate via WeChat,Don via WeChat,Dona con WeChat,Per WeChat spenden,Donar con WeChat,التبرع عبر WeChat,WeChat 후원,Doar via WeChat,Донат через WeChat,微信捐贈,Wesprzyj przez WeChat,
+sponsor.alipay.alt,赞助页-支付宝二维码 alt,支付宝捐赠,Alipay で支援,Donate via Alipay,Don via Alipay,Dona con Alipay,Per Alipay spenden,Donar con Alipay,التبرع عبر Alipay,Alipay 후원,Doar via Alipay,Донат через Alipay,支付寶捐贈,Wesprzyj przez Alipay,
+sponsor.qr.alt,赞助页-二维码图片 alt,赞助二维码,支援用 QR コード,Sponsor QR code,QR code de don,QR code donazione,Spenden-QR-Code,Código QR de patrocinio,رمز QR للدعم,후원 QR 코드,QR code de apoio,QR-код для поддержки,贊助 QR Code,Kod QR wsparcia,
+filter.year,活动中心-左侧筛选项,年份,年,Year,Année,Anno,Jahr,Año,السنة,연도,Ano,Год,年份,Rok,
+filter.developer,活动中心-左侧筛选项,开发商,開発元,Developer,Développeur,Sviluppatore,Entwickler,Desarrollador,المطوّر,개발사,Desenvolvedor,Разработчик,開發商,Deweloper,
+filter.year.all,活动中心-左侧/首页右下角,全部年份,すべての年,All Years,Toutes les années,Tutti gli anni,Alle Jahre,Todos los años,كل السنوات,모든 연도,Todos os anos,Все годы,全部年份,Wszystkie lata,
+filter.developer.all,活动中心-左侧/首页右下角,全部开发商,すべての開発元,All Developers,Tous les développeurs,Tutti gli sviluppatori,Alle Entwickler,Todos los desarrolladores,كل المطورين,모든 개발사,Todos os desenvolvedores,Все разработчики,全部開發商,Wszyscy deweloperzy,
+filter.year.prev,活动中心-年份筛选箭头 aria-label,上一年份,前の年,Previous year,Année précédente,Anno precedente,Vorheriges Jahr,Año anterior,السنة السابقة,이전 연도,Ano anterior,Предыдущий год,上一年份,Poprzedni rok,
+filter.year.next,活动中心-年份筛选箭头 aria-label,下一年份,次の年,Next year,Année suivante,Anno successivo,Nächstes Jahr,Año siguiente,السنة التالية,다음 연도,Próximo ano,Следующий год,下一年份,Następny rok,
+filter.year.aria,活动中心-年份筛选区域 aria-label,年份筛选,年の絞り込み,Year filter,Filtre par année,Filtro anno,Jahresfilter,Filtro de año,تصفية السنة,연도 필터,Filtro de ano,Фильтр по году,年份篩選,Filtr lat,
+filter.developer.prev,活动中心-开发商筛选箭头 aria-label,上一个开发商,前の開発元,Previous developer,Développeur précédent,Sviluppatore precedente,Vorheriger Entwickler,Desarrollador anterior,المطوّر السابق,이전 개발사,Desenvolvedor anterior,Предыдущий разработчик,上一個開發商,Poprzedni deweloper,
+filter.developer.next,活动中心-开发商筛选箭头 aria-label,下一个开发商,次の開発元,Next developer,Développeur suivant,Sviluppatore successivo,Nächster Entwickler,Desarrollador siguiente,المطوّر التالي,다음 개발사,Próximo desenvolvedor,Следующий разработчик,下一個開發商,Następny deweloper,
+filter.developer.aria,活动中心-开发商筛选区域 aria-label,开发商筛选,開発元の絞り込み,Developer filter,Filtre par développeur,Filtro sviluppatore,Entwicklerfilter,Filtro de desarrollador,تصفية المطوّر,개발사 필터,Filtro de desenvolvedor,Фильтр по разработчику,開發商篩選,Filtr dewelopera,
+update.page.title,更新日志页-页面标题,更新日志,更新履歴,Update Log,Journal des mises à jour,Registro aggiornamenti,Update-Protokoll,Registro de cambios,سجل التحديثات,업데이트 로그,Registro de atualizações,Журнал обновлений,更新日誌,Dziennik zmian,与 keybind.openUpdateLog 同词，位置不同
+update.empty,更新日志页-空状态,暂无更新日志,更新履歴がありません,No update logs,Aucun journal de mise à jour,Nessun registro aggiornamenti,Keine Update-Einträge,Sin registros de cambios,لا توجد سجلات تحديث,업데이트 로그 없음,Sem registros de atualizações,Нет записей об обновлениях,暫無更新日誌,Brak dziennika zmian,
+update.meta.loaded,更新日志页-加载状态,已加载 {count} 条日志 · 当前 {version},ログ {count} 件を読み込みました・現在 {version},"one|Loaded {count} entry · current {version}
+other|Loaded {count} entries · current {version}","one|{count} entrée chargée · version {version}
+other|{count} entrées chargées · version {version}","one|Caricata {count} voce · attuale {version}
+other|Caricate {count} voci · attuale {version}","one|{count} Eintrag geladen · aktuell {version}
+other|{count} Einträge geladen · aktuell {version}","one|{count} entrada cargada · actual {version}
+other|{count} entradas cargadas · actual {version}","zero|تم تحميل {count} سجل · الحالي {version}
+one|تم تحميل {count} سجل · الحالي {version}
+two|تم تحميل {count} سجلان · الحالي {version}
+few|تم تحميل {count} سجلات · الحالي {version}
+many|تم تحميل {count} سجلًا · الحالي {version}
+other|تم تحميل {count} سجل · الحالي {version}",로그 {count}개 로드됨 · 현재 {version},"one|{count} registro carregado · atual {version}
+other|{count} registros carregados · atual {version}","one|Загружена {count} запись · текущая {version}
+few|Загружено {count} записи · текущая {version}
+many|Загружено {count} записей · текущая {version}
+other|Загружено {count} записи · текущая {version}",已載入 {count} 條日誌 · 目前 {version},"one|Załadowano {count} wpis · obecna {version}
+few|Załadowano {count} wpisy · obecna {version}
+many|Załadowano {count} wpisów · obecna {version}
+other|Załadowano {count} wpisu · obecna {version}",占位符 {count}/{version} 保持一致；复数变体
+console.dataManagement,控制台-数据管理标题,数据管理,データ管理,Data Management,Gestion des données,Gestione dati,Datenverwaltung,Gestión de datos,إدارة البيانات,데이터 관리,Gerenciamento de dados,Управление данными,資料管理,Zarządzanie danymi,
+console.futureItems,控制台-数据管理说明,后续扩展更多数据项,今後さらに項目を拡張予定,More data items coming later,D'autres éléments seront ajoutés,Altri elementi in arrivo,Weitere Datenpunkte folgen,Más elementos próximamente,المزيد من العناصر لاحقًا,추후 더 많은 항목 확장,Mais itens em breve,Позже появятся новые пункты,後續擴充更多資料項,Więcej pozycji w przyszłości,
+console.title,控制台-页面标题,控制台,コンソール,Console,Console,Console,Konsole,Consola,لوحة التحكم,콘솔,Console,Консоль,控制台,Konsola,
+console.viewIgnored,控制台-按钮,查看已忽略提示,無視した通知を表示,View ignored notices,Voir les avertissements ignorés,Vedi avvisi ignorati,Ignorierte Hinweise anzeigen,Ver avisos ignorados,عرض التنبيهات المتجاهلة,무시한 알림 보기,Ver avisos ignorados,Показать скрытые уведомления,查看已忽略提示,Zobacz ignorowane,
+console.ignored,控制台-已忽略提示标题,已忽略提示,無視した通知,Ignored notices,Avertissements ignorés,Avvisi ignorati,Ignorierte Hinweise,Avisos ignorados,التنبيهات المتجاهلة,무시한 알림,Avisos ignorados,Скрытые уведомления,已忽略提示,Ignorowane,
+console.backToConsole,控制台-返回 aria-label,返回控制台,コンソールに戻る,Back to console,Retour à la console,Torna alla console,Zurück zur Konsole,Volver a la consola,العودة إلى لوحة التحكم,콘솔로,Voltar ao console,Назад в консоль,返回控制台,Wróć do konsoli,
+console.edit,控制台-编辑按钮 aria-label,编辑,編集,Edit,Modifier,Modifica,Bearbeiten,Editar,تحرير,편집,Editar,Изменить,編輯,Edytuj,
+console.importTxt,控制台-按钮,导入 TXT,TXT を読み込む,Import TXT,Importer TXT,Importa TXT,TXT importieren,Importar TXT,استيراد TXT,TXT 가져오기,Importar TXT,Импорт TXT,匯入 TXT,Importuj TXT,
+console.exportJs,控制台-按钮,导出 JS,JS を書き出す,Export JS,Exporter JS,Esporta JS,JS exportieren,Exportar JS,تصدير JS,JS 내보내기,Exportar JS,Экспорт JS,匯出 JS,Eksportuj JS,
+console.meta.core,控制台-活动核心数据-加载状态,已加载 {activities} 个活动 · {info} 条首页信息,イベント {activities} 件・ホーム情報 {info} 件を読み込みました,"base|Loaded {activities} · {info}
+activities.one|{activities} event
+activities.other|{activities} events
+info.one|{info} home entry
+info.other|{info} home entries","base|{activities} · {info} chargés
+activities.one|{activities} événement
+activities.other|{activities} événements
+info.one|{info} info d'accueil
+info.other|{info} infos d'accueil","base|Caricati: {activities} · {info}
+activities.one|{activities} evento
+activities.other|{activities} eventi
+info.one|{info} voce home
+info.other|{info} voci home","base|{activities} · {info} geladen
+activities.one|{activities} Event
+activities.other|{activities} Events
+info.one|{info} Startseiten-Eintrag
+info.other|{info} Startseiten-Einträge","base|Cargados: {activities} · {info}
+activities.one|{activities} evento
+activities.other|{activities} eventos
+info.one|{info} entrada de inicio
+info.other|{info} entradas de inicio","base|تم تحميل {activities} · {info}
+activities.zero|{activities} فعالية
+activities.one|{activities} فعالية
+activities.two|{activities} فعاليتان
+activities.few|{activities} فعاليات
+activities.many|{activities} فعالية
+activities.other|{activities} فعالية
+info.zero|{info} معلومة رئيسية
+info.one|{info} معلومة رئيسية
+info.two|{info} معلومتان رئيسيتان
+info.few|{info} معلومات رئيسية
+info.many|{info} معلومة رئيسية
+info.other|{info} معلومة رئيسية",이벤트 {activities}개 · 홈 정보 {info}개 로드됨,"base|{activities} · {info} carregados
+activities.one|{activities} evento
+activities.other|{activities} eventos
+info.one|{info} entrada inicial
+info.other|{info} entradas iniciais","base|Загружено: {activities} · {info}
+activities.one|{activities} событие
+activities.few|{activities} события
+activities.many|{activities} событий
+activities.other|{activities} события
+info.one|{info} запись
+info.few|{info} записи
+info.many|{info} записей
+info.other|{info} записи",已載入 {activities} 個活動 · {info} 條首頁資訊,"base|Załadowano: {activities} · {info}
+activities.one|{activities} wydarzenie
+activities.few|{activities} wydarzenia
+activities.many|{activities} wydarzeń
+activities.other|{activities} wydarzenia
+info.one|{info} wpis
+info.few|{info} wpisy
+info.many|{info} wpisów
+info.other|{info} wpisu",占位符 {activities}/{info} 保持一致；复数变体（base+占位符片段）
+console.meta.shop,控制台-活动商店数据-加载状态,已加载 {versions} 个版本 · {dlc} 个 DLC · {codes} 个内容代码,バージョン {versions} 件・DLC {dlc} 件・コード {codes} 件を読み込みました,"base|Loaded {versions} · {dlc} · {codes}
+versions.one|{versions} version
+versions.other|{versions} versions
+dlc.one|{dlc} DLC
+dlc.other|{dlc} DLC
+codes.one|{codes} content code
+codes.other|{codes} content codes","base|{versions} · {dlc} · {codes} chargés
+versions.one|{versions} version
+versions.other|{versions} versions
+dlc.one|{dlc} DLC
+dlc.other|{dlc} DLC
+codes.one|{codes} code de contenu
+codes.other|{codes} codes de contenu","base|Caricati: {versions} · {dlc} · {codes}
+versions.one|{versions} versione
+versions.other|{versions} versioni
+dlc.one|{dlc} DLC
+dlc.other|{dlc} DLC
+codes.one|{codes} codice contenuto
+codes.other|{codes} codici contenuto","base|{versions} · {dlc} · {codes} geladen
+versions.one|{versions} Version
+versions.other|{versions} Versionen
+dlc.one|{dlc} DLC
+dlc.other|{dlc} DLC
+codes.one|{codes} Inhaltscode
+codes.other|{codes} Inhaltscodes","base|Cargados: {versions} · {dlc} · {codes}
+versions.one|{versions} versión
+versions.other|{versions} versiones
+dlc.one|{dlc} DLC
+dlc.other|{dlc} DLC
+codes.one|{codes} código de contenido
+codes.other|{codes} códigos de contenido","base|تم تحميل {versions} · {dlc} · {codes}
+versions.zero|{versions} إصدار
+versions.one|{versions} إصدار
+versions.two|{versions} إصداران
+versions.few|{versions} إصدارات
+versions.many|{versions} إصدارًا
+versions.other|{versions} إصدار
+dlc.zero|{dlc} DLC
+dlc.one|{dlc} DLC
+dlc.two|{dlc} DLC
+dlc.few|{dlc} DLC
+dlc.many|{dlc} DLC
+dlc.other|{dlc} DLC
+codes.zero|{codes} رمز محتوى
+codes.one|{codes} رمز محتوى
+codes.two|{codes} رمزان للمحتوى
+codes.few|{codes} رموز محتوى
+codes.many|{codes} رمز محتوى
+codes.other|{codes} رمز محتوى",버전 {versions}개 · DLC {dlc}개 · 콘텐츠 코드 {codes}개 로드됨,"base|{versions} · {dlc} · {codes} carregados
+versions.one|{versions} versão
+versions.other|{versions} versões
+dlc.one|{dlc} DLC
+dlc.other|{dlc} DLC
+codes.one|{codes} código de conteúdo
+codes.other|{codes} códigos de conteúdo","base|Загружено: {versions} · {dlc} · {codes}
+versions.one|{versions} версия
+versions.few|{versions} версии
+versions.many|{versions} версий
+versions.other|{versions} версии
+dlc.one|{dlc} DLC
+dlc.few|{dlc} DLC
+dlc.many|{dlc} DLC
+dlc.other|{dlc} DLC
+codes.one|{codes} код контента
+codes.few|{codes} кода контента
+codes.many|{codes} кодов контента
+codes.other|{codes} кода контента",已載入 {versions} 個版本 · {dlc} 個 DLC · {codes} 個內容代碼,"base|Załadowano: {versions} · {dlc} · {codes}
+versions.one|{versions} wersja
+versions.few|{versions} wersje
+versions.many|{versions} wersji
+versions.other|{versions} wersji
+dlc.one|{dlc} DLC
+dlc.few|{dlc} DLC
+dlc.many|{dlc} DLC
+dlc.other|{dlc} DLC
+codes.one|{codes} kod zawartości
+codes.few|{codes} kody zawartości
+codes.many|{codes} kodów zawartości
+codes.other|{codes} kodu zawartości",占位符 {versions}/{dlc}/{codes} 保持一致；复数变体（base+占位符片段）
+console.meta.library,控制台-活动库存数据-加载状态,已加载 {libraries} 个成员库存 · {entries} 个商品,メンバー在庫 {libraries} 件・商品 {entries} 件を読み込みました,"base|Loaded {libraries} · {entries}
+libraries.one|{libraries} member library
+libraries.other|{libraries} member libraries
+entries.one|{entries} item
+entries.other|{entries} items","base|{libraries} · {entries} chargés
+libraries.one|{libraries} inventaire de membre
+libraries.other|{libraries} inventaires de membres
+entries.one|{entries} article
+entries.other|{entries} articles","base|Caricati: {libraries} · {entries}
+libraries.one|{libraries} inventario
+libraries.other|{libraries} inventari
+entries.one|{entries} articolo
+entries.other|{entries} articoli","base|{libraries} · {entries} geladen
+libraries.one|{libraries} Mitgliederinventar
+libraries.other|{libraries} Mitgliederinventare
+entries.one|{entries} Artikel
+entries.other|{entries} Artikel","base|Cargados: {libraries} · {entries}
+libraries.one|{libraries} inventario de miembro
+libraries.other|{libraries} inventarios de miembros
+entries.one|{entries} artículo
+entries.other|{entries} artículos","base|تم تحميل {libraries} · {entries}
+libraries.zero|{libraries} مخزون عضو
+libraries.one|{libraries} مخزون عضو
+libraries.two|{libraries} مخزونان لعضوين
+libraries.few|{libraries} مخزونات أعضاء
+libraries.many|{libraries} مخزونًا لعضو
+libraries.other|{libraries} مخزون عضو
+entries.zero|{entries} عنصر
+entries.one|{entries} عنصر
+entries.two|{entries} عنصران
+entries.few|{entries} عناصر
+entries.many|{entries} عنصرًا
+entries.other|{entries} عنصر",보관함 {libraries}개 · 상품 {entries}개 로드됨,"base|{libraries} · {entries} carregados
+libraries.one|{libraries} inventário de membro
+libraries.other|{libraries} inventários de membros
+entries.one|{entries} item
+entries.other|{entries} itens","base|Загружено: {libraries} · {entries}
+libraries.one|{libraries} инвентарь
+libraries.few|{libraries} инвентаря
+libraries.many|{libraries} инвентарей
+libraries.other|{libraries} инвентаря
+entries.one|{entries} предмет
+entries.few|{entries} предмета
+entries.many|{entries} предметов
+entries.other|{entries} предмета",已載入 {libraries} 個成員庫存 · {entries} 個商品,"base|Załadowano: {libraries} · {entries}
+libraries.one|{libraries} ekwipunek członka
+libraries.few|{libraries} ekwipunki członków
+libraries.many|{libraries} ekwipunków członków
+libraries.other|{libraries} ekwipunku członka
+entries.one|{entries} przedmiot
+entries.few|{entries} przedmioty
+entries.many|{entries} przedmiotów
+entries.other|{entries} przedmiotu",占位符 {libraries}/{entries} 保持一致；复数变体（base+占位符片段）
+console.meta.review,控制台-测评数据-加载状态,已加载 {count} 条测评,レビュー {count} 件を読み込みました,"one|Loaded {count} review
+other|Loaded {count} reviews","one|{count} critique chargée
+other|{count} critiques chargées","one|Caricata {count} recensione
+other|Caricate {count} recensioni","one|{count} Review geladen
+other|{count} Reviews geladen","one|{count} análisis cargado
+other|{count} análisis cargados","zero|تم تحميل {count} مراجعة
+one|تم تحميل {count} مراجعة
+two|تم تحميل {count} مراجعتان
+few|تم تحميل {count} مراجعات
+many|تم تحميل {count} مراجعة
+other|تم تحميل {count} مراجعة",평가 {count}개 로드됨,"one|{count} análise carregada
+other|{count} análises carregadas","one|Загружен {count} обзор
+few|Загружено {count} обзора
+many|Загружено {count} обзоров
+other|Загружено {count} обзора",已載入 {count} 條測評,"one|Załadowano {count} recenzję
+few|Załadowano {count} recenzje
+many|Załadowano {count} recenzji
+other|Załadowano {count} recenzji",占位符 {count} 保持一致；复数变体
+console.meta.achv,控制台-成就数据-加载状态,已加载 {count} 个成就 · {groups} 个奖杯组,実績 {count} 件・トロフィーグループ {groups} 件を読み込みました,"base|Loaded {count} · {groups}
+count.one|{count} achievement
+count.other|{count} achievements
+groups.one|{groups} trophy group
+groups.other|{groups} trophy groups","base|{count} · {groups} chargés
+count.one|{count} succès
+count.other|{count} succès
+groups.one|{groups} groupe de trophées
+groups.other|{groups} groupes de trophées","base|Caricati: {count} · {groups}
+count.one|{count} obiettivo
+count.other|{count} obiettivi
+groups.one|{groups} gruppo trofei
+groups.other|{groups} gruppi trofei","base|{count} · {groups} geladen
+count.one|{count} Erfolg
+count.other|{count} Erfolge
+groups.one|{groups} Trophäengruppe
+groups.other|{groups} Trophäengruppen","base|Cargados: {count} · {groups}
+count.one|{count} logro
+count.other|{count} logros
+groups.one|{groups} grupo de trofeos
+groups.other|{groups} grupos de trofeos","base|تم تحميل {count} · {groups}
+count.zero|{count} إنجاز
+count.one|{count} إنجاز
+count.two|{count} إنجازان
+count.few|{count} إنجازات
+count.many|{count} إنجازًا
+count.other|{count} إنجاز
+groups.zero|{groups} مجموعة كؤوس
+groups.one|{groups} مجموعة كؤوس
+groups.two|{groups} مجموعتان للكؤوس
+groups.few|{groups} مجموعات كؤوس
+groups.many|{groups} مجموعة كؤوس
+groups.other|{groups} مجموعة كؤوس",업적 {count}개 · 트로피 그룹 {groups}개 로드됨,"base|{count} · {groups} carregados
+count.one|{count} conquista
+count.other|{count} conquistas
+groups.one|{groups} grupo de troféus
+groups.other|{groups} grupos de troféus","base|Загружено: {count} · {groups}
+count.one|{count} достижение
+count.few|{count} достижения
+count.many|{count} достижений
+count.other|{count} достижения
+groups.one|{groups} группа трофеев
+groups.few|{groups} группы трофеев
+groups.many|{groups} групп трофеев
+groups.other|{groups} группы трофеев",已載入 {count} 個成就 · {groups} 個獎盃組,"base|Załadowano: {count} · {groups}
+count.one|{count} osiągnięcie
+count.few|{count} osiągnięcia
+count.many|{count} osiągnięć
+count.other|{count} osiągnięcia
+groups.one|{groups} grupa trofeów
+groups.few|{groups} grupy trofeów
+groups.many|{groups} grup trofeów
+groups.other|{groups} grupy trofeów",占位符 {count}/{groups} 保持一致；复数变体（base+占位符片段）
+console.meta.account,控制台-账号数据-加载状态,已加载 {accounts} 个账号 · {media} 个媒体机构,アカウント {accounts} 件・メディア {media} 件を読み込みました,"base|Loaded {accounts} · {media}
+accounts.one|{accounts} account
+accounts.other|{accounts} accounts
+media.one|{media} media outlet
+media.other|{media} media outlets","base|{accounts} · {media} chargés
+accounts.one|{accounts} compte
+accounts.other|{accounts} comptes
+media.one|{media} média
+media.other|{media} médias","base|Caricati: {accounts} · {media}
+accounts.one|{accounts} account
+accounts.other|{accounts} account
+media.one|{media} testata
+media.other|{media} testate","base|{accounts} · {media} geladen
+accounts.one|{accounts} Konto
+accounts.other|{accounts} Konten
+media.one|{media} Medium
+media.other|{media} Medien","base|Cargados: {accounts} · {media}
+accounts.one|{accounts} cuenta
+accounts.other|{accounts} cuentas
+media.one|{media} medio
+media.other|{media} medios","base|تم تحميل {accounts} · {media}
+accounts.zero|{accounts} حساب
+accounts.one|{accounts} حساب
+accounts.two|{accounts} حسابان
+accounts.few|{accounts} حسابات
+accounts.many|{accounts} حسابًا
+accounts.other|{accounts} حساب
+media.zero|{media} وسيلة إعلام
+media.one|{media} وسيلة إعلام
+media.two|{media} وسيلتان إعلاميتان
+media.few|{media} وسائل إعلام
+media.many|{media} وسيلة إعلام
+media.other|{media} وسيلة إعلام",계정 {accounts}개 · 미디어 {media}개 로드됨,"base|{accounts} · {media} carregados
+accounts.one|{accounts} conta
+accounts.other|{accounts} contas
+media.one|{media} veículo
+media.other|{media} veículos","base|Загружено: {accounts} · {media}
+accounts.one|{accounts} аккаунт
+accounts.few|{accounts} аккаунта
+accounts.many|{accounts} аккаунтов
+accounts.other|{accounts} аккаунта
+media.one|{media} СМИ
+media.few|{media} СМИ
+media.many|{media} СМИ
+media.other|{media} СМИ",已載入 {accounts} 個帳號 · {media} 個媒體機構,"base|Załadowano: {accounts} · {media}
+accounts.one|{accounts} konto
+accounts.few|{accounts} konta
+accounts.many|{accounts} kont
+accounts.other|{accounts} konta
+media.one|{media} medium
+media.few|{media} media
+media.many|{media} mediów
+media.other|{media} medium",占位符 {accounts}/{media} 保持一致；复数变体（base+占位符片段）
+console.meta.title,控制台-称号数据-加载状态,已加载 {count} 个成员称号,メンバー称号 {count} 件を読み込みました,"one|Loaded {count} member title
+other|Loaded {count} member titles","one|{count} titre de membre chargé
+other|{count} titres de membres chargés","one|Caricato {count} titolo membro
+other|Caricati {count} titoli membri","one|{count} Mitgliedertitel geladen
+other|{count} Mitgliedertitel geladen","one|{count} título de miembro cargado
+other|{count} títulos de miembros cargados","zero|تم تحميل {count} لقب عضو
+one|تم تحميل {count} لقب عضو
+two|تم تحميل {count} لقبان لعضوين
+few|تم تحميل {count} ألقاب أعضاء
+many|تم تحميل {count} لقبًا لعضو
+other|تم تحميل {count} لقب عضو",멤버 칭호 {count}개 로드됨,"one|{count} título de membro carregado
+other|{count} títulos de membros carregados","one|Загружен {count} титул участника
+few|Загружено {count} титула участников
+many|Загружено {count} титулов участников
+other|Загружено {count} титула участников",已載入 {count} 個成員稱號,"one|Załadowano {count} tytuł członka
+few|Załadowano {count} tytuły członków
+many|Załadowano {count} tytułów członków
+other|Załadowano {count} tytułu członka",占位符 {count} 保持一致；复数变体
+console.meta.activityReview,控制台-活动测评-加载状态,已加载 {count} 个活动测评,イベントレビュー {count} 件を読み込みました,"one|Loaded reviews for {count} event
+other|Loaded reviews for {count} events","one|{count} critique d'événement chargée
+other|{count} critiques d'événements chargées","one|Caricata la recensione di {count} evento
+other|Caricate le recensioni di {count} eventi","one|Reviews für {count} Event geladen
+other|Reviews für {count} Events geladen","one|Análisis de {count} evento cargado
+other|Análisis de {count} eventos cargados","zero|تم تحميل مراجعات {count} فعالية
+one|تم تحميل مراجعة {count} فعالية
+two|تم تحميل مراجعتي {count} فعاليتين
+few|تم تحميل مراجعات {count} فعاليات
+many|تم تحميل مراجعة لـ {count} فعالية
+other|تم تحميل مراجعات {count} فعالية",이벤트 평가 {count}개 로드됨,"one|Análise de {count} evento carregada
+other|Análises de {count} eventos carregadas","one|Загружен {count} обзор события
+few|Загружено {count} обзора событий
+many|Загружено {count} обзоров событий
+other|Загружено {count} обзора события",已載入 {count} 個活動測評,"one|Załadowano recenzję {count} wydarzenia
+few|Załadowano recenzje {count} wydarzeń
+many|Załadowano recenzji {count} wydarzeń
+other|Załadowano recenzji {count} wydarzenia",占位符 {count} 保持一致；复数变体
+console.meta.activityAchv,控制台-活动成就-加载状态,已加载 {count} 个活动成就,イベント実績 {count} 件を読み込みました,"one|Loaded achievements for {count} event
+other|Loaded achievements for {count} events","one|{count} succès d'événement chargé
+other|{count} succès d'événements chargés","one|Caricato l'obiettivo di {count} evento
+other|Caricati gli obiettivi di {count} eventi","one|Erfolge für {count} Event geladen
+other|Erfolge für {count} Events geladen","one|Logros de {count} evento cargados
+other|Logros de {count} eventos cargados","zero|تم تحميل إنجازات {count} فعالية
+one|تم تحميل إنجاز {count} فعالية
+two|تم تحميل إنجازي {count} فعاليتين
+few|تم تحميل إنجازات {count} فعاليات
+many|تم تحميل إنجازًا لـ {count} فعالية
+other|تم تحميل إنجازات {count} فعالية",이벤트 업적 {count}개 로드됨,"one|Conquistas de {count} evento carregadas
+other|Conquistas de {count} eventos carregadas","one|Загружено {count} достижение события
+few|Загружено {count} достижения событий
+many|Загружено {count} достижений событий
+other|Загружено {count} достижения события",已載入 {count} 個活動成就,"one|Załadowano osiągnięcie {count} wydarzenia
+few|Załadowano osiągnięcia {count} wydarzeń
+many|Załadowano osiągnięć {count} wydarzeń
+other|Załadowano osiągnięć {count} wydarzenia",占位符 {count} 保持一致；复数变体
+console.meta.activityShop,控制台-活动商店-加载状态,已加载 {count} 个活动商店,イベントショップ {count} 件を読み込みました,"one|Loaded {count} event shop
+other|Loaded {count} event shops","one|{count} boutique d'événement chargée
+other|{count} boutiques d'événements chargées","one|Caricato {count} negozio evento
+other|Caricati {count} negozi evento","one|{count} Event-Shop geladen
+other|{count} Event-Shops geladen","one|{count} tienda de evento cargada
+other|{count} tiendas de eventos cargadas","zero|تم تحميل {count} متجر فعالية
+one|تم تحميل {count} متجر فعالية
+two|تم تحميل {count} متجران لفعاليتين
+few|تم تحميل {count} متاجر فعاليات
+many|تم تحميل {count} متجرًا للفعاليات
+other|تم تحميل {count} متجر فعالية",이벤트 상점 {count}개 로드됨,"one|{count} loja de evento carregada
+other|{count} lojas de eventos carregadas","one|Загружен {count} магазин события
+few|Загружено {count} магазина событий
+many|Загружено {count} магазинов событий
+other|Загружено {count} магазина событий",已載入 {count} 個活動商店,"one|Załadowano {count} sklep wydarzenia
+few|Załadowano {count} sklepy wydarzeń
+many|Załadowano {count} sklepów wydarzeń
+other|Załadowano {count} sklepu wydarzenia",占位符 {count} 保持一致；复数变体
+console.meta.activitySchedule,控制台-活动日程-加载状态,已加载 {count} 个活动日程,イベント予定 {count} 件を読み込みました,"one|Loaded {count} event schedule
+other|Loaded {count} event schedules","one|{count} calendrier d'événement chargé
+other|{count} calendriers d'événements chargés","one|Caricato {count} calendario eventi
+other|Caricati {count} calendari eventi","one|{count} Event-Zeitplan geladen
+other|{count} Event-Zeitpläne geladen","one|{count} calendario de evento cargado
+other|{count} calendarios de eventos cargados","zero|تم تحميل {count} جدول فعالية
+one|تم تحميل {count} جدول فعالية
+two|تم تحميل {count} جدولان لفعاليتين
+few|تم تحميل {count} جداول فعاليات
+many|تم تحميل {count} جدولًا للفعاليات
+other|تم تحميل {count} جدول فعالية",이벤트 일정 {count}개 로드됨,"one|{count} agenda de evento carregada
+other|{count} agendas de eventos carregadas","one|Загружено {count} расписание события
+few|Загружено {count} расписания событий
+many|Загружено {count} расписаний событий
+other|Загружено {count} расписания событий",已載入 {count} 個活動日程,"one|Załadowano {count} harmonogram wydarzenia
+few|Załadowano {count} harmonogramy wydarzeń
+many|Załadowano {count} harmonogramów wydarzeń
+other|Załadowano {count} harmonogramu wydarzeń",占位符 {count} 保持一致；复数变体
+console.card.core,控制台-数据卡片标题,活动核心数据,イベント中核データ,Event Core Data,Données de base,Dati principali evento,Event-Kerndaten,Datos básicos del evento,بيانات الفعالية الأساسية,이벤트 핵심 데이터,Dados principais do evento,Основные данные событий,活動核心資料,Dane podstawowe wydarzeń,
+console.card.coreMeta,控制台-数据卡片格式说明,活动ID · 中文名 · 英文名 · 音乐 · 显示（0隐藏 / 1显示 / 11默认） · 开发商 · 发行商 · 发行日期 · 标签,イベントID・中国語名・英語名・音楽・表示（0非表示 / 1表示 / 11既定）・開発元・販売元・発売日・タグ,ID · Chinese name · English name · music · display (0 hidden / 1 shown / 11 default) · developer · publisher · release date · tags,ID · nom chinois · nom anglais · musique · affichage (0 masqué / 1 affiché / 11 défaut) · développeur · éditeur · date de sortie · tags,ID · nome cinese · nome inglese · musica · visualizzazione (0 nascosto / 1 visibile / 11 predefinito) · sviluppatore · editore · data · tag,ID · chinesischer Name · englischer Name · Musik · Anzeige (0 aus / 1 ein / 11 Standard) · Entwickler · Publisher · Datum · Tags,ID · nombre chino · nombre inglés · música · visualización (0 oculto / 1 visible / 11 predeterminado) · desarrollador · distribuidora · fecha · etiquetas,المعرف · الاسم الصيني · الاسم الإنجليزي · الموسيقى · العرض (0 مخفي / 1 ظاهر / 11 افتراضي) · المطوّر · الناشر · تاريخ الإصدار · الوسوم,ID · 중국어명 · 영어명 · 음악 · 표시(0 숨김 / 1 표시 / 11 기본) · 개발사 · 배급사 · 출시일 · 태그,ID · nome chinês · nome inglês · música · exibição (0 oculto / 1 visível / 11 padrão) · desenvolvedor · publicadora · data · tags,ID · название · музыка · отображение (0 скрыто / 1 показано / 11 по умолчанию) · разработчик · издатель · дата · теги,活動ID · 中文名 · 英文名 · 音樂 · 顯示（0隱藏 / 1顯示 / 11預設） · 開發商 · 發行商 · 發行日期 · 標籤,ID · nazwa chińska · nazwa angielska · muzyka · widoczność (0 ukryte / 1 widoczne / 11 domyślne) · deweloper · wydawca · data · tagi,分隔符与代码一致
+console.card.shop,控制台-数据卡片标题,活动商店数据,イベントショップデータ,Event Shop Data,Données de la boutique,Dati negozio evento,Event-Shop-Daten,Datos de tienda,بيانات متجر الفعالية,이벤트 상점 데이터,Dados da loja do evento,Данные магазина событий,活動商店資料,Dane sklepu wydarzeń,
+console.card.shopMeta,控制台-数据卡片格式说明,活动标识 · 版本/DLC￥价格 · 包含内容 · 地图代码,イベントID・バージョン/DLC ￥価格・内容・マップコード,Event ID · version/DLC price · included content · map code,ID · prix version/DLC ￥ · contenu inclus · code de carte,ID · prezzo versione/DLC ￥ · contenuto · codice mappa,Event-ID · Version/DLC-Preis ￥ · Inhalt · Kartencode,ID · precio versión/DLC ￥ · contenido · código de mapa,معرف الفعالية · السعر ￥ · المحتوى · رمز الخريطة,이벤트 ID · 버전/DLC ￥가격 · 포함 내용 · 맵 코드,ID · preço versão/DLC ￥ · conteúdo · código do mapa,ID · цена версии/DLC ￥ · содержимое · код карты,活動標識 · 版本/DLC￥價格 · 包含內容 · 地圖代碼,ID · cena wersji/DLC ￥ · zawartość · kod mapy,
+console.card.library,控制台-数据卡片标题,活动库存数据,イベント在庫データ,Event Library Data,Données d'inventaire,Dati inventario,Event-Inventardaten,Datos de inventario,بيانات المخزون,이벤트 보관함 데이터,Dados de inventário,Данные инвентаря,活動庫存資料,Dane ekwipunku,
+console.card.libraryMeta,控制台-数据卡片格式说明,人名 · 活动标识商品名（可无内容）,人名・イベントID 商品名（内容なし可）,Name · event ID item name (content optional),Nom · ID d'événement nom d'article (contenu facultatif),Nome · ID evento nome articolo (contenuto opzionale),Name · Event-ID Artikelname (Inhalt optional),Nombre · ID evento artículo (contenido opcional),الاسم · معرف الفعالية اسم العنصر (المحتوى اختياري),이름 · 이벤트 ID 상품명 (내용 생략 가능),Nome · ID do evento item (conteúdo opcional),Имя · ID события название предмета (содержимое необязательно),人名 · 活動標識商品名（可省略內容）,Imię · ID wydarzenia nazwa przedmiotu (opcjonalnie),
+console.card.account,控制台-数据卡片标题,账号数据,アカウントデータ,Account Data,Données de compte,Dati account,Kontodaten,Datos de cuentas,بيانات الحسابات,계정 데이터,Dados de contas,Данные аккаунтов,帳號資料,Dane kont,
+console.card.accountMeta,控制台-数据卡片格式说明,昵称 · 用户名 · 密码 · 媒体机构（可省略）,ニックネーム・ユーザー名・パスワード・媒体（省略可）,Nickname · username · password · media outlet (optional),Pseudonyme · identifiant · mot de passe · média (facultatif),Nickname · username · password · testata (opzionale),Spitzname · Benutzername · Passwort · Medium (optional),Apodo · usuario · contraseña · medio (opcional),الاسم المختصر · اسم المستخدم · كلمة المرور · الوسيلة (اختياري),닉네임 · 사용자명 · 비밀번호 · 미디어 (생략 가능),Apelido · usuário · senha · veículo (opcional),Ник · логин · пароль · СМИ (необязательно),暱稱 · 使用者名稱 · 密碼 · 媒體機構（可省略）,Pseudonim · login · hasło · medium (opcjonalnie),
+console.card.title,控制台-数据卡片标题,称号数据,称号データ,Title Data,Données de titres,Dati titoli,Titeldaten,Datos de títulos,بيانات الألقاب,칭호 데이터,Dados de títulos,Данные титулов,稱號資料,Dane tytułów,
+console.card.titleMeta,控制台-数据卡片格式说明,昵称 · [等级]称号,ニックネーム・[等級]称号,Nickname · [rank] title,Pseudonyme · [rang] titre,Nickname · [grado] titolo,Spitzname · [Rang] Titel,Apodo · [rango] título,الاسم · [الرتبة] اللقب,닉네임 · [등급] 칭호,Apelido · [grau] título,Ник · [ранг] титул,暱稱 · [等級]稱號,Pseudonim · [ranga] tytuł,
+console.card.update,控制台-数据卡片标题,更新日志,更新履歴,Update Log,Journal des mises à jour,Registro aggiornamenti,Update-Protokoll,Registro de cambios,سجل التحديثات,업데이트 로그,Registro de atualizações,Журнал обновлений,更新日誌,Dziennik zmian,与 update.page.title 同词，位置不同
+console.card.updateMeta,控制台-数据卡片格式说明,第一行版本 · 下面内容 · 空行分隔多条日志（resources/update.js）,1行目にバージョン・以降が内容・空行で複数ログを区切る（resources/update.js）,First line: version · following lines: content · blank line separates entries (resources/update.js),1re ligne : version · contenu ensuite · ligne vide entre les entrées (resources/update.js),Prima riga: versione · poi contenuto · riga vuota separa le voci (resources/update.js),Erste Zeile: Version · dann Inhalt · Leerzeile trennt Einträge (resources/update.js),Primera línea: versión · luego contenido · línea vacía entre entradas (resources/update.js),السطر الأول: الإصدار · ثم المحتوى · سطر فارغ يفصل السجلات (resources/update.js),첫 줄 버전 · 아래 내용 · 빈 줄로 항목 구분 (resources/update.js),Primeira linha: versão · depois conteúdo · linha vazia separa entradas (resources/update.js),Первая строка: версия · далее содержимое · пустая строка разделяет записи (resources/update.js),第一行版本 · 下面內容 · 空行分隔多條日誌（resources/update.js）,Pierwsza linia: wersja · potem treść · pusta linia oddziela wpisy (resources/update.js),
+console.card.review,控制台-数据卡片标题,测评数据,レビューデータ,Review Data,Données de critiques,Dati recensioni,Review-Daten,Datos de análisis,بيانات المراجعات,평가 데이터,Dados de análises,Данные обзоров,測評資料,Dane recenzji,
+console.card.reviewMeta,控制台-数据卡片格式说明,机构 · 分数 · 评测文本；多分类用 --- 分开，每类第一行写分类名,媒体・スコア・本文；複数分類は --- で区切り、各分類の1行目に分類名,"Outlet · score · text; separate categories with ---, first line is the category name","Média · note · texte ; séparez les catégories par ---, 1re ligne = nom de catégorie","Testata · punteggio · testo; separa le categorie con ---, prima riga = nome categoria","Medium · Wertung · Text; Kategorien mit --- trennen, erste Zeile = Kategoriename","Medio · nota · texto; separa categorías con ---, primera línea = nombre",الوسيلة · النقاط · النص؛ افصل الفئات بـ --- واكتب اسم الفئة في السطر الأول,"미디어 · 점수 · 평가문; 분류는 ---로 구분, 첫 줄에 분류명","Veículo · nota · texto; separe categorias com ---, primeira linha = nome","СМИ · оценка · текст; категории через ---, первая строка — название",機構 · 分數 · 評測文字；多分類用 --- 分開，每類第一行寫分類名,"Medium · ocena · tekst; kategorie oddzielaj ---, pierwsza linia to nazwa",
+console.card.achv,控制台-数据卡片标题,成就数据,実績データ,Achievement Data,Données de succès,Dati obiettivi,Erfolgsdaten,Datos de logros,بيانات الإنجازات,업적 데이터,Dados de conquistas,Данные достижений,成就資料,Dane osiągnięć,
+console.card.achvMeta,控制台-数据卡片格式说明,《奖杯组》· [奖杯等级，黑=紫金] · 成就名 · 说明,《トロフィーグループ》・[等級、黒=紫金]・実績名・説明,"Trophy group · [tier, black = purple-gold] · achievement name · description","« Groupe de trophées » · [rang, noir = violet-or] · nom · description","Gruppo trofei · [grado, nero = viola-oro] · nome · descrizione","Trophäengruppe · [Rang, Schwarz = Violettgold] · Name · Beschreibung","Grupo de trofeos · [rango, negro = violeta-oro] · nombre · descripción",مجموعة الكؤوس · [الرتبة، أسود = بنفسجي ذهبي] · الاسم · الوصف,"《트로피 그룹》 · [등급, 검정=자금] · 업적명 · 설명","Grupo de troféus · [grau, preto = roxo-dourado] · nome · descrição","Группа трофеев · [ранг, чёрный = фиолетово-золотой] · название · описание",《獎盃組》· [獎盃等級，黑=紫金] · 成就名 · 說明,"Grupa trofeów · [ranga, czarny = fioletowo-złoty] · nazwa · opis",非 CJK 语言不再使用书名号
+console.card.schedule,控制台-数据卡片标题,日程数据,スケジュールデータ,Schedule Data,Données de calendrier,Dati calendario,Zeitplandaten,Datos de calendario,بيانات الجدول,일정 데이터,Dados de agenda,Данные расписания,日程資料,Dane harmonogramu,
+console.card.scheduleMeta,控制台-数据卡片格式说明,日期 · 日程（date.txt 格式）,日付・予定（date.txt 形式）,Date · schedule (date.txt format),Date · événement (format date.txt),Data · evento (formato date.txt),Datum · Termin (date.txt-Format),Fecha · evento (formato date.txt),التاريخ · الجدول (تنسيق date.txt),날짜 · 일정 (date.txt 형식),Data · agenda (formato date.txt),Дата · событие (формат date.txt),日期 · 日程（date.txt 格式）,Data · wydarzenie (format date.txt),
+console.card.resourceList,控制台-数据卡片标题,资源列表数据,リソース一覧データ,Resource List Data,Données de ressources,Dati elenco risorse,Ressourcenlistendaten,Datos de lista de recursos,بيانات قائمة الموارد,리소스 목록 데이터,Dados da lista de recursos,Данные списка ресурсов,資源列表資料,Dane listy zasobów,
+console.card.resourceListMeta,控制台-数据卡片格式说明,文件名 · 标题 · 分类（空行后的段落为精选列表）,ファイル名・タイトル・分類（空行以降は特選リスト）,File name · title · category (a blank line starts the featured list),Nom de fichier · titre · catégorie (une ligne vide précède la sélection),Nome file · titolo · categoria (riga vuota = elenco in evidenza),Dateiname · Titel · Kategorie (Leerzeile = Auswahlliste),Archivo · título · categoría (línea vacía = destacados),اسم الملف · العنوان · الفئة (سطر فارغ يبدأ القائمة المميزة),파일명 · 제목 · 분류 (빈 줄 뒤는 추천 목록),Arquivo · título · categoria (linha vazia = destaques),Файл · заголовок · категория (пустая строка — избранное),檔案名 · 標題 · 分類（空行後的段落為精選列表）,Plik · tytuł · kategoria (pusta linia = wyróżnione),
+console.card.hotspot,控制台-数据卡片标题,热点数据,ホットデータ,Hot Data,Données hot,Dati hot,Hot-Daten,Datos de tendencias,بيانات المنشورات,핫 데이터,Dados de publicações,Данные горячего,熱點資料,Dane na czasie,
+console.card.hotspotMeta,控制台-数据卡片格式说明,日期时间 · 标题 · 内容 · 缩进评论,日時・タイトル・本文・インデントしたコメント,Datetime · title · content · indented comments,Date · titre · contenu · commentaires indentés,Data · titolo · contenuto · commenti indentati,Datum · Titel · Inhalt · eingerückte Kommentare,Fecha · título · contenido · comentarios indentados,التاريخ · العنوان · المحتوى · تعليقات بمسافة بادئة,일시 · 제목 · 내용 · 들여쓴 댓글,Data · título · conteúdo · comentários indentados,Дата · заголовок · текст · отступы комментариев,日期時間 · 標題 · 內容 · 縮排評論,Data · tytuł · treść · komentarze z wcięciem,
+console.card.keyword,控制台-数据卡片标题,关键词数据,キーワードデータ,Keyword Data,Données de mots-clés,Dati parole chiave,Stichwortdaten,Datos de palabras clave,بيانات الكلمات المفتاحية,키워드 데이터,Dados de palavras-chave,Данные ключевых слов,關鍵字資料,Dane słów kluczowych,
+console.card.keywordMeta,控制台-数据卡片格式说明,关键词 · 支持换行、逗号或顿号分隔,キーワード・改行、カンマ、読点で区切り可能,"Keywords · separated by newline, comma or ideographic comma","Mots-clés · séparés par retour à la ligne, virgule ou virgule idéographique","Parole chiave · separate da a capo, virgola o virgola ideografica","Stichwörter · getrennt durch Zeilenumbruch, Komma oder Aufzählungszeichen","Palabras clave · separadas por salto, coma o coma ideográfica",كلمات مفتاحية · مفصولة بسطر أو فاصلة,"키워드 · 줄바꿈, 쉼표, 가운뎃점으로 구분","Palavras-chave · separadas por linha, vírgula ou vírgula ideográfica","Ключевые слова · разделяются переводом строки, запятой или 、",關鍵字 · 支援換行、逗號或頓號分隔,"Słowa kluczowe · oddzielone nową linią, przecinkiem lub 、",
+console.alert.importOkKeywords,控制台-提示,导入成功：{count} 个关键词,{count} 件のキーワードを読み込みました,"one|Imported {count} keyword
+other|Imported {count} keywords","one|{count} mot-clé importé
+other|{count} mots-clés importés","one|Importata {count} parola chiave
+other|Importate {count} parole chiave","one|{count} Stichwort importiert
+other|{count} Stichwörter importiert","one|{count} palabra clave importada
+other|{count} palabras clave importadas","zero|تم استيراد {count} كلمة مفتاحية
+one|تم استيراد {count} كلمة مفتاحية
+two|تم استيراد {count} كلمتان مفتاحيتان
+few|تم استيراد {count} كلمات مفتاحية
+many|تم استيراد {count} كلمة مفتاحية
+other|تم استيراد {count} كلمة مفتاحية",키워드 {count}개를 가져왔습니다,"one|{count} palavra-chave importada
+other|{count} palavras-chave importadas","one|Импортировано {count} ключевое слово
+few|Импортировано {count} ключевых слова
+many|Импортировано {count} ключевых слов
+other|Импортировано {count} ключевых слова",匯入成功：{count} 個關鍵字,"one|Zaimportowano {count} słowo kluczowe
+few|Zaimportowano {count} słowa kluczowe
+many|Zaimportowano {count} słów kluczowych
+other|Zaimportowano {count} słowa kluczowego",占位符 {count} 保持一致；复数变体
+console.alert.importOkPosts,控制台-提示,导入成功：{posts} 个帖子，{comments} 条评论,{posts} 件の投稿と {comments} 件のコメントを読み込みました,"base|Imported {posts} · {comments}
+posts.one|{posts} post
+posts.other|{posts} posts
+comments.one|{comments} comment
+comments.other|{comments} comments","base|{posts} · {comments} importés
+posts.one|{posts} post
+posts.other|{posts} posts
+comments.one|{comments} commentaire
+comments.other|{comments} commentaires","base|Importati: {posts} · {comments}
+posts.one|{posts} post
+posts.other|{posts} post
+comments.one|{comments} commento
+comments.other|{comments} commenti","base|{posts} · {comments} importiert
+posts.one|{posts} Beitrag
+posts.other|{posts} Beiträge
+comments.one|{comments} Kommentar
+comments.other|{comments} Kommentare","base|Importados: {posts} · {comments}
+posts.one|{posts} publicación
+posts.other|{posts} publicaciones
+comments.one|{comments} comentario
+comments.other|{comments} comentarios","base|تم استيراد {posts} · {comments}
+posts.zero|{posts} منشور
+posts.one|{posts} منشور
+posts.two|{posts} منشوران
+posts.few|{posts} منشورات
+posts.many|{posts} منشورًا
+posts.other|{posts} منشور
+comments.zero|{comments} تعليق
+comments.one|{comments} تعليق
+comments.two|{comments} تعليقان
+comments.few|{comments} تعليقات
+comments.many|{comments} تعليقًا
+comments.other|{comments} تعليق","게시물 {posts}개, 댓글 {comments}개를 가져왔습니다","base|{posts} · {comments} importados
+posts.one|{posts} publicação
+posts.other|{posts} publicações
+comments.one|{comments} comentário
+comments.other|{comments} comentários","base|Импортировано: {posts} · {comments}
+posts.one|{posts} пост
+posts.few|{posts} поста
+posts.many|{posts} постов
+posts.other|{posts} поста
+comments.one|{comments} комментарий
+comments.few|{comments} комментария
+comments.many|{comments} комментариев
+comments.other|{comments} комментария",匯入成功：{posts} 個帖子，{comments} 條評論,"base|Zaimportowano: {posts} · {comments}
+posts.one|{posts} post
+posts.few|{posts} posty
+posts.many|{posts} postów
+posts.other|{posts} postu
+comments.one|{comments} komentarz
+comments.few|{comments} komentarze
+comments.many|{comments} komentarzy
+comments.other|{comments} komentarza",占位符 {posts}/{comments} 保持一致；复数变体（base+占位符片段）
+console.alert.importOkTitles,控制台-提示,导入成功：共 {count} 个成员称号,{count} 件のメンバー称号を読み込みました,"one|Imported {count} member title
+other|Imported {count} member titles","one|{count} titre de membre importé
+other|{count} titres de membres importés","one|Importato {count} titolo membro
+other|Importati {count} titoli membri","one|{count} Mitgliedertitel importiert
+other|{count} Mitgliedertitel importiert","one|{count} título de miembro importado
+other|{count} títulos de miembros importados","zero|تم استيراد {count} لقب عضو
+one|تم استيراد {count} لقب عضو
+two|تم استيراد {count} لقبان لعضوين
+few|تم استيراد {count} ألقاب أعضاء
+many|تم استيراد {count} لقبًا لعضو
+other|تم استيراد {count} لقب عضو",멤버 칭호 {count}개를 가져왔습니다,"one|{count} título de membro importado
+other|{count} títulos de membros importados","one|Импортирован {count} титул участника
+few|Импортировано {count} титула участников
+many|Импортировано {count} титулов участников
+other|Импортировано {count} титула участников",匯入成功：共 {count} 個成員稱號,"one|Zaimportowano {count} tytuł członka
+few|Zaimportowano {count} tytuły członków
+many|Zaimportowano {count} tytułów członków
+other|Zaimportowano {count} tytułu członka",占位符 {count} 保持一致；复数变体
+console.alert.importOkLibraries,控制台-提示,导入成功：共 {count} 个成员库存,{count} 件のメンバー在庫を読み込みました,"one|Imported {count} member library
+other|Imported {count} member libraries","one|{count} inventaire de membre importé
+other|{count} inventaires de membres importés","one|Importato {count} inventario
+other|Importati {count} inventari","one|{count} Mitgliederinventar importiert
+other|{count} Mitgliederinventare importiert","one|{count} inventario de miembro importado
+other|{count} inventarios de miembros importados","zero|تم استيراد {count} مخزون عضو
+one|تم استيراد {count} مخزون عضو
+two|تم استيراد {count} مخزونان لعضوين
+few|تم استيراد {count} مخزونات أعضاء
+many|تم استيراد {count} مخزونًا لعضو
+other|تم استيراد {count} مخزون عضو",멤버 보관함 {count}개를 가져왔습니다,"one|{count} inventário de membro importado
+other|{count} inventários de membros importados","one|Импортирован {count} инвентарь
+few|Импортировано {count} инвентаря
+many|Импортировано {count} инвентарей
+other|Импортировано {count} инвентаря",匯入成功：共 {count} 個成員庫存,"one|Zaimportowano {count} ekwipunek członka
+few|Zaimportowano {count} ekwipunki członków
+many|Zaimportowano {count} ekwipunków członków
+other|Zaimportowano {count} ekwipunku członka",占位符 {count} 保持一致；复数变体
+console.alert.importOkAchv,控制台-提示,导入成功：{id} 共 {count} 条成就,{id}：実績 {count} 件を読み込みました,"one|Imported {count} achievement for {id}
+other|Imported {count} achievements for {id}","one|{count} succès importé pour {id}
+other|{count} succès importés pour {id}","one|Importato {count} obiettivo per {id}
+other|Importati {count} obiettivi per {id}","one|{count} Erfolg für {id} importiert
+other|{count} Erfolge für {id} importiert","one|{count} logro importado para {id}
+other|{count} logros importados para {id}","zero|تم استيراد {count} إنجاز لـ {id}
+one|تم استيراد {count} إنجاز لـ {id}
+two|تم استيراد {count} إنجازان لـ {id}
+few|تم استيراد {count} إنجازات لـ {id}
+many|تم استيراد {count} إنجازًا لـ {id}
+other|تم استيراد {count} إنجاز لـ {id}",{id} 업적 {count}개를 가져왔습니다,"one|{count} conquista importada de {id}
+other|{count} conquistas importadas de {id}","one|Импортировано {count} достижение для {id}
+few|Импортировано {count} достижения для {id}
+many|Импортировано {count} достижений для {id}
+other|Импортировано {count} достижения для {id}",匯入成功：{id} 共 {count} 條成就,"one|Zaimportowano {count} osiągnięcie dla {id}
+few|Zaimportowano {count} osiągnięcia dla {id}
+many|Zaimportowano {count} osiągnięć dla {id}
+other|Zaimportowano {count} osiągnięcia dla {id}",占位符 {id}/{count} 保持一致；复数变体
+console.alert.importOkMerged,控制台-提示,导入成功：合并 {count} 条首页活动信息,ホームのイベント情報 {count} 件を統合しました,"one|Merged {count} home activity entry
+other|Merged {count} home activity entries","one|{count} info d'accueil fusionnée
+other|{count} infos d'accueil fusionnées","one|Unita {count} voce eventi home
+other|Unite {count} voci eventi home","one|{count} Startseiten-Eintrag zusammengeführt
+other|{count} Startseiten-Einträge zusammengeführt","one|{count} entrada de inicio fusionada
+other|{count} entradas de inicio fusionadas","zero|تم دمج {count} معلومة رئيسية
+one|تم دمج {count} معلومة رئيسية
+two|تم دمج {count} معلومتان رئيسيتان
+few|تم دمج {count} معلومات رئيسية
+many|تم دمج {count} معلومة رئيسية
+other|تم دمج {count} معلومة رئيسية",홈 이벤트 정보 {count}개를 병합했습니다,"one|{count} entrada inicial mesclada
+other|{count} entradas iniciais mescladas","one|Объединена {count} запись
+few|Объединено {count} записи
+many|Объединено {count} записей
+other|Объединено {count} записи",匯入成功：合併 {count} 條首頁活動資訊,"one|Scalono {count} wpis
+few|Scalono {count} wpisy
+many|Scalono {count} wpisów
+other|Scalono {count} wpisu",占位符 {count} 保持一致；复数变体
+console.alert.importOkActivities,控制台-提示,导入成功：共 {count} 个活动,{count} 件のイベントを読み込みました,"one|Imported {count} event
+other|Imported {count} events","one|{count} événement importé
+other|{count} événements importés","one|Importato {count} evento
+other|Importati {count} eventi","one|{count} Event importiert
+other|{count} Events importiert","one|{count} evento importado
+other|{count} eventos importados","zero|تم استيراد {count} فعالية
+one|تم استيراد {count} فعالية
+two|تم استيراد {count} فعاليتان
+few|تم استيراد {count} فعاليات
+many|تم استيراد {count} فعالية
+other|تم استيراد {count} فعالية",이벤트 {count}개를 가져왔습니다,"one|{count} evento importado
+other|{count} eventos importados","one|Импортировано {count} событие
+few|Импортировано {count} события
+many|Импортировано {count} событий
+other|Импортировано {count} события",匯入成功：共 {count} 個活動,"one|Zaimportowano {count} wydarzenie
+few|Zaimportowano {count} wydarzenia
+many|Zaimportowano {count} wydarzeń
+other|Zaimportowano {count} wydarzenia",占位符 {count} 保持一致；复数变体
+console.alert.checksum,控制台-提示,备份校验未通过,バックアップの検証に失敗しました,Backup check failed,Échec de la vérification,Verifica backup non riuscita,Backup-Prüfung fehlgeschlagen,Error de verificación,فشل التحقق من النسخة,백업 검증 실패,Falha na verificação,Проверка копии не пройдена,備份校驗未通過,Weryfikacja nie powiodła się,
+console.alert.checksumDamaged,控制台-提示,备份校验未通过，数据可能已损坏,バックアップの検証に失敗しました。データが破損している可能性があります,Backup check failed; data may be corrupted,Échec de la vérification ; données peut-être corrompues,Verifica fallita; dati forse danneggiati,Prüfung fehlgeschlagen; Daten evtl. beschädigt,Error de verificación; datos posiblemente dañados,فشل التحقق؛ قد تكون البيانات تالفة,"백업 검증 실패, 데이터가 손상되었을 수 있습니다",Falha na verificação; dados podem estar corrompidos,Проверка не пройдена; данные могут быть повреждены,備份校驗未通過，資料可能已損壞,Weryfikacja nie powiodła się; dane mogą być uszkodzone,
+console.alert.checksumShort,控制台-提示,校验未通过,検証に失敗しました,Check failed,Échec de la vérification,Verifica fallita,Prüfung fehlgeschlagen,Error de verificación,فشل التحقق,검증 실패,Falha na verificação,Проверка не пройдена,校驗未通過,Weryfikacja nie powiodła się,
+console.alert.emptyHotspot,控制台-提示,未解析到有效热点数据,有効なホットデータが見つかりません,No valid hot data found,Aucune donnée hot valide,Nessun dato hot valido,Keine gültigen Hot-Daten,No se encontraron datos válidos,لم يتم العثور على بيانات صالحة,유효한 핫 데이터가 없습니다,Nenhum dado válido encontrado,Действительные данные не найдены,未解析到有效熱點資料,Nie znaleziono danych,
+console.alert.emptyKeyword,控制台-提示,未解析到有效关键词,有効なキーワードが見つかりません,No valid keywords found,Aucun mot-clé valide,Nessuna parola chiave valida,Keine gültigen Stichwörter,No hay palabras clave válidas,لا توجد كلمات مفتاحية صالحة,유효한 키워드가 없습니다,Nenhuma palavra-chave válida,Действительных ключевых слов нет,未解析到有效關鍵字,Nie znaleziono słów kluczowych,
+console.alert.emptyResource,控制台-提示,未解析到有效资源,有効なリソースが見つかりません,No valid resources found,Aucune ressource valide,Nessuna risorsa valida,Keine gültigen Ressourcen,No hay recursos válidos,لا توجد موارد صالحة,유효한 리소스가 없습니다,Nenhum recurso válido,Действительных ресурсов нет,未解析到有效資源,Nie znaleziono zasobów,
+console.alert.emptySchedule,控制台-提示,未解析到有效日程,有効な予定が見つかりません,No valid schedule found,Aucun calendrier valide,Nessun evento valido,Kein gültiger Zeitplan,No hay calendario válido,لا يوجد جدول صالح,유효한 일정이 없습니다,Nenhuma agenda válida,Действительного расписания нет,未解析到有效日程,Nie znaleziono harmonogramu,
+console.alert.emptyReview,控制台-提示,未解析到有效数据,有効なデータが見つかりません,No valid data found,Aucune donnée valide,Nessun dato valido,Keine gültigen Daten,No hay datos válidos,لا توجد بيانات صالحة,유효한 데이터가 없습니다,Nenhum dado válido,Действительных данных нет,未解析到有效資料,Nie znaleziono danych,
+console.alert.emptyShop,控制台-提示,未解析到有效商店数据,有効なショップデータが見つかりません,No valid shop data found,Aucune donnée de boutique valide,Nessun dato negozio valido,Keine gültigen Shop-Daten,No hay datos de tienda válidos,لا توجد بيانات متجر صالحة,유효한 상점 데이터가 없습니다,Nenhum dado de loja válido,Действительных данных магазина нет,未解析到有效商店資料,Nie znaleziono danych sklepu,
+console.alert.emptyLibrary,控制台-提示,未解析到有效库存数据,有効な在庫データが見つかりません,No valid library data found,Aucune donnée d'inventaire valide,Nessun dato inventario valido,Keine gültigen Inventardaten,No hay datos de inventario válidos,لا توجد بيانات مخزون صالحة,유효한 보관함 데이터가 없습니다,Nenhum dado de inventário válido,Действительных данных инвентаря нет,未解析到有效庫存資料,Nie znaleziono danych ekwipunku,
+console.alert.badFormat,控制台-提示,文件格式错误,ファイル形式エラー,Invalid file format,Format de fichier incorrect,Formato file non valido,Ungültiges Dateiformat,Formato de archivo no válido,تنسيق الملف غير صالح,파일 형식 오류,Formato de arquivo inválido,Неверный формат файла,檔案格式錯誤,Nieprawidłowy format pliku,
+console.alert.importFailed,控制台-提示,导入失败：{msg},読み込みに失敗しました：{msg},Import failed: {msg},Échec de l'importation : {msg},Importazione non riuscita: {msg},Import fehlgeschlagen: {msg},Error al importar: {msg},فشل الاستيراد: {msg},가져오기 실패: {msg},Falha ao importar: {msg},Ошибка импорта: {msg},匯入失敗：{msg},Import nie powiódł się: {msg},占位符 {msg} 保持一致
+console.alert.emptyAccount,控制台-提示,未解析到有效数据（每行格式：昵称，用户名，密码，媒体机构；媒体机构可省略）,"有効なデータがありません（1行形式：ニックネーム,ユーザー名,パスワード,媒体；媒体は省略可）","No valid data (format per line: nickname, username, password, media; media optional)","Aucune donnée valide (par ligne : pseudonyme, identifiant, mot de passe, média ; média facultatif)","Nessun dato valido (per riga: nickname, username, password, testata; testata opzionale)","Keine gültigen Daten (pro Zeile: Spitzname, Benutzername, Passwort, Medium; Medium optional)","Sin datos válidos (por línea: apodo, usuario, contraseña, medio; medio opcional)",لا توجد بيانات صالحة (لكل سطر: الاسم، المستخدم، كلمة المرور، الوسيلة؛ الوسيلة اختيارية),"유효한 데이터 없음 (줄 형식: 닉네임, 사용자명, 비밀번호, 미디어; 미디어 생략 가능)","Nenhum dado válido (por linha: apelido, usuário, senha, veículo; veículo opcional)","Нет действительных данных (в строке: ник, логин, пароль, СМИ; СМИ необязательно)",未解析到有效資料（每行格式：暱稱，使用者名稱，密碼，媒體機構；媒體機構可省略）,"Brak danych (format wiersza: pseudonim, login, hasło, medium; medium opcjonalne)",
+console.alert.emptyTitle,控制台-提示,未解析到有效数据（每行格式：昵称，[等级]称号，…）,"有効なデータがありません（1行形式：ニックネーム,[等級]称号,…）","No valid data (format per line: nickname, [rank] title, …)","Aucune donnée valide (par ligne : pseudonyme, [rang] titre, …)","Nessun dato valido (per riga: nickname, [grado] titolo, …)","Keine gültigen Daten (pro Zeile: Spitzname, [Rang] Titel, …)","Sin datos válidos (por línea: apodo, [rango] título, …)",لا توجد بيانات صالحة (لكل سطر: الاسم، [الرتبة] اللقب، …),"유효한 데이터 없음 (줄 형식: 닉네임, [등급] 칭호, …)","Nenhum dado válido (por linha: apelido, [grau] título, …)","Нет действительных данных (в строке: ник, [ранг] титул, …)",未解析到有效資料（每行格式：暱稱，[等級]稱號，…）,"Brak danych (format: pseudonim, [ranga] tytuł, …)",
+console.alert.titleMagic,控制台-提示,不是有效的 FGEXPIG 称号备份文件,有効な FGEXPIG 称号バックアップではありません,Not a valid FGEXPIG title backup,Sauvegarde de titres FGEXPIG non valide,Backup titoli FGEXPIG non valido,Kein gültiges FGEXPIG-Titelbackup,Copia de títulos FGEXPIG no válida,نسخة ألقاب FGEXPIG غير صالحة,유효한 FGEXPIG 칭호 백업이 아닙니다,Backup de títulos FGEXPIG inválido,Недействительная копия титулов FGEXPIG,不是有效的 FGEXPIG 稱號備份檔案,Nieprawidłowa kopia tytułów FGEXPIG,
+console.alert.accountMagic,控制台-提示,不是有效的 FGEXPIG 账号备份文件,有効な FGEXPIG アカウントバックアップではありません,Not a valid FGEXPIG account backup,Sauvegarde de comptes FGEXPIG non valide,Backup account FGEXPIG non valido,Kein gültiges FGEXPIG-Kontobackup,Copia de cuentas FGEXPIG no válida,نسخة حسابات FGEXPIG غير صالحة,유효한 FGEXPIG 계정 백업이 아닙니다,Backup de contas FGEXPIG inválido,Недействительная копия аккаунтов FGEXPIG,不是有效的 FGEXPIG 帳號備份檔案,Nieprawidłowa kopia kont FGEXPIG,
+console.alert.coreMagic,控制台-提示,不是有效的 FGEXPIG 备份文件,有効な FGEXPIG バックアップではありません,Not a valid FGEXPIG backup,Sauvegarde FGEXPIG non valide,Backup FGEXPIG non valido,Kein gültiges FGEXPIG-Backup,Copia FGEXPIG no válida,نسخة FGEXPIG غير صالحة,유효한 FGEXPIG 백업이 아닙니다,Backup FGEXPIG inválido,Недействительная копия FGEXPIG,不是有效的 FGEXPIG 備份檔案,Nieprawidłowa kopia FGEXPIG,
+console.alert.coreEmpty,控制台-提示,未解析到有效数据（需为 core.txt 区块格式或旧版 CSV）,有効なデータがありません（core.txt ブロック形式または旧 CSV が必要です）,No valid data (core.txt block format or legacy CSV required),Aucune donnée valide (format bloc core.txt ou ancien CSV requis),Nessun dato valido (serve core.txt o CSV legacy),Keine gültigen Daten (core.txt-Blockformat oder altes CSV nötig),Sin datos válidos (se requiere core.txt o CSV antiguo),لا توجد بيانات صالحة (يلزم تنسيق core.txt أو CSV القديم),유효한 데이터 없음 (core.txt 블록 또는 구형 CSV 필요),Nenhum dado válido (é necessário core.txt ou CSV antigo),Нет действительных данных (нужен core.txt или старый CSV),未解析到有效資料（需為 core.txt 區塊格式或舊版 CSV）,Brak danych (wymagany core.txt lub stary CSV),
+console.alert.exportEmpty,控制台-提示,暂无数据可导出,書き出せるデータがありません,No data to export,Aucune donnée à exporter,Nessun dato da esportare,Keine Daten zum Exportieren,No hay datos para exportar,لا توجد بيانات للتصدير,내보낼 데이터가 없습니다,Sem dados para exportar,Нет данных для экспорта,暫無資料可匯出,Brak danych do eksportu,
+console.alert.pickTxt,控制台-提示,请选择 TXT 文件,TXT ファイルを選択してください,Please choose a TXT file,Veuillez choisir un fichier TXT,Scegli un file TXT,Bitte eine TXT-Datei wählen,Elige un archivo TXT,اختر ملف TXT,TXT 파일을 선택하세요,Escolha um arquivo TXT,Выберите файл TXT,請選擇 TXT 檔案,Wybierz plik TXT,
+console.alert.generateFailed,控制台-提示,生成失败：{msg},生成に失敗しました：{msg},Generation failed: {msg},Échec de la génération : {msg},Generazione non riuscita: {msg},Erstellung fehlgeschlagen: {msg},Error al generar: {msg},فشل الإنشاء: {msg},생성 실패: {msg},Falha ao gerar: {msg},Ошибка создания: {msg},生成失敗：{msg},Generowanie nie powiodło się: {msg},占位符 {msg} 保持一致
+console.alert.txtFormat,控制台-提示,TXT 文件格式错误,TXT ファイルの形式が正しくありません,Invalid TXT file format,Format de fichier TXT incorrect,Formato file TXT non valido,Ungültiges TXT-Dateiformat,Formato de archivo TXT no válido,تنسيق ملف TXT غير صالح,TXT 파일 형식 오류,Formato de arquivo TXT inválido,Неверный формат файла TXT,TXT 檔案格式錯誤,Nieprawidłowy format pliku TXT,
+console.alert.exported,控制台-提示,"已生成数据 JS 文件：{path}
+请将该文件放入此路径，然后刷新网页。","データ JS を生成しました：{path}
+このファイルをこのパスに置いてページを再読み込みしてください。","Data JS generated: {path}
+Place the file at this path, then reload the page.","Fichier JS généré : {path}
+Placez-le à ce chemin puis rechargez la page.","File JS generato: {path}
+Mettilo in questo percorso e ricarica la pagina.","Datendatei erzeugt: {path}
+Datei an diesen Pfad legen und Seite neu laden.","JS generado: {path}
+Coloca el archivo en esta ruta y recarga la página.","تم إنشاء ملف JS: {path}
+ضع الملف في هذا المسار ثم أعد تحميل الصفحة.","데이터 JS 생성: {path}
+이 경로에 파일을 넣고 페이지를 새로고침하세요.","JS gerado: {path}
+Coloque o arquivo nesse caminho e recarregue a página.","Файл JS создан: {path}
+Поместите его по этому пути и перезагрузите страницу.","已生成資料 JS 檔案：{path}
+請將該檔案放入此路徑，然後重新整理網頁。","Wygenerowano plik JS: {path}
+Umieść go w tej ścieżce i odśwież stronę.",含换行，占位符 {path} 保持一致
+common.empty,各卡片-通用空状态,暂无数据,データがありません,No data,Aucune donnée,Nessun dato,Keine Daten,Sin datos,لا توجد بيانات,데이터 없음,Sem dados,Нет данных,暫無資料,Brak danych,
+format.number.yi,全站-大数字单位后缀（亿）,亿,億,M,M,Mln,Mio.,M,مليون,억,mi,млн,億,mln,1亿=100M，实现时需按语言换算数值
+format.number.wan,全站-大数字单位后缀（万）,万,万,K,k,mila,Tsd.,mil,ألف,만,mil,тыс.,萬,tys.,1万=10K，实现时需按语言换算数值
+common.adSlot,暂停菜单-广告位 aria-label,广告位,広告枠,Ad slot,Emplacement publicitaire,Spazio pubblicitario,Werbeplatz,Espacio publicitario,مساحة إعلانية,광고 영역,Espaço publicitário,Рекламный блок,廣告位,Miejsce reklamowe,
+settings.quality.category.wallpaper,设置-显示页-画质分类名,壁纸,壁紙,Wallpaper,Fond d'écran,Sfondo,Hintergrund,Fondo de pantalla,الخلفية,배경화면,Papel de parede,Обои,桌布,Tapeta,
+settings.quality.category.profileMusic,设置-显示页-画质分类名,头像与音乐,アイコンと音楽,Avatar & Music,Avatar et musique,Avatar e musica,Avatar & Musik,Avatar y música,الصورة والموسيقى,아바타 및 음악,Avatar e música,Аватар и музыка,頭像與音樂,Avatar i muzyka,
+settings.quality.category.badges,设置-显示页-画质分类名,徽标,エンブレム,Badges,Badges,Emblemi,Abzeichen,Emblemas,الشارات,엠블럼,Emblemas,Значки,徽標,Odznaki,
+settings.quality.category.emoji,设置-显示页-画质分类名,表情包,絵文字,Emoji,Emoji,Emoji,Emojis,Emojis,الإيموجي,이모지,Emojis,Эмодзи,表情包,Emoji,
+settings.categories.aria,设置页-左侧分类 aria-label,设置分类,設定カテゴリ,Settings categories,Catégories de paramètres,Categorie impostazioni,Einstellungskategorien,Categorías de ajustes,فئات الإعدادات,설정 분류,Categorias de configurações,Категории настроек,設定分類,Kategorie ustawień,
+settings.control.shortcutAria,设置-控制页-按键框 aria-label,修改{action}快捷键,{action}のキーを変更,Change {action} shortcut,Modifier le raccourci : {action},Modifica scorciatoia {action},Tastenkürzel für {action} ändern,Cambiar atajo de {action},تغيير اختصار {action},{action} 단축키 변경,Alterar atalho de {action},Изменить сочетание: {action},修改{action}快捷鍵,Zmień skrót: {action},原文由“修改”+功能名+“快捷键”拼接
+settings.desc.displayPanel,设置-显示页顶部说明,调整壁纸亮度、卡片模糊、性能模式和画质。,壁紙の明るさ、カードのぼかし、パフォーマンスモード、画質を調整します。,"Adjust wallpaper brightness, card blur, Performance Mode and image quality.","Réglez la luminosité du fond, le flou des cartes, le mode Performance et la qualité.","Regola luminosità sfondo, sfocatura schede, modalità Prestazioni e qualità.","Hintergrundhelligkeit, Kartenunschärfe, Leistungsmodus und Bildqualität anpassen.","Ajusta brillo del fondo, desenfoque de tarjetas, modo Rendimiento y calidad.",اضبط سطوع الخلفية وضبابية البطاقات ووضع الأداء وجودة الصورة.,"배경 밝기, 카드 흐림, 성능 모드, 화질을 조정합니다.","Ajuste brilho do papel de parede, desfoque dos cards, Modo Desempenho e qualidade.","Яркость обоев, размытие карточек, режим производительности и качество.",調整桌布亮度、卡片模糊、效能模式與畫質。,"Dostosuj jasność tapety, rozmycie kart, tryb wydajności i jakość.",
+topbar.selectActivityLabel,顶栏/底栏-活动按钮 aria-label,选择活动：{name},アクティビティを選択：{name},Select activity: {name},Choisir une activité : {name},Seleziona attività: {name},Aktivität wählen: {name},Seleccionar actividad: {name},اختيار النشاط: {name},활동 선택: {name},Selecionar atividade: {name},Выбрать событие: {name},選擇活動：{name},Wybierz wydarzenie: {name},原文由“选择活动：”+活动名拼接，活动名保留原文
+topbar.switchActivity,商店页-活动 Logo 卡片 aria-label,切换活动：{name},アクティビティを切替：{name},Switch activity: {name},Changer d'activité : {name},Cambia attività: {name},Aktivität wechseln: {name},Cambiar de actividad: {name},تبديل النشاط: {name},활동 전환: {name},Trocar atividade: {name},Сменить событие: {name},切換活動：{name},Zmień wydarzenie: {name},占位符 {name} 保持一致
+achv.rank.rainbow,商店-实绩-奖杯等级名,幻彩,虹彩,Iridescent,Iridescent,Iridescente,Schillernd,Iridiscente,قزحي,무지개,Iridescente,Радужный,幻彩,Opalizujący,奖杯等级枚举
+achv.rank.purple,商店-实绩-奖杯等级名,紫金,紫金,Purple-Gold,Violet-or,Viola-oro,Violettgold,Violeta y oro,بنفسجي ذهبي,자금,Roxo-dourado,Фиолетово-золотой,紫金,Fioletowo-złoty,奖杯等级枚举
+achv.rank.platinum,商店-实绩-奖杯等级名,铂金,プラチナ,Platinum,Platine,Platino,Platin,Platino,بلاتيني,플래티넘,Platina,Платина,鉑金,Platynowy,奖杯等级枚举
+achv.rank.gold,商店-实绩-奖杯等级名,黄金,ゴールド,Gold,Or,Oro,Gold,Oro,ذهبي,골드,Ouro,Золото,黃金,Złoty,奖杯等级枚举
+achv.rank.silver,商店-实绩-奖杯等级名,白银,シルバー,Silver,Argent,Argento,Silber,Plata,فضي,실버,Prata,Серебро,白銀,Srebrny,奖杯等级枚举
+achv.rank.bronze,商店-实绩-奖杯等级名,青铜,ブロンズ,Bronze,Bronze,Bronzo,Bronze,Bronce,برونزي,브론즈,Bronze,Бронза,青銅,Brązowy,奖杯等级枚举
+console.emoji.empty,控制台-表情包检查-空状态,暂无已忽略提示,無視した通知はありません,No ignored notices,Aucun avertissement ignoré,Nessun avviso ignorato,Keine ignorierten Hinweise,No hay avisos ignorados,لا توجد تنبيهات متجاهلة,무시한 알림 없음,Sem avisos ignorados,Нет скрытых уведомлений,暫無已忽略提示,Brak ignorowanych,
+console.emoji.checking,控制台-表情包检查-加载中,正在检查热点表情包...,ホットの絵文字を確認中…,Checking hot emoji…,Vérification des emoji…,Controllo emoji…,Hot-Emojis werden geprüft…,Comprobando emoji…,جارٍ فحص الإيموجي…,핫 이모지 확인 중…,Verificando emojis…,Проверка эмодзи…,正在檢查熱點表情包...,Sprawdzanie emoji…,
+console.emoji.ok,控制台-表情包检查-完成,未发现热点表情包转义问题,ホット絵文字のエスケープ問題はありません,No hot emoji escaping issues found,Aucun problème d'échappement détecté,Nessun problema di escape,Keine Escape-Probleme gefunden,Sin problemas de escape,لا توجد مشكلات في تهريب الإيموجي,핫 이모지 이스케이프 문제 없음,Nenhum problema de escape encontrado,Проблем с экранированием не найдено,未發現熱點表情包轉義問題,Nie znaleziono problemów z escape,
+console.emoji.ignore,控制台-表情包检查-忽略提示 aria-label,忽略此提示,この通知を無視,Ignore this notice,Ignorer cet avertissement,Ignora questo avviso,Hinweis ignorieren,Ignorar este aviso,تجاهل هذا التنبيه,이 알림 무시,Ignorar este aviso,Скрыть это уведомление,忽略此提示,Ignoruj,
+console.emoji.failed,控制台-表情包检查-失败,热点表情包检查失败,ホット絵文字の確認に失敗しました,Hot emoji check failed,Échec de la vérification des emoji,Controllo emoji non riuscito,Emoji-Prüfung fehlgeschlagen,Error al comprobar emoji,فشل فحص الإيموجي,핫 이모지 확인 실패,Falha na verificação de emojis,Ошибка проверки эмодзи,熱點表情包檢查失敗,Sprawdzanie emoji nie powiodło się,
+console.emoji.missingEscape,控制台-表情包检查-条目,疑似缺少转义：{name},エスケープ不足の可能性：{name},Possible missing escape: {name},Échappement manquant possible : {name},Possibile escape mancante: {name},Möglicherweise fehlendes Escape: {name},Posible escape faltante: {name},قد يكون التهريب مفقودًا: {name},이스케이프 누락 의심: {name},Possível escape ausente: {name},"Возможно, не хватает экранирования: {name}",疑似缺少轉義：{name},Możliwy brak escape: {name},占位符 {name} 保持一致
+console.emoji.missingEmoji,控制台-表情包检查-条目,未找到表情包：{name},絵文字が見つかりません：{name},Emoji not found: {name},Emoji introuvable : {name},Emoji non trovato: {name},Emoji nicht gefunden: {name},Emoji no encontrado: {name},لم يتم العثور على الإيموجي: {name},이모지를 찾을 수 없음: {name},Emoji não encontrado: {name},Эмодзи не найден: {name},未找到表情包：{name},Nie znaleziono emoji: {name},占位符 {name} 保持一致
+console.emoji.missingQuality,控制台-表情包检查-条目后缀,（缺失画质：{levels}）,（画質 {levels} が欠落）,(missing quality: {levels}),(qualité manquante : {levels}),(qualità mancante: {levels}),(fehlende Qualität: {levels}),(calidad faltante: {levels}),(الجودة المفقودة: {levels}),(누락 화질: {levels}),(qualidade ausente: {levels}),(отсутствует качество: {levels}),（缺失畫質：{levels}）,(brak jakości: {levels}),占位符 {levels} 保持一致
+console.emoji.unused,控制台-表情包检查-条目,未使用的表情包：{name},未使用の絵文字：{name},Unused emoji: {name},Emoji inutilisé : {name},Emoji non usato: {name},Nicht verwendetes Emoji: {name},Emoji sin usar: {name},إيموجي غير مستخدم: {name},사용하지 않는 이모지: {name},Emoji não usado: {name},Неиспользуемый эмодзи: {name},未使用的表情包：{name},Nieużywane emoji: {name},占位符 {name} 保持一致
+settings.tab.language,设置页-左侧分类/顶部导航,语言,言語,Language,Langue,Lingua,Sprache,Idioma,اللغة,언어,Idioma,Язык,語言,Język,新增：语言导航
+settings.desc.language,设置页-语言页说明,选择网页界面语言。切换后会立即应用，并自动保存到本机。,ウェブの表示言語を選択します。切り替えると即時反映され、自動的に保存されます。,Choose the interface language. Changes apply instantly and are saved on this device.,Choisissez la langue de l'interface. Elle s'applique immédiatement et est enregistrée localement.,Scegli la lingua dell'interfaccia. Si applica subito e viene salvata localmente.,Wähle die Sprache der Oberfläche. Änderungen gelten sofort und werden lokal gespeichert.,Elige el idioma de la interfaz. Se aplica al instante y se guarda en este dispositivo.,اختر لغة الواجهة. يُطبَّق التغيير فورًا ويُحفظ محليًا.,인터페이스 언어를 선택합니다. 즉시 적용되고 기기에 자동 저장됩니다.,Escolha o idioma da interface. A alteração é aplicada e salva no dispositivo.,Выберите язык интерфейса. Изменения применяются сразу и сохраняются на устройстве.,選擇網頁介面語言。切換後立即套用並自動儲存到本機。,Wybierz język interfejsu. Zmiany działają od razu i zapisują się lokalnie.,新增：语言页说明
+schedule.weekday.mon,资源页-日程-星期缩写,一,月,M,L,L,M,L,ن,월,S,П,一,P,拆分自 schedule.weekdays，便于逐字替换
+schedule.weekday.tue,资源页-日程-星期缩写,二,火,T,M,M,D,M,ث,화,T,В,二,W,拆分自 schedule.weekdays，便于逐字替换
+schedule.weekday.wed,资源页-日程-星期缩写,三,水,W,M,M,M,X,ر,수,Q,С,三,Ś,拆分自 schedule.weekdays，便于逐字替换
+schedule.weekday.thu,资源页-日程-星期缩写,四,木,T,J,G,D,J,خ,목,Q,Ч,四,C,拆分自 schedule.weekdays，便于逐字替换
+schedule.weekday.fri,资源页-日程-星期缩写,五,金,F,V,V,F,V,ج,금,S,П,五,P,拆分自 schedule.weekdays，便于逐字替换
+schedule.weekday.sat,资源页-日程-星期缩写,六,土,S,S,S,S,S,س,토,S,С,六,S,拆分自 schedule.weekdays，便于逐字替换
+schedule.weekday.sun,资源页-日程-星期缩写,日,日,S,D,D,S,D,ح,일,D,В,日,N,拆分自 schedule.weekdays，便于逐字替换
+shop.detail.name,商店-详情卡片-字段名,中文名,中国語名,Chinese Name,Nom chinois,Nome cinese,Chinesischer Name,Nombre chino,الاسم الصيني,중국어명,Nome em chinês,Название (кит.),中文名,Nazwa chińska,
+shop.detail.publisher,商店-详情卡片-字段名,发行商,販売元,Publisher,Éditeur,Editore,Publisher,Distribuidora,الناشر,배급사,Publicadora,Издатель,發行商,Wydawca,
+common.separator.pipe,首页-右下角筛选提示-分隔符,｜,｜, | , | , | , | , | , | , | , | , | ,｜, | ,CJK 用全角，其余用半角加空格
+shop.purchase.line,商店-购买卡片-购买行模板,{action}《{name}》{version},{action}「 {name} 」{version},"{action} "" {name} "" {version}",{action} « {name} » {version},{action} « {name} » {version},{action} „ {name} “ {version},{action} « {name} » {version},{action} « {name} » {version},{action} ‘ {name} ’ {version},{action} “ {name} ” {version},{action} « {name} » {version},{action}《{name}》{version},{action} „ {name} ” {version},书名号按语言本地化
+shop.edition.标准版,商店-购买卡片-版本名（数据名）,标准版,スタンダード版,Standard Edition,Édition standard,Edizione standard,Standard Edition,Edición estándar,الإصدار القياسي,스탠다드 에디션,Edição Padrão,Стандартное издание,標準版,Edycja standardowa,商店版本名，内容数据按需求本地化
+shop.edition.传承版,商店-购买卡片-版本名（数据名）,传承版,レガシー版,Legacy Edition,Édition Héritage,Edizione Legacy,Legacy Edition,Edición Legacy,إصدار Legacy,레거시 에디션,Edição Legacy,Издание Legacy,傳承版,Edycja Legacy,商店版本名，内容数据按需求本地化
+shop.edition.终极版,商店-购买卡片-版本名（数据名）,终极版,アルティメット版,Ultimate Edition,Édition ultime,Edizione Ultimate,Ultimate Edition,Edición Ultimate,الإصدار الأقصى,얼티밋 에디션,Edição Ultimate,Ultimate-издание,終極版,Edycja Ultimate,商店版本名，内容数据按需求本地化
+shop.edition.黄金版,商店-购买卡片-版本名（数据名）,黄金版,ゴールド版,Gold Edition,Édition Or,Edizione Oro,Gold Edition,Edición Oro,الإصدار الذهبي,골드 에디션,Edição Ouro,Золотое издание,黃金版,Edycja Gold,商店版本名，内容数据按需求本地化
+shop.edition.豪华版,商店-购买卡片-版本名（数据名）,豪华版,デラックス版,Deluxe Edition,Édition Deluxe,Edizione Deluxe,Deluxe Edition,Edición Deluxe,الإصدار الفاخر,디럭스 에디션,Edição Deluxe,Расширенное издание,豪華版,Edycja Deluxe,商店版本名，内容数据按需求本地化
+shop.edition.支持者版,商店-购买卡片-版本名（数据名）,支持者版,サポーター版,Supporter Edition,Édition Supporter,Edizione Sostenitore,Supporter Edition,Edición de apoyo,إصدار الداعمين,서포터 에디션,Edição de Apoiador,Издание для поддержки,支持者版,Edycja Supporter,商店版本名，内容数据按需求本地化
+shop.edition.支持者包,商店-购买卡片-版本名（数据名）,支持者包,サポーターパック,Supporter Pack,Pack Supporter,Pacchetto Sostenitore,Supporter-Paket,Paquete de apoyo,حزمة الداعمين,서포터 팩,Pacote de Apoiador,Набор поддержки,支持者包,Pakiet Supporter,商店版本名，内容数据按需求本地化
+shop.edition.体验版,商店-购买卡片-版本名（数据名）,体验版,体験版,Trial Edition,Édition d'essai,Edizione di prova,Testversion,Edición de prueba,إصدار تجريبي,체험판,Edição de teste,Пробное издание,體驗版,Wersja próbna,商店版本名，内容数据按需求本地化
+shop.edition.尊享版,商店-购买卡片-版本名（数据名）,尊享版,プレミアム版,Premium Edition,Édition Premium,Edizione Premium,Premium Edition,Edición Premium,الإصدار المميز,프리미엄 에디션,Edição Premium,Премиум-издание,尊享版,Edycja Premium,商店版本名，内容数据按需求本地化
+news.post.commentCount,热点页-帖子列表-评论数,{count}评论,{count}コメント,"one|{count} comment
+other|{count} comments","one|{count} commentaire
+other|{count} commentaires","one|{count} commento
+other|{count} commenti","one|{count} Kommentar
+other|{count} Kommentare","one|{count} comentario
+other|{count} comentarios","zero|{count} تعليق
+one|{count} تعليق
+two|{count} تعليقان
+few|{count} تعليقات
+many|{count} تعليقًا
+other|{count} تعليق",{count}댓글,"one|{count} comentário
+other|{count} comentários","one|{count} комментарий
+few|{count} комментария
+many|{count} комментариев
+other|{count} комментария",{count}評論,"one|{count} komentarz
+few|{count} komentarze
+many|{count} komentarzy
+other|{count} komentarza",复数变体；热点帖子列表右下角评论数
+tag.艺术,商店-详情卡片-标签枚举,艺术,アート,Art,Art,Arte,Kunst,Arte,فن,예술,Arte,Искусство,藝術,Sztuka,标签枚举，按需求本地化
+tag.轻松,商店-详情卡片-标签枚举,轻松,リラックス,Relaxed,Détente,Relax,Entspannt,Relajado,استرخاء,힐링,Relaxante,Расслабление,輕鬆,Na luzie,标签枚举，按需求本地化
+tag.合作,商店-详情卡片-标签枚举,合作,協力,Co-op,Coopération,Cooperativa,Koop,Cooperativo,تعاوني,협동,Cooperativo,Кооператив,合作,Kooperacja,标签枚举，按需求本地化
+tag.关卡竞赛,商店-详情卡片-标签枚举,关卡竞赛,レベルレース,Level Race,Course de niveaux,Corsa a livelli,Level-Rennen,Carrera de niveles,سباق المراحل,레벨 레이스,Corrida de níveis,Гонка по уровням,關卡競賽,Wyścig poziomów,标签枚举，按需求本地化
+tag.解压,商店-详情卡片-标签枚举,解压,癒し,Stress Relief,Anti-stress,Antistress,Stressabbau,Antiestrés,تخفيف التوتر,스트레스 해소,Alívio do estresse,Антистресс,解壓,Relaks,标签枚举，按需求本地化
+tag.高难,商店-详情卡片-标签枚举,高难,高難度,Hardcore,Hardcore,Hardcore,Hardcore,Hardcore,صعب جدًا,하드코어,Hardcore,Хардкор,高難,Hardcore,标签枚举，按需求本地化
+tag.漫长,商店-详情卡片-标签枚举,漫长,ロング,Long,Long,Lungo,Lang,Largo,طويل,장기전,Longo,Долгий,漫長,Długi,标签枚举，按需求本地化
+tag.跑酷,商店-详情卡片-标签枚举,跑酷,パルクール,Parkour,Parkour,Parkour,Parkour,Parkour,باركور,파쿠르,Parkour,Паркур,跑酷,Parkour,标签枚举，按需求本地化
+tag.练习,商店-详情卡片-标签枚举,练习,練習,Practice,Entraînement,Pratica,Übung,Práctica,تدريب,연습,Prática,Тренировка,練習,Trening,标签枚举，按需求本地化
+tag.恶作剧,商店-详情卡片-标签枚举,恶作剧,いたずら,Prank,Farce,Scherzo,Streich,Travesura,مقالب,장난,Travessura,Шутка,惡作劇,Psikus,标签枚举，按需求本地化
+tag.解谜,商店-详情卡片-标签枚举,解谜,パズル,Puzzle,Puzzle,Puzzle,Rätsel,Puzle,ألغاز,퍼즐,Quebra-cabeça,Головоломка,解謎,Łamigłówka,标签枚举，按需求本地化
+tag.速决,商店-详情卡片-标签枚举,速决,スピードラン,Speedrun,Speedrun,Speedrun,Speedrun,Speedrun,سبيدرن,스피드런,Speedrun,Спидран,速決,Speedrun,标签枚举，按需求本地化
+common.separator.list,通用-列表分隔符,；,、,", ",", ",", ",", ",", ",، ,", ",", ",", ",；,", ",列表分隔符；CJK 用分号/顿号
+shop.edition.最终版,商店-购买卡片-版本名（数据名）,最终版,デフィニティブ・エディション,Definitive Edition,Édition définitive,Edizione definitiva,Definitive Edition,Edición definitiva,الإصدار النهائي,디피니티브 에디션,Edição Definitiva,Definitive Edition,決定版,Edycja ostateczna,商店版本名，内容数据按需求本地化
+shop.edition.完全版,商店-购买卡片-版本名（数据名）,完全版,コンプリート版,Complete Edition,Édition complète,Edizione completa,Complete Edition,Edición completa,الإصدار الكامل,컴플리트 에디션,Edição Completa,Полное издание,完全版,Edycja kompletna,商店版本名，内容数据按需求本地化
+settings.sponsor.paypal,设置-赞助页-按钮,使用贝宝支付（付款至NTKSCurseN@outlook.com账户）,PayPal で支払う（NTKSCurseN@outlook.com 宛て）,Pay with PayPal (to account NTKSCurseN@outlook.com),Payer avec PayPal (vers le compte NTKSCurseN@outlook.com),Paga con PayPal (all'account NTKSCurseN@outlook.com),Mit PayPal bezahlen (an das Konto NTKSCurseN@outlook.com),Pagar con PayPal (a la cuenta NTKSCurseN@outlook.com),الدفع عبر PayPal (إلى الحساب NTKSCurseN@outlook.com),PayPal로 결제 (계정 NTKSCurseN@outlook.com),Pagar com PayPal (para a conta NTKSCurseN@outlook.com),Оплатить через PayPal (на аккаунт NTKSCurseN@outlook.com),使用貝寶支付（付款至NTKSCurseN@outlook.com帳戶）,Zapłać przez PayPal (na konto NTKSCurseN@outlook.com),贝宝为 PayPal 中文名；括号内为收款账号，不做网页跳转
+shop.guest.play,商店-购买卡片-访客顶部按钮,在糖豆人中游玩,Fall Guys でプレイ,Play in Fall Guys,Jouer à Fall Guys,Gioca in Fall Guys,In Fall Guys spielen,Jugar en Fall Guys,اللعب في Fall Guys,Fall Guys에서 플레이,Jogar em Fall Guys,Играть в Fall Guys,在糖豆人中遊玩,Graj w Fall Guys,仅访客：顶部条文案
+shop.guest.view,商店-购买卡片-访客状态按钮,查看,表示,View,Voir,Visualizza,Ansehen,Ver,عرض,보기,Ver,Просмотр,查看,Zobacz,仅访客：购买卡片状态按钮文案
+shop.price.free,商店-购买卡片-价格显示,免费,無料,Free,Gratuit,Gratuito,Kostenlos,Gratis,مجاني,무료,Grátis,Бесплатно,免費,Darmowe,价格：0 时显示

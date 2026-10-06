@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -14,7 +14,7 @@
 <link rel="icon" href="favicon.ico?v=7" type="image/x-icon">
 <link rel="shortcut icon" href="favicon.ico?v=7">
 <link rel="apple-touch-icon" href="favicon.ico?v=7">
-<link rel="stylesheet" href="css/style.css?v=20260924gz247">
+<link rel="stylesheet" href="css/style.css?v=20260924gz308">
 </head>
 <body>
 
@@ -25,7 +25,7 @@
   <img class="startup-splash-art" id="startupSplashA" alt="" draggable="false" hidden>
   <img class="startup-splash-art" id="startupSplashB" alt="" draggable="false" hidden>
   <div class="startup-sync" id="startupSync" hidden>
-    <p class="startup-sync-text">CONNECTING TO THE NETWORK</p>
+    <p class="startup-sync-text">DOWNLOADING RESOURCES</p>
     <div class="startup-sync-row">
       <div class="startup-sync-bar"><i class="startup-sync-fill" id="startupSyncFill"></i></div>
       <span class="startup-sync-count" id="startupSyncCount">0 / 0 / 0</span>
@@ -128,9 +128,9 @@
 
 <!-- 全屏暂停菜单 -->
 <section class="pause-menu" id="pauseMenu" aria-hidden="true">
-  <div class="pause-site-value" role="img" aria-label="6,555,795,679；￥239.55 CNY">
-    <span class="pause-site-value-item is-visits" aria-hidden="true">6,555,795,679</span>
-    <span class="pause-site-value-item is-value" aria-hidden="true">￥239.55 CNY</span>
+  <div class="pause-site-value" role="img" aria-label="7,144,844,765；￥260.56 CNY">
+    <span class="pause-site-value-item is-visits" aria-hidden="true">7,144,844,765</span>
+    <span class="pause-site-value-item is-value" aria-hidden="true">￥260.56 CNY</span>
   </div>
   <!-- 左下角版本号（按键 + 文字，点击或按 V / RS / R3 进入更新日志） -->
   <div class="pause-version-hint" id="pauseVersionHint"></div>
@@ -228,6 +228,10 @@
             <img class="topnav-item-effect" alt="" aria-hidden="true">
             <span class="topnav-item-label">字体</span>
           </button>
+          <button class="topnav-item settings-tab" type="button" data-settings-tab="language">
+            <img class="topnav-item-effect" alt="" aria-hidden="true">
+            <span class="topnav-item-label">语言</span>
+          </button>
           <button class="topnav-item settings-tab" type="button" data-settings-tab="sponsor">
             <img class="topnav-item-effect" alt="" aria-hidden="true">
             <span class="topnav-item-label">赞助</span>
@@ -297,6 +301,9 @@
           <section class="settings-section" data-settings-panel="font" hidden>
             <div class="sidebar-list font-list" id="fontList"></div>
           </section>
+          <section class="settings-section" data-settings-panel="language" hidden>
+            <div class="sidebar-list font-list" id="languageList"></div>
+          </section>
           <section class="settings-section" data-settings-panel="sponsor" hidden>
             <div class="sidebar-list theme-list">
               <button class="theme-control sponsor-option" type="button" data-sponsor-image="wallpaper/wx.png">
@@ -311,6 +318,9 @@
                   <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg>
                 </span>
               </button>
+              <div class="theme-control sponsor-account">
+                <span class="settings-card-label">使用贝宝支付（付款至NTKSCurseN@outlook.com账户）</span>
+              </div>
             </div>
           </section>
           <section class="settings-section" data-settings-panel="interface" hidden>
@@ -533,8 +543,10 @@
 <script src="js/emoji-manifest.js"></script>
 <script src="js/emoji-trim-data.js"></script>
 <script src="js/emoji-trim.js"></script>
-<script src="js/sync-manifest.js?v=20260924gz247"></script>
-<script src="js/outer-settings-pages.js?v=20260924gz247"></script>
-<script src="js/main.js?v=20260924gz247"></script>
+<script src="js/sync-manifest.js?v=20260924gz308"></script>
+<script src="i18n/index.js?v=20260924gz308"></script>
+<script src="js/i18n.js?v=20260924gz308"></script>
+<script src="js/outer-settings-pages.js?v=20260924gz308"></script>
+<script src="js/main.js?v=20260924gz308"></script>
 </body>
 </html>
