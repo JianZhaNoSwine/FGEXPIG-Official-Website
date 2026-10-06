@@ -1,8 +1,10 @@
 ﻿/* 统一缓存机制：
    - 文本（HTML / CSS / JS / JSON / TXT 等）只联网读取，不进入缓存；
    - 图片 / 音乐 / 字体 / 视频等二进制资源先读缓存，再联网校验更新；
-   - 只保留当前筛选活动、当前画质级别的资源，其余不进入缓存。 */
-const CACHE_NAME = 'fgexpig-assets-v99';
+   - 固定缓存名：普通内容更新不清空旧缓存，只替换发生变化的资源；
+   - 1/2/3 级缓存的范围由前端下载队列控制，Service Worker 不主动删除已下载的分级资源。 */
+const CACHE_NAME = 'fgexpig-assets';
+const LEGACY_CACHE_PREFIX = 'fgexpig-assets-';
 const ACTIVITY_RELEASE_DELAY = 10000;
 /* 文本类：不缓存 */
 const TEXT_PATH_RE = /\.(?:html?|css|js|json|txt|xml|csv|md)$/i;
@@ -15,6 +17,7 @@ function isMediaPath(path) {
 
 let activeActivity = '';
 let allowedActivities = [];
+let cacheConfigReady = false;
 let qualityConfig = {
   wallpaper: 1,
   profileMusic: 1,
@@ -71,21 +74,15 @@ function qualityAllowed(path) {
 }
 
 function cacheKind(path) {
-  if (isTextPath(path)) return '';
-  if (isResourcePath(path)) {
-    const id = activityIdOf(path);
-    return activityAllowed(id) && qualityAllowed(path) ? 'activity' : '';
-  }
-  return qualityAllowed(path) ? 'asset' : '';
+  return isTextPath(path) ? '' : 'asset';
 }
 
 function keepable(path) {
-  if (isTextPath(path)) return false;
-  if (isResourcePath(path)) return activityAllowed(activityIdOf(path)) && qualityAllowed(path);
-  return qualityAllowed(path);
+  return !isTextPath(path);
 }
 
 async function pruneCache() {
+  if (!cacheConfigReady) return;
   const cache = await caches.open(CACHE_NAME);
   const requests = await cache.keys();
   await Promise.all(requests.map(async request => {
@@ -97,35 +94,37 @@ async function pruneCache() {
 async function putIfUsable(request, response) {
   if (!response || !response.ok || response.type !== 'basic') return;
   const cache = await caches.open(CACHE_NAME);
-  await cache.put(request, response.clone());
+  const path = new URL(request.url).pathname;
+  const stale = (await cache.keys()).filter(function (cachedRequest) {
+    return cachedRequest.url !== request.url && new URL(cachedRequest.url).pathname === path;
+  });
+  await Promise.all(stale.map(function (cachedRequest) { return cache.delete(cachedRequest); }));
+  await cache.put(new Request(request.url), response.clone());
 }
 
-// 先返回缓存；后台再联网校验：带上 ETag / Last-Modified，304 说明没过时，
-// 200 则写入新缓存（过时的资源被替换）。
-async function staleWhileRevalidate(request) {
+// 先联网校验：带上 ETag / Last-Modified；304 直接保留旧缓存，
+// 200 则只替换这一个发生变化的资源；网络失败才回退到缓存。
+async function revalidateFirst(request) {
   const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request);
-  const network = (async () => {
-    try {
-      const headers = new Headers();
-      const etag = cached && cached.headers.get('ETag');
-      const lastModified = cached && cached.headers.get('Last-Modified');
-      if (etag) headers.set('If-None-Match', etag);
-      if (lastModified) headers.set('If-Modified-Since', lastModified);
-      const response = await fetch(new Request(request.url, {
-        method: 'GET',
-        headers: headers,
-        credentials: 'same-origin',
-        cache: 'no-store'
-      }));
-      if (response.status === 304) return cached || response;
-      await putIfUsable(request, response);
-      return response;
-    } catch (err) {
-      return cached || Response.error();
-    }
-  })();
-  return cached || network;
+  const cached = await cache.match(request, { ignoreVary: true });
+  try {
+    const headers = new Headers();
+    const etag = cached && cached.headers.get('ETag');
+    const lastModified = cached && cached.headers.get('Last-Modified');
+    if (etag) headers.set('If-None-Match', etag);
+    if (lastModified) headers.set('If-Modified-Since', lastModified);
+    const response = await fetch(new Request(request.url, {
+      method: 'GET',
+      headers: headers,
+      credentials: 'same-origin',
+      cache: 'no-store'
+    }));
+    if (response.status === 304) return cached || response;
+    await putIfUsable(request, response);
+    return response;
+  } catch (err) {
+    return cached || Response.error();
+  }
 }
 
 function armReleaseTimer() {
@@ -147,26 +146,37 @@ function armReleaseTimer() {
 }
 
 async function releaseExpiredActivities() {
-  const now = Date.now();
-  const expired = Object.keys(releaseDeadlines).filter(id => releaseDeadlines[id] <= now);
-  if (!expired.length) return;
-  const cache = await caches.open(CACHE_NAME);
-  const requests = await cache.keys();
-  await Promise.all(requests.map(async request => {
-    const id = activityIdOf(new URL(request.url).pathname);
-    if (id && expired.indexOf(id) >= 0) await cache.delete(request);
-  }));
-  expired.forEach(id => { delete releaseDeadlines[id]; });
+  // 3 级缓存会保留所有活动资源，不再按活动切换时间主动删除。
+  Object.keys(releaseDeadlines).forEach(id => { delete releaseDeadlines[id]; });
 }
 
 self.addEventListener('install', event => {
   event.waitUntil(self.skipWaiting());
 });
 
+async function migrateLegacyCaches() {
+  const names = await caches.keys();
+  const legacyNames = names.filter(function (name) {
+    return name !== CACHE_NAME && name.indexOf(LEGACY_CACHE_PREFIX) === 0;
+  });
+  if (!legacyNames.length) return;
+  const target = await caches.open(CACHE_NAME);
+  for (const name of legacyNames) {
+    const source = await caches.open(name);
+    const requests = await source.keys();
+    for (const request of requests) {
+      const existing = await target.match(request, { ignoreVary: true });
+      if (existing) continue;
+      const response = await source.match(request, { ignoreVary: true });
+      if (response) await target.put(request, response.clone());
+    }
+    await caches.delete(name);
+  }
+}
+
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
-    const names = await caches.keys();
-    await Promise.all(names.filter(name => name !== CACHE_NAME).map(name => caches.delete(name)));
+    await migrateLegacyCaches();
     await pruneCache();
     await self.clients.claim();
   })());
@@ -176,6 +186,7 @@ self.addEventListener('message', event => {
   const data = event.data || {};
   if (data.type === 'fgexpig-cache-config') {
     activeActivity = String(data.activity || '');
+    cacheConfigReady = true;
     allowedActivities = Array.isArray(data.activities)
       ? data.activities.map(id => String(id || '')).filter(Boolean).filter((id, index, list) => list.indexOf(id) === index)
       : [];
@@ -191,8 +202,9 @@ self.addEventListener('message', event => {
   if (data.type !== 'fgexpig-cache-activity') return;
   const previousActivity = activeActivity;
   activeActivity = String(data.activity || '');
+  cacheConfigReady = true;
   event.waitUntil((async () => {
-    // 兼容旧消息：只更新当前活动，不扩大缓存范围。
+    // 兼容旧消息：只记录当前活动，不再删除其他活动缓存。
     if (previousActivity && previousActivity !== activeActivity) {
       releaseDeadlines[previousActivity] = Date.now() + ACTIVITY_RELEASE_DELAY;
     }
@@ -237,14 +249,7 @@ async function getMediaPayload(url) {
     mediaPayloads.set(key, hit);
     return hit;
   }
-  const cache = await caches.open(CACHE_NAME);
-  let response = await cache.match(key, { ignoreVary: true });
-  if (!response || !response.ok) {
-    response = await fetch(key, { credentials: 'same-origin', cache: 'no-store' });
-    if (response && response.ok && response.type === 'basic') {
-      await putIfUsable(new Request(key), response.clone());
-    }
-  }
+  const response = await revalidateFirst(new Request(key));
   if (!response || !response.ok) throw new Error('media-unavailable');
   const type = response.headers.get('Content-Type') || defaultMediaType(url.pathname);
   const buffer = await response.arrayBuffer();
@@ -254,13 +259,8 @@ async function getMediaPayload(url) {
 }
 
 async function serveMediaFull(request, url) {
-  const cache = await caches.open(CACHE_NAME);
-  let response = await cache.match(url.href, { ignoreVary: true });
-  if (!response || !response.ok) {
-    response = await fetch(url.href, { credentials: 'same-origin', cache: 'no-store' });
-    if (!response || !response.ok) throw new Error('media-unavailable');
-    await putIfUsable(new Request(url.href), response.clone());
-  }
+  const response = await revalidateFirst(new Request(url.href));
+  if (!response || !response.ok) throw new Error('media-unavailable');
   const headers = new Headers(response.headers);
   headers.set('Accept-Ranges', 'bytes');
   return new Response(response.body, {
@@ -332,5 +332,5 @@ self.addEventListener('fetch', event => {
     event.respondWith(serveMedia(request, url));
     return;
   }
-  event.respondWith(staleWhileRevalidate(request));
+  event.respondWith(revalidateFirst(request));
 });

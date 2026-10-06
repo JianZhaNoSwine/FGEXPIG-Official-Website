@@ -8614,7 +8614,10 @@
   var startupSyncEl = document.getElementById('startupSync');
   var startupSyncFillEl = document.getElementById('startupSyncFill');
   var startupSyncCountEl = document.getElementById('startupSyncCount');
+  var pauseCacheProgressEl = document.getElementById('pauseCacheProgress');
   var startupSyncActive = false;
+  var backgroundCacheStarted = false;
+  var backgroundCacheProgress = { level: 0, current: 0, target: 0, all: 0, done: true };
   var STARTUP_SYNC_MIN_MS = 2000;
 
   function startupManifestUrls() {
@@ -8637,6 +8640,73 @@
     return /\.(?:html?|css|js|json|txt|xml|csv|md)$/i.test(startupUrlPath(url));
   }
 
+  var activityEmojiNamesCache = {};
+  var emojiNameIndexCache = null;
+
+  function emojiNameIndex() {
+    if (emojiNameIndexCache) return emojiNameIndexCache;
+    var names = Array.isArray(window.FGEXPIG_EMOJI_MANIFEST) ? window.FGEXPIG_EMOJI_MANIFEST.slice() : [];
+    var byInitial = {};
+    names.forEach(function (name) {
+      var key = String(name || '').toLowerCase().charAt(0);
+      if (!key) return;
+      if (!byInitial[key]) byInitial[key] = [];
+      byInitial[key].push(String(name));
+    });
+    Object.keys(byInitial).forEach(function (key) {
+      byInitial[key].sort(function (a, b) { return b.length - a.length; });
+    });
+    emojiNameIndexCache = byInitial;
+    return emojiNameIndexCache;
+  }
+
+  function collectActivityEmojiNames(value, result) {
+    if (value == null) return;
+    if (typeof value === 'string') {
+      var text = value;
+      var byInitial = emojiNameIndex();
+      for (var i = 0; i < text.length; i++) {
+        if (text.charAt(i) !== '\\') continue;
+        var tail = text.slice(i + 1);
+        var candidates = byInitial[String(tail.charAt(0) || '').toLowerCase()] || [];
+        for (var j = 0; j < candidates.length; j++) {
+          var name = candidates[j];
+          if (tail.slice(0, name.length).toLowerCase() !== name.toLowerCase()) continue;
+          result[name] = true;
+          i += name.length;
+          break;
+        }
+      }
+      return;
+    }
+    if (Array.isArray(value)) {
+      value.forEach(function (item) { collectActivityEmojiNames(item, result); });
+      return;
+    }
+    if (typeof value === 'object') {
+      Object.keys(value).forEach(function (key) { collectActivityEmojiNames(value[key], result); });
+    }
+  }
+
+  function loadActivityEmojiNames(id) {
+    if (!id) return Promise.resolve({});
+    if (activityEmojiNamesCache[id]) return Promise.resolve(activityEmojiNamesCache[id]);
+    var existing = hotspotStore && hotspotStore.hotspots && hotspotStore.hotspots[id];
+    var rowsPromise = Array.isArray(existing)
+      ? Promise.resolve(existing)
+      : loadDataFragmentRaw('news', id).then(function (fragment) {
+          return hotspotRowsFromFragment(fragment, id);
+        });
+    return rowsPromise.then(function (rows) {
+      var names = {};
+      collectActivityEmojiNames(rows, names);
+      activityEmojiNamesCache[id] = names;
+      return names;
+    }).catch(function () {
+      activityEmojiNamesCache[id] = {};
+      return {};
+    });
+  }
   function startupQualityCategory(path) {
     if (/^wallpaper\//i.test(path)) return 'wallpaper';
     if (/^(profile|music)\//i.test(path)) return 'profileMusic';
@@ -8654,7 +8724,13 @@
     return match ? Number(match[1]) : 0;
   }
 
-  function startupQualityAllowed(url) {
+  /* 缓存分级：
+     1级 = 当前画质 + 默认选中活动的 resources；
+     2级 = 当前画质 + 全部活动 resources；
+     3级 = 全部画质 + 全部活动 resources。
+     非 resources 的 logo、音乐等均视为核心数据，不按活动筛选。 */
+  function startupQualityAllowed(url, cacheLevel) {
+    if (Number(cacheLevel) >= 3) return true;
     var path = startupUrlPath(url);
     var category = startupQualityCategory(path);
     if (!category) return true;
@@ -8664,18 +8740,30 @@
     return level === selected;
   }
 
-  function startupActivityAllowed(url) {
+  function startupActivityAllowed(url, cacheLevel) {
     var path = startupUrlPath(url);
     var match = /^resources\/([^/]+)\//.exec(path);
     if (!match) return true;
-    return activityIds().indexOf(match[1]) >= 0;
+    if (Number(cacheLevel) <= 1) return match[1] === defaultSelectedActivityId();
+    return true;
   }
 
-  function startupSyncUrls() {
+  function startupEmojiAllowed(url, cacheLevel, allowedEmojiNames) {
+    if (Number(cacheLevel) !== 1 || !allowedEmojiNames) return true;
+    var path = startupUrlPath(url);
+    var match = /^emoji\/[1-5]\/([^/]+)$/i.exec(path);
+    if (!match) return true;
+    var name = match[1].replace(/\.[^.]+$/, '');
+    try { name = decodeURIComponent(name); } catch (err) {}
+    return !!allowedEmojiNames[name];
+  }
+
+  function startupSyncUrls(cacheLevel, allowedEmojiNames) {
+    cacheLevel = Number(cacheLevel) || 1;
     var manifest = startupManifestUrls();
     if (manifest.length) {
       return manifest.filter(function (url) {
-        return !startupTextResource(url) && startupActivityAllowed(url) && startupQualityAllowed(url);
+        return !startupTextResource(url) && startupActivityAllowed(url, cacheLevel) && startupQualityAllowed(url, cacheLevel) && startupEmojiAllowed(url, cacheLevel, allowedEmojiNames);
       });
     }
     var id = String(curNavLogo || (typeof state !== 'undefined' && state ? LOGOS[state.index] : '') || '');
@@ -8712,7 +8800,7 @@
     return urls.filter(function (url) {
       if (!url || seen[url]) return false;
       seen[url] = true;
-      return !startupTextResource(url) && startupActivityAllowed(url) && startupQualityAllowed(url);
+      return !startupTextResource(url) && startupActivityAllowed(url, cacheLevel) && startupQualityAllowed(url, cacheLevel) && startupEmojiAllowed(url, cacheLevel, allowedEmojiNames);
     });
   }
 
@@ -8755,8 +8843,30 @@
     return Promise.all(workers);
   }
 
-  function formatStartupSyncCount(current, target, all) {
-    return current + ' / ' + target + ' / ' + all;
+  function formatStartupSyncCount(current, target) {
+    return current + ' / ' + target;
+  }
+
+  function formatBackgroundCacheProgress(progress) {
+    var target = Math.max(0, Number(progress.target) || 0);
+    var current = Math.max(0, Math.min(Number(progress.current) || 0, target || Number(progress.current) || 0));
+    var all = Math.max(target, Number(progress.all) || target || 0);
+    var percent = target ? Math.round((Math.min(current, target) / target) * 100) : 100;
+    var counts = progress.level === 2
+      ? current + '/' + target + '/' + all
+      : current + '/' + all;
+    return 'DOWNLOADING RESOURCES ' + percent + '% ( ' + counts + ' )';
+  }
+
+  function updatePauseCacheProgress() {
+    if (!pauseCacheProgressEl) return;
+    var progress = backgroundCacheProgress;
+    if (!progress || !progress.level) {
+      pauseCacheProgressEl.hidden = true;
+      return;
+    }
+    pauseCacheProgressEl.hidden = false;
+    pauseCacheProgressEl.textContent = formatBackgroundCacheProgress(progress);
   }
 
   function countCachedStartupUrls(urls) {
@@ -8783,6 +8893,38 @@
     });
   }
 
+  function runCacheLevelDownload(level) {
+    var urls = startupSyncUrls(level);
+    var all = startupSyncUrls(3).length;
+    backgroundCacheProgress = { level: level, current: 0, target: urls.length, all: all, done: false };
+    updatePauseCacheProgress();
+    return countCachedStartupUrls(urls).then(function (cached) {
+      var base = cached.current;
+      backgroundCacheProgress.current = base;
+      updatePauseCacheProgress();
+      if (!urls.length || base >= urls.length) return null;
+      return preloadStartupUrls(cached.missing, function (loaded) {
+        backgroundCacheProgress.current = base + loaded;
+        updatePauseCacheProgress();
+      });
+    }).then(function () {
+      backgroundCacheProgress.done = true;
+      updatePauseCacheProgress();
+    });
+  }
+
+  function startBackgroundCacheDownloads() {
+    if (backgroundCacheStarted) return;
+    backgroundCacheStarted = true;
+    var run = function (level) {
+      if (level > 3) return Promise.resolve();
+      return runCacheLevelDownload(level).then(function () {
+        return run(level + 1);
+      });
+    };
+    run(2);
+  }
+
   function runStartupSync(done) {
     if (!startupSyncEl) {
       if (done) done();
@@ -8791,8 +8933,7 @@
     startupSyncActive = true;
     startupSyncEl.hidden = false;
     if (startupSyncFillEl) startupSyncFillEl.style.width = '0%';
-    var allTotal = startupManifestUrls().length;
-    if (startupSyncCountEl) startupSyncCountEl.textContent = formatStartupSyncCount(0, 0, allTotal);
+    if (startupSyncCountEl) startupSyncCountEl.textContent = formatStartupSyncCount(0, 0);
     var startedAt = Date.now();
     var syncFinished = false;
     var finish = function () {
@@ -8812,25 +8953,27 @@
     };
     var refresh = (typeof initData === 'function') ? initData().catch(function () {}) : Promise.resolve();
     refresh.then(function () {
-      var urls = startupSyncUrls();
-      var target = urls.length;
-      return countCachedStartupUrls(urls).then(function (cached) {
-        var current = cached.current;
-        var update = function () {
-          var percent = target ? Math.round((Math.min(current, target) / target) * 100) : 100;
-          if (startupSyncFillEl) startupSyncFillEl.style.width = percent + '%';
-          if (startupSyncCountEl) startupSyncCountEl.textContent = formatStartupSyncCount(current, target, allTotal);
-        };
-        update();
-        if (!target || current >= target) {
-          finish();
-          return;
-        }
-        var base = current;
-        preloadStartupUrls(cached.missing, function (loaded) {
-          current = base + loaded;
+      return loadActivityEmojiNames(defaultSelectedActivityId()).then(function (allowedEmojiNames) {
+        var urls = startupSyncUrls(1, allowedEmojiNames);
+        var target = urls.length;
+        return countCachedStartupUrls(urls).then(function (cached) {
+          var current = cached.current;
+          var update = function () {
+            var percent = target ? Math.round((Math.min(current, target) / target) * 100) : 100;
+            if (startupSyncFillEl) startupSyncFillEl.style.width = percent + '%';
+            if (startupSyncCountEl) startupSyncCountEl.textContent = formatStartupSyncCount(current, target);
+          };
           update();
-        }).then(finish, finish);
+          if (!target || current >= target) {
+            finish();
+            return;
+          }
+          var base = current;
+          preloadStartupUrls(cached.missing, function (loaded) {
+            current = base + loaded;
+            update();
+          }).then(finish, finish);
+        });
       });
     });
   }
@@ -8952,6 +9095,7 @@
     if (startupCloseTimer) clearTimeout(startupCloseTimer);
     startupCloseTimer = setTimeout(function () {
       startupOverlay.hidden = true;
+      startBackgroundCacheDownloads();
       releaseStartupVideoSource();
       showCursorGlowOnEntry();
       syncLiquidGlassRenderer(true);
@@ -11403,12 +11547,20 @@
     window.location.reload();
   }
 
-  // 模板里捕获到的活动中文名：中文界面保留，其他语言换成核心数据里的英文名
+  // 模板里捕获到的活动中文名：中文界面保留；日文优先用语言包里的日文专名；其他语言用核心数据里的英文名
   function translateActivityNameValue(text) {
     var api = i18nApi();
     if (!api) return text;
     var lang = api.getLanguage();
     if (lang === 'zh-Hans' || lang === 'zh-Hant') return text;
+    if (lang === 'ja') {
+      var index = window.FGEXPIG_I18N_INDEX || {};
+      var key = index.byZh && index.byZh[text];
+      var packs = window.FGEXPIG_I18N_LANG_PACKS || {};
+      var jaPack = packs.ja;
+      var jaText = key && jaPack && jaPack.cells && jaPack.cells[key];
+      if (jaText) return jaText;
+    }
     var core = (typeof dataStore !== 'undefined' && dataStore && dataStore.core) || [];
     for (var i = 0; i < core.length; i++) {
       var row = core[i];
@@ -15451,7 +15603,8 @@
         height: barHeight
       });
       var barTitle = createPauseLeaderboardSvgElement('title');
-      barTitle.textContent = row.name + '：' + (valueFormatter ? valueFormatter(value) : pauseLeaderboardChartNumber(value));
+      var displayName = i18nHotspotText(row.name);
+      barTitle.textContent = displayName + '：' + (valueFormatter ? valueFormatter(value) : pauseLeaderboardChartNumber(value));
       bar.appendChild(barTitle);
       svg.appendChild(bar);
 
@@ -15462,7 +15615,7 @@
       var valueWidth = Math.max.apply(null, valueTexts.map(function (item) {
         return pauseLeaderboardEstimatedTextWidth(item);
       }));
-      var nameText = String(row.name == null ? '' : row.name);
+      var nameText = String(displayName == null ? '' : displayName);
       var nameWidth = pauseLeaderboardEstimatedTextWidth(nameText);
       var nameInside = barWidth >= nameWidth + 14;
       var valueInside = nameInside && barWidth >= 14 + nameWidth + 8 + valueWidth;
@@ -15494,10 +15647,14 @@
           'text-anchor': 'start'
         });
         outsideNameLabel.textContent = nameOutsideText;
+        outsideNameLabel.setAttribute('xml:space', 'preserve');
         var outsideNameTitle = createPauseLeaderboardSvgElement('title');
         outsideNameTitle.textContent = nameText;
         outsideNameLabel.appendChild(outsideNameTitle);
         svg.appendChild(outsideNameLabel);
+        var measuredNameWidth = 0;
+        try { measuredNameWidth = outsideNameLabel.getComputedTextLength(); } catch (err) {}
+        valueX = nameOutsideX + (measuredNameWidth > 0 ? measuredNameWidth : nameOutsideWidth + 8);
         requiredSvgWidth = Math.max(requiredSvgWidth, nameOutsideX + nameOutsideWidth + 6);
       }
 
@@ -15514,7 +15671,8 @@
           y: barY + barHeight / 2 + 3.5,
           'text-anchor': valueInside ? 'end' : 'start'
         });
-        valueLabel.textContent = valueText;
+        if (!valueInside) valueLabel.setAttribute('xml:space', 'preserve');
+        valueLabel.textContent = valueInside ? valueText : '\u00A0' + valueText;
         svg.appendChild(valueLabel);
       });
       if (!valueInside) requiredSvgWidth = Math.max(requiredSvgWidth, valueX + valueWidth + 6);
@@ -16518,11 +16676,19 @@
     detailTitleEl.appendChild(detailBackBtn);
     var detailOverviewScrollTop = 0;
 
-    // 《》里的活动名跟随语言：中文界面用中文名，其他语言用英文名（英文名与评测卡片同源）
-    function ownedVersionLabel(versionName) {
+    // 活动名使用商店 CSV 的独立词条，不再从版本包含内容反推。
+    function localizedShopActivityName() {
+      var translated = i18nT('shop.activity.' + id, '');
+      if (translated) return translated;
       var langId = (window.FgexpigI18n && window.FgexpigI18n.getLanguage) ? window.FgexpigI18n.getLanguage() : 'zh-Hans';
-      var chinese = (langId === 'zh-Hans' || langId === 'zh-Hant');
-      var displayName = chinese ? activityName : ((info && info.englishName) || activityName);
+      if (langId === 'zh-Hans' || langId === 'zh-Hant') return activityName;
+      return (info && info.englishName) || activityName;
+    }
+
+    function ownedVersionLabel(versionName) {
+      var displayName = localizedShopActivityName();
+      var langId = (window.FgexpigI18n && window.FgexpigI18n.getLanguage) ? window.FgexpigI18n.getLanguage() : 'zh-Hans';
+      if (langId === 'ja') return i18nTr('「' + displayName + '」' + i18nTr(versionName) + 'を所持');
       return i18nTr('拥有《{activity}》{name}', { activity: displayName, name: i18nTr(versionName) });
     }
 
@@ -16622,12 +16788,13 @@
           var actionText = i18nTr(purchaseLabel);
           var versionText = i18nTr(item.name);
           var langId = (window.FgexpigI18n && window.FgexpigI18n.getLanguage) ? window.FgexpigI18n.getLanguage() : 'zh-Hans';
-          var titleName = (langId === 'zh-Hans' || langId === 'zh-Hant')
-            ? activityName
-            : ((info && info.englishName) || activityName);
+          var titleName = localizedShopActivityName();
           var fullName = compactName
             ? actionText + ' ' + versionText
-            : i18nTr('{action}《{name}》{version}', { action: actionText, name: titleName, version: versionText });
+            : (langId === 'ja'
+              ? actionText + '「' + titleName + '」' + versionText
+              : i18nTr('{action}《{name}》{version}', { action: actionText, name: titleName, version: versionText }));
+          if (langId === 'ja') fullName = i18nTr(fullName);
           name.textContent = fullName;
           name.title = fullName;
           head.appendChild(name);

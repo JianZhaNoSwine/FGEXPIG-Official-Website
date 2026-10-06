@@ -133,6 +133,18 @@
     });
   }
 
+  // 日文界面仅把整条文本中的“单个数字”转为全角；
+  // 只要出现两个及以上数字，整条文本都保持半角（发行日等日期因此不转）。
+  function localizeDisplayText(value) {
+    var text = value == null ? '' : String(value);
+    if (state.id !== 'ja') return text;
+    var digits = text.match(/[0-9]/g);
+    if (!digits || digits.length !== 1) return text;
+    return text.replace(/[0-9]/g, function (ch) {
+      return String.fromCharCode(ch.charCodeAt(0) + 0xFEE0);
+    });
+  }
+
   function firstNumberParam(params) {
     if (!params) return null;
     var keys = Object.keys(params);
@@ -232,16 +244,16 @@
 
   function t(key, fallback, params) {
     var raw = cellFor(key);
-    if (!raw) return fillParams(fallback || '', params);
+    if (!raw) return localizeDisplayText(fillParams(fallback || '', params));
     var out = resolveCell(raw, state.id, params);
-    return out || fillParams(fallback || '', params);
+    return localizeDisplayText(out || fillParams(fallback || '', params));
   }
 
   function tr(zhText, params, depth) {
     if (zhText == null) return zhText;
     var source = String(zhText);
     depth = depth || 0;
-    if (state.id === SOURCE_ID || !INDEX || depth > 3) return fillParams(source, params);
+    if (state.id === SOURCE_ID || !INDEX || depth > 3) return localizeDisplayText(fillParams(source, params));
     var key = indexKeyOf(source);
     var useParams = params;
     if (!key) {
@@ -254,11 +266,11 @@
         break;
       }
     }
-    if (!key) return source;
+    if (!key) return localizeDisplayText(source);
     var raw = cellFor(key);
-    if (!raw) return fillParams(source, params);
+    if (!raw) return localizeDisplayText(fillParams(source, params));
     var out = resolveCell(raw, state.id, useParams);
-    return out || source;
+    return localizeDisplayText(out || source);
   }
 
   /* ---------- 数字 / 日期本地化 ---------- */
@@ -281,9 +293,9 @@
     var absolute = Math.abs(number);
     var cjk = state.id === 'zh-Hans' || state.id === 'zh-Hant' || state.id === 'ja' || state.id === 'ko';
     if (cjk) {
-      if (absolute >= 100000000) return fixedTrim(number / 100000000, absolute >= 1000000000 ? 1 : 2) + t('format.number.yi', '亿');
-      if (absolute >= 10000) return fixedTrim(number / 10000, absolute >= 100000 ? 1 : 2) + t('format.number.wan', '万');
-      return plainNumber(number);
+      if (absolute >= 100000000) return localizeDisplayText(fixedTrim(number / 100000000, absolute >= 1000000000 ? 1 : 2) + t('format.number.yi', '亿'));
+      if (absolute >= 10000) return localizeDisplayText(fixedTrim(number / 10000, absolute >= 100000 ? 1 : 2) + t('format.number.wan', '万'));
+      return localizeDisplayText(plainNumber(number));
     }
     if (absolute >= 100000000) return fixedTrim(number / 1000000, absolute >= 1000000000 ? 1 : 2) + t('format.number.yi', 'M');
     if (absolute >= 10000) return fixedTrim(number / 1000, absolute >= 100000 ? 1 : 2) + t('format.number.wan', 'K');
@@ -294,13 +306,13 @@
     var raw = (value == null) ? '' : String(value);
     if (!raw) return raw;
     var m = /(\d{4})\D{1,3}(\d{1,2})\D{1,3}(\d{1,2})/.exec(raw);
-    if (!m) return raw;
+    if (!m) return localizeDisplayText(raw);
     var date = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
-    if (isNaN(date.getTime())) return raw;
+    if (isNaN(date.getTime())) return localizeDisplayText(raw);
     try {
-      return new Intl.DateTimeFormat(currentLocale(), { year: 'numeric', month: 'long', day: 'numeric' }).format(date);
+      return localizeDisplayText(new Intl.DateTimeFormat(currentLocale(), { year: 'numeric', month: 'long', day: 'numeric' }).format(date));
     } catch (err) {
-      return raw;
+      return localizeDisplayText(raw);
     }
   }
 
@@ -338,10 +350,10 @@
   }
 
   function translateByKey(key, zhSource, params) {
-    if (state.id === SOURCE_ID) return fillParams(zhSource, params);
+    if (state.id === SOURCE_ID) return localizeDisplayText(fillParams(zhSource, params));
     var raw = cellFor(key);
-    if (!raw) return fillParams(zhSource, params);
-    return resolveCell(raw, state.id, params) || fillParams(zhSource, params);
+    if (!raw) return localizeDisplayText(fillParams(zhSource, params));
+    return localizeDisplayText(resolveCell(raw, state.id, params) || fillParams(zhSource, params));
   }
 
   function applyText(node) {

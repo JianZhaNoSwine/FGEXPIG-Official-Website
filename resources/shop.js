@@ -540,7 +540,7 @@
       "versions": [
         {
           "name": "标准版",
-          "price": "2.98",
+          "price": "3.48",
           "contents": [
             "不给糖果就小丑导弹"
           ]

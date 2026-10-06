@@ -2599,6 +2599,26 @@ html.has-card-blur .pause-menu .settings-page .font-item {
   max-width: 420px;
   justify-self: end;
 }
+.pause-cache-progress {
+  position: absolute;
+  right: var(--pause-margin-right);
+  bottom: var(--pause-margin-bottom, 16px);
+  z-index: 6;
+  max-width: min(520px, calc(100vw - 32px));
+  color: #fff;
+  font-size: var(--text-large);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-align: right;
+  text-shadow: 0 1px 1px #000, 0 0 4px rgba(0, 0, 0, 0.92);
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+.pause-cache-progress[hidden] { display: none; }
+.pause-menu.open .pause-cache-progress:not([hidden]) {
+  animation: pause-control-in-right 0.46s var(--ease-out) 0.12s backwards;
+}
 .pause-ad-slot {
   flex: 0 0 auto;
   min-height: 0;
@@ -2681,6 +2701,7 @@ html.has-card-blur .pause-menu .settings-page .font-item {
   pointer-events: none;
   user-select: none;
   font-variant-numeric: tabular-nums;
+  white-space: pre;
 }
 .pause-leaderboard-bar-label.is-top,
 .pause-leaderboard-bar-value.is-top {
