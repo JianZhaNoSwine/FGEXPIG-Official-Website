@@ -2616,6 +2616,7 @@ html.has-card-blur .pause-menu .settings-page .font-item {
   user-select: none;
 }
 .pause-cache-progress[hidden] { display: none; }
+.pause-menu.is-subpage-open .pause-cache-progress { display: none; }
 .pause-menu.open .pause-cache-progress:not([hidden]) {
   animation: pause-control-in-right 0.46s var(--ease-out) 0.12s backwards;
 }

@@ -28,6 +28,7 @@
     loadingId: '',
     listeners: []
   };
+  var sourceLanguageLocked = false;
 
   function langOf(id) {
     return byId[id] || byId[DEFAULT_ID] || { id: DEFAULT_ID, htmlLang: DEFAULT_ID, native: DEFAULT_ID };
@@ -133,9 +134,15 @@
     });
   }
 
-  // 日文界面仅把整条文本中的“单个数字”转为全角；
-  // 只要出现两个及以上数字，整条文本都保持半角（发行日等日期因此不转）。
-  function localizeDisplayText(value) {
+  // 全角数字只用于日文活动名：整条活动名恰好一个数字时转全角；
+  // 其他日文文案、日期、排行榜数字等全部保持半角。
+  function normalizeJapaneseQuoteSpacing(value) {
+    var text = value == null ? '' : String(value);
+    if (state.id !== 'ja') return text;
+    return text.replace(/「\s+/g, '「').replace(/\s+」/g, '」');
+  }
+
+  function localizeActivityNameText(value) {
     var text = value == null ? '' : String(value);
     if (state.id !== 'ja') return text;
     var digits = text.match(/[0-9]/g);
@@ -244,16 +251,18 @@
 
   function t(key, fallback, params) {
     var raw = cellFor(key);
-    if (!raw) return localizeDisplayText(fillParams(fallback || '', params));
+    if (!raw) return fillParams(fallback || '', params);
     var out = resolveCell(raw, state.id, params);
-    return localizeDisplayText(out || fillParams(fallback || '', params));
+    out = out || fillParams(fallback || '', params);
+    out = normalizeJapaneseQuoteSpacing(out);
+    return /^shop\.activity\./.test(key) ? localizeActivityNameText(out) : out;
   }
 
   function tr(zhText, params, depth) {
     if (zhText == null) return zhText;
     var source = String(zhText);
     depth = depth || 0;
-    if (state.id === SOURCE_ID || !INDEX || depth > 3) return localizeDisplayText(fillParams(source, params));
+    if (state.id === SOURCE_ID || !INDEX || depth > 3) return fillParams(source, params);
     var key = indexKeyOf(source);
     var useParams = params;
     if (!key) {
@@ -266,11 +275,12 @@
         break;
       }
     }
-    if (!key) return localizeDisplayText(source);
+    if (!key) return source;
     var raw = cellFor(key);
-    if (!raw) return localizeDisplayText(fillParams(source, params));
-    var out = resolveCell(raw, state.id, useParams);
-    return localizeDisplayText(out || source);
+    if (!raw) return fillParams(source, params);
+    var out = resolveCell(raw, state.id, useParams) || source;
+    out = normalizeJapaneseQuoteSpacing(out);
+    return /^shop\.activity\./.test(key) ? localizeActivityNameText(out) : out;
   }
 
   /* ---------- 数字 / 日期本地化 ---------- */
@@ -293,9 +303,9 @@
     var absolute = Math.abs(number);
     var cjk = state.id === 'zh-Hans' || state.id === 'zh-Hant' || state.id === 'ja' || state.id === 'ko';
     if (cjk) {
-      if (absolute >= 100000000) return localizeDisplayText(fixedTrim(number / 100000000, absolute >= 1000000000 ? 1 : 2) + t('format.number.yi', '亿'));
-      if (absolute >= 10000) return localizeDisplayText(fixedTrim(number / 10000, absolute >= 100000 ? 1 : 2) + t('format.number.wan', '万'));
-      return localizeDisplayText(plainNumber(number));
+      if (absolute >= 100000000) return fixedTrim(number / 100000000, absolute >= 1000000000 ? 1 : 2) + t('format.number.yi', '亿');
+      if (absolute >= 10000) return fixedTrim(number / 10000, absolute >= 100000 ? 1 : 2) + t('format.number.wan', '万');
+      return plainNumber(number);
     }
     if (absolute >= 100000000) return fixedTrim(number / 1000000, absolute >= 1000000000 ? 1 : 2) + t('format.number.yi', 'M');
     if (absolute >= 10000) return fixedTrim(number / 1000, absolute >= 100000 ? 1 : 2) + t('format.number.wan', 'K');
@@ -306,13 +316,13 @@
     var raw = (value == null) ? '' : String(value);
     if (!raw) return raw;
     var m = /(\d{4})\D{1,3}(\d{1,2})\D{1,3}(\d{1,2})/.exec(raw);
-    if (!m) return localizeDisplayText(raw);
+    if (!m) return raw;
     var date = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
-    if (isNaN(date.getTime())) return localizeDisplayText(raw);
+    if (isNaN(date.getTime())) return raw;
     try {
-      return localizeDisplayText(new Intl.DateTimeFormat(currentLocale(), { year: 'numeric', month: 'long', day: 'numeric' }).format(date));
+      return new Intl.DateTimeFormat(currentLocale(), { year: 'numeric', month: 'long', day: 'numeric' }).format(date);
     } catch (err) {
-      return localizeDisplayText(raw);
+      return raw;
     }
   }
 
@@ -350,10 +360,11 @@
   }
 
   function translateByKey(key, zhSource, params) {
-    if (state.id === SOURCE_ID) return localizeDisplayText(fillParams(zhSource, params));
+    if (state.id === SOURCE_ID) return fillParams(zhSource, params);
     var raw = cellFor(key);
-    if (!raw) return localizeDisplayText(fillParams(zhSource, params));
-    return localizeDisplayText(resolveCell(raw, state.id, params) || fillParams(zhSource, params));
+    var out = raw ? (resolveCell(raw, state.id, params) || fillParams(zhSource, params)) : fillParams(zhSource, params);
+    out = normalizeJapaneseQuoteSpacing(out);
+    return /^shop\.activity\./.test(key) ? localizeActivityNameText(out) : out;
   }
 
   function applyText(node) {
@@ -520,12 +531,20 @@
   }
 
   function setLanguage(id) {
+    if (sourceLanguageLocked) {
+      useSourceLanguage();
+      return Promise.resolve(SOURCE_ID);
+    }
     var target = byId[id] && !HIDDEN_LANGUAGE_IDS[id] ? id : DEFAULT_ID;
     if (target === SOURCE_ID) {
       useSourceLanguage();
       return Promise.resolve(target);
     }
     return loadPack(target).then(function (pack) {
+      if (sourceLanguageLocked) {
+        useSourceLanguage();
+        return SOURCE_ID;
+      }
       state.id = target;
       state.cells = (pack && pack.cells) || {};
       document.documentElement.setAttribute('lang', langOf(target).htmlLang);
@@ -538,6 +557,20 @@
       useSourceLanguage();
       return SOURCE_ID;
     });
+  }
+
+  function lockSourceLanguage() {
+    sourceLanguageLocked = true;
+    if (state.id === SOURCE_ID && !state.cells) return Promise.resolve(SOURCE_ID);
+    useSourceLanguage();
+    return Promise.resolve(SOURCE_ID);
+  }
+
+  function unlockSourceLanguage() {
+    sourceLanguageLocked = false;
+    var id = savedLanguage();
+    if (!id || !byId[id] || HIDDEN_LANGUAGE_IDS[id]) id = DEFAULT_ID;
+    return setLanguage(id);
   }
 
   function init() {
@@ -562,6 +595,8 @@
     t: t,
     tr: tr,
     setLanguage: setLanguage,
+    lockSourceLanguage: lockSourceLanguage,
+    unlockSourceLanguage: unlockSourceLanguage,
     saveLanguage: saveLanguage,
     getSavedLanguage: savedLanguage,
     getLanguage: function () { return state.id; },
@@ -569,6 +604,7 @@
     applyDom: function (root) { applyTree(root || document.body); },
     formatNumber: formatNumber,
     localizeDate: localizeDate,
+    localizeActivityNameText: localizeActivityNameText,
     currentLocale: currentLocale,
     pluralCategory: pluralCategory,
     setValueTranslator: setValueTranslator,

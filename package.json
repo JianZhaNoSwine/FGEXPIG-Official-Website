@@ -1,0 +1,44 @@
+{
+  "name": "fgexpig-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "探索的猪仔官方网站 Electron 桌面端",
+  "main": "electron/main.js",
+  "scripts": {
+    "start:desktop": "electron .",
+    "dist:desktop": "electron-builder --win nsis",
+    "desktop:manifest": "node tools/build-desktop-manifest.js",
+    "desktop:start": "electron .",
+    "desktop:dist": "pnpm run desktop:manifest && electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "^39.0.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.fgexpig.desktop",
+    "productName": "探索的猪仔官方网站",
+    "asar": true,
+    "files": [
+      "electron/**/*"
+    ],
+    "directories": {
+      "output": "desktop-dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "author": "FGEXPIG"
+}

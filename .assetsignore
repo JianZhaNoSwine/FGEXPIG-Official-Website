@@ -11,3 +11,13 @@ i18n/hotspot-strings.csv
 i18n/title-strings.csv
 tools/check-untranslated.js
 tools/check-untranslated.bat
+node_modules
+node_modules/*
+package.json
+pnpm-lock.yaml
+electron
+electron/*
+desktop-dist
+desktop-dist/*
+pnpm-workspace.yaml
+tools/build-desktop-manifest.js

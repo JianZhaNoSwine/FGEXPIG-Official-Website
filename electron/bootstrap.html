@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>探索的猪仔官方网站</title>
+<style>
+html,body{height:100%;margin:0;background:#08080b;color:#fff;font:16px/1.5 system-ui,sans-serif}
+body{display:grid;place-items:center}
+main{width:min(520px,calc(100vw - 64px));text-align:center}
+h1{margin:0 0 22px;font-size:22px;letter-spacing:.08em}
+.status{color:rgba(255,255,255,.72);font-variant-numeric:tabular-nums}
+.bar{height:8px;margin-top:14px;border-radius:999px;background:rgba(255,255,255,.14);overflow:hidden}
+.bar i{display:block;width:0;height:100%;border-radius:inherit;background:#fff;transition:width .15s ease}
+</style>
+</head>
+<body>
+<main>
+  <h1>DOWNLOADING</h1>
+  <div class="status" id="status">准备更新...</div>
+  <div class="bar"><i id="fill"></i></div>
+</main>
+<script>
+window.updateDesktopProgress = function (data) {
+  if (data && data.phase === 'error') {
+    document.getElementById('status').textContent = '资源更新失败，且本机没有可用缓存';
+    return;
+  }
+  var current = Number(data && data.current) || 0;
+  var target = Number(data && data.target) || 0;
+  var percent = target ? Math.round(current / target * 100) : 0;
+  document.getElementById('fill').style.width = percent + '%';
+  document.getElementById('status').textContent = current + ' / ' + target + '  (' + percent + '%)';
+};
+</script>
+</body>
+</html>

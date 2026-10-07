@@ -1356,6 +1356,11 @@
     document.documentElement.classList.toggle('inner-screen-layout', nextInnerScreen);
     document.documentElement.classList.toggle('portrait-layout', nextPortrait);
     document.documentElement.classList.toggle('outer-screen-layout', nextOuterScreen);
+    var i18nLayoutApi = window.FgexpigI18n;
+    if (i18nLayoutApi) {
+      if (nextOuterScreen && i18nLayoutApi.lockSourceLanguage) i18nLayoutApi.lockSourceLanguage();
+      else if (!nextOuterScreen && outerModeChanged && i18nLayoutApi.unlockSourceLanguage) i18nLayoutApi.unlockSourceLanguage();
+    }
     if (!nextOuterScreen) document.documentElement.style.removeProperty('--outer-content-bottom-safe');
     syncNonOuterCardBlurLayers();
     if (outerModeChanged && curNavLogo) buildNav(curNavLogo);
@@ -8855,13 +8860,13 @@
     var counts = progress.level === 2
       ? current + '/' + target + '/' + all
       : current + '/' + all;
-    return 'DOWNLOADING RESOURCES ' + percent + '% ( ' + counts + ' )';
+    return 'DOWNLOADING ' + percent + '% ( ' + counts + ' )';
   }
 
   function updatePauseCacheProgress() {
     if (!pauseCacheProgressEl) return;
     var progress = backgroundCacheProgress;
-    if (!progress || !progress.level) {
+    if (!progress || !progress.level || (progress.level === 3 && progress.done)) {
       pauseCacheProgressEl.hidden = true;
       return;
     }
@@ -9862,7 +9867,7 @@
     else if (actionId === 'openFilter') openFilterPanel();
     else if (actionId === 'titleQuickEquip') quickEquipDefaultTitle();
     else if (actionId === 'resetSettings') resetSettingsDraft();
-    else if (actionId === 'applySettings') applySettingsChanges();
+    else if (actionId === 'applySettings') applySettingsChanges(false);
     else if (actionId === 'openUpdateLog') openUpdatePanel();
     else if (actionId === 'pauseBack') {
       if (sponsorOverlay && !sponsorOverlay.hidden) {
@@ -11535,6 +11540,10 @@
   function applyLanguage(id, persist) {
     var api = i18nApi();
     if (!api) return;
+    if (document.documentElement.classList.contains('outer-screen-layout')) {
+      renderLanguageList();
+      return;
+    }
     if (id === api.getLanguage()) {
       renderLanguageList();
       return;
@@ -11553,15 +11562,22 @@
     if (!api) return text;
     var lang = api.getLanguage();
     if (lang === 'zh-Hans' || lang === 'zh-Hant') return text;
+    var core = (typeof dataStore !== 'undefined' && dataStore && dataStore.core) || [];
     if (lang === 'ja') {
       var index = window.FGEXPIG_I18N_INDEX || {};
-      var key = index.byZh && index.byZh[text];
       var packs = window.FGEXPIG_I18N_LANG_PACKS || {};
       var jaPack = packs.ja;
+      var key = '';
+      for (var ci = 0; ci < core.length; ci++) {
+        if (core[ci] && core[ci].name === text && core[ci].id) {
+          key = 'shop.activity.' + core[ci].id;
+          break;
+        }
+      }
+      if (!key) key = index.byZh && index.byZh[text];
       var jaText = key && jaPack && jaPack.cells && jaPack.cells[key];
-      if (jaText) return jaText;
+      if (jaText) return api.localizeActivityNameText ? api.localizeActivityNameText(jaText) : jaText;
     }
-    var core = (typeof dataStore !== 'undefined' && dataStore && dataStore.core) || [];
     for (var i = 0; i < core.length; i++) {
       var row = core[i];
       if (row && row.name === text && row.englishName) return row.englishName;
@@ -12273,7 +12289,7 @@
       if (!event.repeat && settingsKey === 'f') {
         event.preventDefault();
         event.stopPropagation();
-        applySettingsChanges();
+        applySettingsChanges(false);
         return;
       }
       // 设置页顶栏两侧显示上/下一个导航的按键提示，按下对应按键时切换设置分页。
@@ -12968,7 +12984,7 @@
         else if (b === 10 && homeFilterActionAvailable()) runGamepadAction('openFilter');
         else if (pauseMenu && pauseMenu.classList.contains('is-settings-open') && (b === 2 || b === 3)) {
           if (b === 2) resetSettingsDraft();
-          else applySettingsChanges();
+          else applySettingsChanges(false);
         }
         else if (pauseMenu && currentSidebarPanel === 'filter' && (b === 12 || b === 13)) {
           moveFilterSelection(b === 13 ? 1 : -1);
