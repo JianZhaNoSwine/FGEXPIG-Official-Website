@@ -3,13 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "description": "探索的猪仔官方网站 Electron 桌面端",
-  "main": "electron/main.js",
+  "main": "main.js",
   "scripts": {
-    "start:desktop": "electron .",
-    "dist:desktop": "electron-builder --win nsis",
-    "desktop:manifest": "node tools/build-desktop-manifest.js",
-    "desktop:start": "electron .",
-    "desktop:dist": "pnpm run desktop:manifest && electron-builder --win nsis"
+    "start": "electron .",
+    "manifest": "node ../tools/build-desktop-manifest.js",
+    "dist": "pnpm run manifest && electron-builder --win nsis"
   },
   "devDependencies": {
     "electron": "^39.0.0",
@@ -20,10 +18,10 @@
     "productName": "探索的猪仔官方网站",
     "asar": true,
     "files": [
-      "electron/**/*"
+      "**/*"
     ],
     "directories": {
-      "output": "desktop-dist"
+      "output": "../desktop-dist"
     },
     "win": {
       "target": [
