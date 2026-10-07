@@ -3,6 +3,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const { Readable } = require('stream');
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -82,8 +83,38 @@ function sendRange(req, res, filePath, stat) {
   fs.createReadStream(filePath).pipe(res);
 }
 
-function createStaticServer(rootDir, port) {
+function createStaticServer(rootDir, port, options) {
   const root = path.resolve(rootDir);
+  const fallbackBaseUrl = options && options.fallbackBaseUrl ? options.fallbackBaseUrl : '';
+  function proxyRemote(req, res) {
+    if (!fallbackBaseUrl) {
+      res.writeHead(404);
+      res.end('Not found');
+      return;
+    }
+    let target;
+    try { target = new URL(req.url, fallbackBaseUrl).toString(); } catch (err) {
+      res.writeHead(404);
+      res.end('Not found');
+      return;
+    }
+    const headers = {};
+    if (req.headers.range) headers.Range = req.headers.range;
+    fetch(target, { headers: headers, cache: 'no-store' }).then(function (response) {
+      const responseHeaders = {};
+      ['content-type', 'content-length', 'content-range', 'accept-ranges', 'etag', 'last-modified'].forEach(function (name) {
+        const value = response.headers.get(name);
+        if (value) responseHeaders[name] = value;
+      });
+      responseHeaders['Cache-Control'] = 'no-store';
+      res.writeHead(response.status, responseHeaders);
+      if (req.method === 'HEAD' || !response.body) return res.end();
+      Readable.fromWeb(response.body).pipe(res);
+    }).catch(function () {
+      res.writeHead(404);
+      res.end('Not found');
+    });
+  }
   const server = http.createServer(function (req, res) {
     if (req.method !== 'GET' && req.method !== 'HEAD') {
       res.writeHead(405, { Allow: 'GET, HEAD' });
@@ -107,8 +138,7 @@ function createStaticServer(rootDir, port) {
     }
     fs.stat(filePath, function (err, stat) {
       if (err || !stat.isFile()) {
-        res.writeHead(404);
-        res.end('Not found');
+        proxyRemote(req, res);
         return;
       }
       sendRange(req, res, filePath, stat);

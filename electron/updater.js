@@ -101,7 +101,7 @@ async function mapLimit(items, limit, worker) {
   await Promise.all(workers);
 }
 
-async function syncSite(baseUrl, root, onProgress) {
+async function syncSite(baseUrl, root, onProgress, maxLevel) {
   const manifest = await fetchManifest(baseUrl);
   const localManifestPath = path.join(root, LOCAL_MANIFEST_NAME);
   const local = await readJson(localManifestPath);
@@ -109,22 +109,26 @@ async function syncSite(baseUrl, root, onProgress) {
   if (local && Array.isArray(local.files)) {
     local.files.forEach(function (entry) { localMap[entry.path] = entry; });
   }
+  maxLevel = Math.max(1, Math.min(3, Number(maxLevel) || 3));
   await fsp.mkdir(root, { recursive: true });
-  const files = manifest.files;
+  const files = manifest.files.filter(function (entry) {
+    return Math.max(1, Math.min(3, Number(entry.level) || 3)) <= maxLevel;
+  });
   let current = 0;
-  if (onProgress) onProgress({ current: 0, target: files.length, phase: 'check' });
+  if (onProgress) onProgress({ current: 0, target: files.length, phase: 'check', level: maxLevel });
   await mapLimit(files, 6, async function (entry) {
     if (await fileState(root, entry, localMap[entry.path])) {
       current += 1;
-      if (onProgress) onProgress({ current: current, target: files.length, phase: 'download' });
+      if (onProgress) onProgress({ current: current, target: files.length, phase: 'download', level: maxLevel });
       return;
     }
     await downloadEntry(baseUrl, root, entry);
     current += 1;
-    if (onProgress) onProgress({ current: current, target: files.length, phase: 'download' });
+    if (onProgress) onProgress({ current: current, target: files.length, phase: 'download', level: maxLevel });
   });
-  await fsp.writeFile(localManifestPath, JSON.stringify({ version: manifest.version, files: files }, null, 2), 'utf8');
-  return { version: manifest.version, count: files.length };
+  const completedLevel = Math.max(Number(local && local.completedLevel) || 0, maxLevel);
+  await fsp.writeFile(localManifestPath, JSON.stringify({ version: manifest.version, completedLevel: completedLevel, files: manifest.files }, null, 2), 'utf8');
+  return { version: manifest.version, count: files.length, level: maxLevel, completedLevel: completedLevel };
 }
 
 function hasLocalSite(root) {

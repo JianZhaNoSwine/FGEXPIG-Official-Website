@@ -33,7 +33,7 @@ async function startStaticServer() {
     const address = staticServer.address();
     return 'http://127.0.0.1:' + (address && address.port ? address.port : DESKTOP_PORT) + '/';
   }
-  const started = await createStaticServer(SITE_ROOT, DESKTOP_PORT);
+  const started = await createStaticServer(SITE_ROOT, DESKTOP_PORT, { fallbackBaseUrl: UPDATE_BASE_URL });
   staticServer = started.server;
   return started.url;
 }
@@ -66,7 +66,7 @@ async function createWindow() {
   await mainWindow.loadFile(path.join(__dirname, 'bootstrap.html'));
 
   try {
-    await syncSite(UPDATE_BASE_URL, SITE_ROOT, sendProgress);
+    await syncSite(UPDATE_BASE_URL, SITE_ROOT, sendProgress, 1);
   } catch (err) {
     console.error('[desktop] site update failed:', err);
     if (!hasLocalSite(SITE_ROOT)) {
@@ -93,6 +93,17 @@ async function createWindow() {
   if (process.env.FGEXPIG_DEVTOOLS === '1') {
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   }
+
+  (async function () {
+    for (const level of [2, 3]) {
+      try {
+        await syncSite(UPDATE_BASE_URL, SITE_ROOT, function () {}, level);
+      } catch (err) {
+        console.warn('[desktop] background cache level ' + level + ' failed:', err);
+        return;
+      }
+    }
+  })();
 }
 
 app.whenReady().then(function () {
