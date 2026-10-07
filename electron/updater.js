@@ -101,7 +101,7 @@ async function mapLimit(items, limit, worker) {
   await Promise.all(workers);
 }
 
-async function syncSite(baseUrl, root, onProgress, maxLevel) {
+async function syncSite(baseUrl, root, onProgress, maxLevel, quality) {
   const manifest = await fetchManifest(baseUrl);
   const localManifestPath = path.join(root, LOCAL_MANIFEST_NAME);
   const local = await readJson(localManifestPath);
@@ -111,8 +111,11 @@ async function syncSite(baseUrl, root, onProgress, maxLevel) {
   }
   maxLevel = Math.max(1, Math.min(3, Number(maxLevel) || 3));
   await fsp.mkdir(root, { recursive: true });
+  const selectedQuality = Number(quality) === 3 ? 3 : 5;
   const files = manifest.files.filter(function (entry) {
-    return Math.max(1, Math.min(3, Number(entry.level) || 3)) <= maxLevel;
+    const entryQuality = Number(entry.quality) || 0;
+    const qualityMatches = maxLevel >= 3 || !entryQuality || entryQuality === selectedQuality;
+    return qualityMatches && Math.max(1, Math.min(3, Number(entry.level) || 3)) <= maxLevel;
   });
   let current = 0;
   if (onProgress) onProgress({ current: 0, target: files.length, phase: 'check', level: maxLevel });
@@ -127,8 +130,8 @@ async function syncSite(baseUrl, root, onProgress, maxLevel) {
     if (onProgress) onProgress({ current: current, target: files.length, phase: 'download', level: maxLevel });
   });
   const completedLevel = Math.max(Number(local && local.completedLevel) || 0, maxLevel);
-  await fsp.writeFile(localManifestPath, JSON.stringify({ version: manifest.version, completedLevel: completedLevel, files: manifest.files }, null, 2), 'utf8');
-  return { version: manifest.version, count: files.length, level: maxLevel, completedLevel: completedLevel };
+  await fsp.writeFile(localManifestPath, JSON.stringify({ version: manifest.version, completedLevel: completedLevel, quality: selectedQuality, files: manifest.files }, null, 2), 'utf8');
+  return { version: manifest.version, count: files.length, level: maxLevel, quality: selectedQuality, completedLevel: completedLevel };
 }
 
 function hasLocalSite(root) {

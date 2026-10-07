@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
  * 底栏 logo 刻度槽切换
  * - 滚轮切换 / 鼠标长按拖动 / 移动端拖动 / 点击两侧槽位
  * - 每个 logo 对应一个页面（页面唯一标识 = logo 名）
@@ -6,6 +6,11 @@
  * ============================================================ */
 (function () {
   'use strict';
+
+  // 桌面端由 Electron preload 注入；普通浏览器中不存在该对象。
+  function isDesktopRuntime() {
+    return !!(window.FGEXPIG_DESKTOP && window.FGEXPIG_DESKTOP.isDesktop);
+  }
 
   /* ---------- 数据：活动列表 ----------
      底栏槽位以「活动核心数据」为准；没有 logo 图的活动仍显示圆角矩形框（空框，无 logo）。
@@ -8935,6 +8940,13 @@
       if (done) done();
       return;
     }
+    if (isDesktopRuntime()) {
+      startupSyncActive = false;
+      startupSyncEl.hidden = true;
+      startupSyncEl.style.display = 'none';
+      if (done) done();
+      return;
+    }
     startupSyncActive = true;
     startupSyncEl.hidden = false;
     if (startupSyncFillEl) startupSyncFillEl.style.width = '0%';
@@ -8985,7 +8997,7 @@
 
   function syncThenCloseStartupOverlay() {
     if (startupSyncActive) return;
-    if (shouldUseOuterScreenLayout()) {
+    if (shouldUseOuterScreenLayout() || isDesktopRuntime()) {
       closeStartupOverlay();
       return;
     }
@@ -9206,6 +9218,10 @@
   }
 
   function initStartupOverlay() {
+    if (startupSyncEl && isDesktopRuntime()) {
+      startupSyncEl.hidden = true;
+      startupSyncEl.style.display = 'none';
+    }
     if (!startupOverlay || !startupVideo || !startupLanding) {
       startupEntryComplete = true;
       return;
@@ -10483,6 +10499,15 @@
   var imageQualityPrev = document.getElementById('imageQualityPrev');
   var imageQualityNext = document.getElementById('imageQualityNext');
   var qualityCategoryList = document.getElementById('qualityCategoryList');
+  var desktopQualityCard = document.getElementById('desktopQualityCard');
+  var desktopAspectCard = document.getElementById('desktopAspectCard');
+  var desktopAspectVal = document.getElementById('desktopAspectVal');
+  var desktopAspectPrev = document.getElementById('desktopAspectPrev');
+  var desktopAspectNext = document.getElementById('desktopAspectNext');
+  var desktopResolutionCard = document.getElementById('desktopResolutionCard');
+  var desktopResolutionVal = document.getElementById('desktopResolutionVal');
+  var desktopResolutionPrev = document.getElementById('desktopResolutionPrev');
+  var desktopResolutionNext = document.getElementById('desktopResolutionNext');
   var mainVolumeInput = document.getElementById('mainVolume');
   var minigameVolumeInput = document.getElementById('minigameVolume');
   var mainVolumeVal = document.getElementById('mainVolumeVal');
@@ -10585,6 +10610,12 @@
     interface: {
       title: '界面',
       text: '调整亮度、模糊和沉浸光效。性能模式开启时，沉浸光效会暂时禁用。',
+      subtitle: '沉浸光感',
+      extra: '0级使用默认鼠标指针\n1级使用称号等级鼠标指针\n2级增加沉浸光感\n3级增加边框描边'
+    },
+    interfaceDesktop: {
+      title: '界面',
+      text: '调整窗口比例、窗口大小、亮度、模糊和沉浸光效。',
       subtitle: '沉浸光感',
       extra: '0级使用默认鼠标指针\n1级使用称号等级鼠标指针\n2级增加沉浸光感\n3级增加边框描边'
     }
@@ -10801,7 +10832,11 @@
   }
 
   function showSettingsTab(tabId) {
+    if (tabId === 'display' && isDesktopRuntime()) tabId = 'interface';
     var desc = SETTINGS_DESCRIPTIONS[tabId] || SETTINGS_DESCRIPTIONS.interface;
+    if (tabId === 'interface' && isDesktopRuntime() && SETTINGS_DESCRIPTIONS.interfaceDesktop) {
+      desc = SETTINGS_DESCRIPTIONS.interfaceDesktop;
+    }
     currentSettingsTab = SETTINGS_DESCRIPTIONS[tabId] ? tabId : 'interface';
     Array.prototype.forEach.call(settingsTabs, function (tab) {
       var active = tab.getAttribute('data-settings-tab') === currentSettingsTab;
@@ -10872,7 +10907,7 @@
     renderFontList();
     renderKeybindList();
     renderLanguageList();
-    syncFontTabVisibility();
+    syncSettingsTabVisibility();
     Array.prototype.forEach.call(settingsTabs, function (tab) {
       var effect = tab.querySelector('.topnav-item-effect');
       if (effect && !effect.getAttribute('data-asset-original')) bindResponsiveAsset(effect, 'logo/choose.png');
@@ -10882,7 +10917,141 @@
     moveSettingsThumb(currentSettingsTab, false);
   }
 
+  function desktopQualityLevel(value) {
+    return Number(value) >= 4 ? 5 : 3;
+  }
+
+  function desktopQualityLabel(value) {
+    return desktopQualityLevel(value) === 3 ? '性能' : '画质';
+  }
+
+  var DESKTOP_WINDOW_SIZE_LABELS = {
+    6: ['settings.windowSize.tiny', '极小'],
+    7: ['settings.windowSize.small', '小'],
+    8: ['settings.windowSize.medium', '中等'],
+    9: ['settings.windowSize.large', '大'],
+    10: ['settings.windowSize.huge', '极大']
+  };
+
+  function desktopWindowSizeLabel(item) {
+    var entry = DESKTOP_WINDOW_SIZE_LABELS[Number(item && item.cards)];
+    if (entry) return i18nT(entry[0], entry[1]);
+    return item && item.width ? item.width + '×' + item.height : '--';
+  }
+
+  var desktopAspectIndex = 0;
+  var desktopResolutionIndex = 0;
+  var desktopDisplayState = null;
+
+  function desktopDisplayStateFromApi() {
+    var api = window.FGEXPIG_DESKTOP || {};
+    if (typeof api.getResolutionState === 'function') {
+      try {
+        var state = api.getResolutionState();
+        if (state) return state;
+      } catch (err) {}
+    }
+    return {
+      aspects: Array.isArray(api.aspects) && api.aspects.length ? api.aspects : [{ id: '16:9' }],
+      aspect: api.aspect || '16:9',
+      options: Array.isArray(api.resolutions) && api.resolutions.length ? api.resolutions : [{ width: 1600, height: 900, cards: 10 }],
+      current: api.resolution || null
+    };
+  }
+
+  function desktopAspectOptions() {
+    var state = desktopDisplayState || desktopDisplayStateFromApi();
+    return Array.isArray(state.aspects) && state.aspects.length ? state.aspects : [{ id: '16:9' }];
+  }
+
+  function desktopResolutionOptions() {
+    var state = desktopDisplayState || desktopDisplayStateFromApi();
+    return Array.isArray(state.options) && state.options.length ? state.options : [{ width: 1600, height: 900, cards: 10 }];
+  }
+
+  function desktopAspectIndexFor(value, options) {
+    options = options || desktopAspectOptions();
+    var id = String(value == null ? '' : value);
+    for (var i = 0; i < options.length; i += 1) {
+      if (String(options[i].id) === id) return i;
+    }
+    return 0;
+  }
+
+  function desktopResolutionIndexFor(value, options) {
+    options = options || desktopResolutionOptions();
+    for (var i = 0; i < options.length; i += 1) {
+      if (Number(value && value.width) === Number(options[i].width) && Number(value && value.height) === Number(options[i].height)) return i;
+    }
+    return 0;
+  }
+
+  function renderDesktopAspect() {
+    if (!desktopAspectCard) return;
+    var options = desktopAspectOptions();
+    if (desktopAspectIndex < 0 || desktopAspectIndex >= options.length) desktopAspectIndex = 0;
+    if (desktopAspectVal) desktopAspectVal.textContent = options[desktopAspectIndex].id;
+    var single = options.length <= 1;
+    if (desktopAspectPrev) desktopAspectPrev.disabled = single;
+    if (desktopAspectNext) desktopAspectNext.disabled = single;
+  }
+
+  function renderDesktopResolution() {
+    if (!desktopResolutionCard) return;
+    var options = desktopResolutionOptions();
+    if (desktopResolutionIndex < 0 || desktopResolutionIndex >= options.length) desktopResolutionIndex = 0;
+    var item = options[desktopResolutionIndex];
+    if (desktopResolutionVal) desktopResolutionVal.textContent = desktopWindowSizeLabel(item);
+    if (desktopResolutionPrev) desktopResolutionPrev.disabled = desktopResolutionIndex >= options.length - 1;
+    if (desktopResolutionNext) desktopResolutionNext.disabled = desktopResolutionIndex <= 0;
+  }
+
+  function refreshDesktopDisplayState() {
+    desktopDisplayState = desktopDisplayStateFromApi();
+    desktopAspectIndex = desktopAspectIndexFor(desktopDisplayState.aspect, desktopAspectOptions());
+    desktopResolutionIndex = desktopResolutionIndexFor(desktopDisplayState.current, desktopResolutionOptions());
+    renderDesktopAspect();
+    renderDesktopResolution();
+  }
+
+  function selectDesktopAspect(delta) {
+    var options = desktopAspectOptions();
+    if (options.length <= 1) return;
+    var nextIndex = (desktopAspectIndex + delta + options.length) % options.length;
+    if (nextIndex === desktopAspectIndex) return;
+    desktopAspectIndex = nextIndex;
+    renderDesktopAspect();
+    if (window.FGEXPIG_DESKTOP && window.FGEXPIG_DESKTOP.setAspect) {
+      var state = window.FGEXPIG_DESKTOP.setAspect(options[desktopAspectIndex].id);
+      if (state) desktopDisplayState = state;
+    }
+    refreshDesktopDisplayState();
+  }
+
+  function selectDesktopResolution(delta) {
+    var options = desktopResolutionOptions();
+    var nextIndex = Math.max(0, Math.min(options.length - 1, desktopResolutionIndex + delta));
+    if (nextIndex === desktopResolutionIndex) return;
+    desktopResolutionIndex = nextIndex;
+    renderDesktopResolution();
+    if (window.FGEXPIG_DESKTOP && window.FGEXPIG_DESKTOP.setResolution) {
+      var state = window.FGEXPIG_DESKTOP.setResolution(options[desktopResolutionIndex]);
+      if (state) desktopDisplayState = state;
+    }
+    refreshDesktopDisplayState();
+  }
+
+  function initDesktopResolutionControl() {
+    if (!isDesktopRuntime()) return;
+    if (performanceModeCard) performanceModeCard.hidden = true;
+    if (desktopQualityCard) desktopQualityCard.hidden = true;
+    if (desktopAspectCard) desktopAspectCard.hidden = false;
+    if (desktopResolutionCard) desktopResolutionCard.hidden = false;
+    refreshDesktopDisplayState();
+  }
+
   function qualityLabel(value) {
+    if (isDesktopRuntime()) return desktopQualityLabel(value);
     var labels = { 1: '极低', 2: '低', 3: '中', 4: '高', 5: '极高' };
     return labels[normalizeImageQuality(value)] || labels[1];
   }
@@ -10914,6 +11083,10 @@
 
   function renderQualityCategoryRows() {
     if (!qualityCategoryList) return;
+    if (isDesktopRuntime()) {
+      qualityCategoryList.hidden = true;
+      return;
+    }
     if (!qualityCategoryList.children.length) {
       IMAGE_QUALITY_CATEGORIES.forEach(function (category) {
         var row = document.createElement('div');
@@ -10964,6 +11137,13 @@
     renderQualityCategoryRows();
     var values = qualityCategoryValues();
     var uniform = qualityIsUniform();
+    if (isDesktopRuntime()) {
+      var desktopValue = desktopQualityLevel(uniform ? values[0] : imageQualityLevel);
+      imageQualityLevel = desktopValue;
+      if (imageQualityVal) imageQualityVal.textContent = desktopQualityLabel(desktopValue);
+      if (imageQualityInput) imageQualityInput.value = String(desktopValue);
+      return;
+    }
     if (uniform) imageQualityLevel = values[0];
     if (imageQualityVal) imageQualityVal.textContent = uniform ? qualityLabel(values[0]) : '自定义';
     if (qualityCategoryList) {
@@ -10990,6 +11170,9 @@
       imageQualityCategories[category.id] = normalizeImageQuality(snapshot.categories[category.id]);
     });
     imageQualityLevel = normalizeImageQuality(snapshot.imageQuality);
+    if (isDesktopRuntime() && window.FGEXPIG_DESKTOP && window.FGEXPIG_DESKTOP.setQuality) {
+      window.FGEXPIG_DESKTOP.setQuality(desktopQualityLevel(snapshot.imageQuality));
+    }
     renderQualityControls();
     applyThemeFromControls(false);
   }
@@ -11207,7 +11390,10 @@
   }
 
   function setImageQuality(value, persist) {
-    var level = normalizeImageQuality(value);
+    var level = isDesktopRuntime() ? desktopQualityLevel(value) : normalizeImageQuality(value);
+    if (isDesktopRuntime() && persist && window.FGEXPIG_DESKTOP && window.FGEXPIG_DESKTOP.setQuality) {
+      window.FGEXPIG_DESKTOP.setQuality(level);
+    }
     var changed = false;
     IMAGE_QUALITY_CATEGORIES.forEach(function (category) {
       if (Number(imageQualityCategories[category.id]) !== level) changed = true;
@@ -11227,6 +11413,7 @@
   }
 
   function setCategoryImageQuality(categoryId, value, persist) {
+    if (isDesktopRuntime()) return setImageQuality(value, persist);
     if (!qualityCategoryById(categoryId)) return;
     var level = normalizeImageQuality(value);
     var changed = Number(imageQualityCategories[categoryId]) !== level;
@@ -11345,13 +11532,20 @@
     } catch (err) {}
     if (performanceModeInput) performanceModeInput.checked = !!(saved && saved.performance);
     var quality = IMAGE_QUALITY_MAX;
-    if (saved && Object.prototype.hasOwnProperty.call(saved, 'imageQuality')) {
+    if (isDesktopRuntime() && window.FGEXPIG_DESKTOP && window.FGEXPIG_DESKTOP.quality) {
+      quality = window.FGEXPIG_DESKTOP.quality;
+    } else if (saved && Object.prototype.hasOwnProperty.call(saved, 'imageQuality')) {
       quality = saved.imageQuality;
     } else if (saved && saved.superResolution) {
       quality = IMAGE_QUALITY_MAX;
     }
     quality = normalizeImageQuality(quality);
-    if (saved && saved.imageQualityCategories && typeof saved.imageQualityCategories === 'object') {
+    if (isDesktopRuntime()) {
+      quality = desktopQualityLevel(quality);
+      IMAGE_QUALITY_CATEGORIES.forEach(function (category) {
+        imageQualityCategories[category.id] = quality;
+      });
+    } else if (saved && saved.imageQualityCategories && typeof saved.imageQualityCategories === 'object') {
       IMAGE_QUALITY_CATEGORIES.forEach(function (category) {
         if (Object.prototype.hasOwnProperty.call(saved.imageQualityCategories, category.id)) {
           imageQualityCategories[category.id] = normalizeImageQuality(saved.imageQualityCategories[category.id]);
@@ -11373,6 +11567,7 @@
     }
     var brightness = 0;
     if (saved && Object.prototype.hasOwnProperty.call(saved, 'dim')) brightness = 100 - Number(saved.dim);
+    initDesktopResolutionControl();
     applyThemeSettings(brightness, saved ? saved.blur : 1, level, quality, false);
   }
 
@@ -11411,18 +11606,34 @@
     return FONT_LANG_SUPPORT[lang] || ['sarasa'];
   }
 
-  function syncFontTabVisibility() {
+  function visibleSettingsTabs() {
+    return Array.prototype.slice.call(settingsTabs || []).filter(function (tab) {
+      return !tab.hidden && tab.style.display !== 'none';
+    });
+  }
+
+  function syncSettingsTabVisibility() {
     if (!settingsTabs || !settingsTabs.length) return;
     var fontTab = null;
+    var displayTab = null;
     for (var i = 0; i < settingsTabs.length; i++) {
-      if (settingsTabs[i].getAttribute('data-settings-tab') === 'font') { fontTab = settingsTabs[i]; break; }
+      if (settingsTabs[i].getAttribute('data-settings-tab') === 'font') fontTab = settingsTabs[i];
+      if (settingsTabs[i].getAttribute('data-settings-tab') === 'display') displayTab = settingsTabs[i];
     }
-    if (!fontTab) return;
-    var show = supportedFontIds().length > 1;
-    fontTab.hidden = !show;
-    // 同时写内联样式，避免 .topnav-item 的 display:inline-flex 覆盖 hidden
-    fontTab.style.display = show ? '' : 'none';
-    if (!show && currentSettingsTab === 'font') showSettingsTab('interface');
+    if (displayTab) {
+      var showDisplay = !isDesktopRuntime();
+      displayTab.hidden = !showDisplay;
+      displayTab.style.display = showDisplay ? '' : 'none';
+    }
+    if (fontTab) {
+      var showFont = supportedFontIds().length > 1;
+      fontTab.hidden = !showFont;
+      // 同时写内联样式，避免 .topnav-item 的 display:inline-flex 覆盖 hidden
+      fontTab.style.display = showFont ? '' : 'none';
+    }
+    if (displayTab && displayTab.hidden && currentSettingsTab === 'display') showSettingsTab('interface');
+    if (fontTab && fontTab.hidden && currentSettingsTab === 'font') showSettingsTab('interface');
+    if (settingsThumb) moveSettingsThumb(currentSettingsTab, false);
   }
 
   function clampFontToLanguage() {
@@ -11622,7 +11833,8 @@
       renderLanguageList();
       clampFontToLanguage();
       renderFontList();
-      syncFontTabVisibility();
+      syncSettingsTabVisibility();
+      try { refreshDesktopDisplayState(); } catch (err) {}
       // 重新生成由代码拼好的文案（首页右下角筛选提示、左下角键位提示等）
       try { renderBottomKeyHints(); } catch (err) {}
       try { renderHomeFilterHint(); } catch (err) {}
@@ -12105,11 +12317,15 @@
   }
   if (imageQualityInput) imageQualityInput.addEventListener('change', function () { setImageQuality(Number(imageQualityInput.value), true); });
   if (imageQualityPrev) imageQualityPrev.addEventListener('click', function () {
-    setImageQuality(Number(imageQualityInput.value) - 1, true);
+    setImageQuality(isDesktopRuntime() ? (Number(imageQualityInput.value) === 3 ? 5 : 3) : Number(imageQualityInput.value) - 1, true);
   });
   if (imageQualityNext) imageQualityNext.addEventListener('click', function () {
-    setImageQuality(Number(imageQualityInput.value) + 1, true);
+    setImageQuality(isDesktopRuntime() ? (Number(imageQualityInput.value) === 3 ? 5 : 3) : Number(imageQualityInput.value) + 1, true);
   });
+  if (desktopAspectPrev) desktopAspectPrev.addEventListener('click', function () { selectDesktopAspect(-1); });
+  if (desktopAspectNext) desktopAspectNext.addEventListener('click', function () { selectDesktopAspect(1); });
+  if (desktopResolutionPrev) desktopResolutionPrev.addEventListener('click', function () { selectDesktopResolution(1); });
+  if (desktopResolutionNext) desktopResolutionNext.addEventListener('click', function () { selectDesktopResolution(-1); });
   if (mainVolumeInput) mainVolumeInput.addEventListener('input', function () {
     audioSettings.mainVolume = normalizeAudioVolume(mainVolumeInput.value);
     applyAudioSettings(true);
@@ -12416,7 +12632,7 @@
     updatePauseMenuSelection();
   }
   function moveSettingsTab(delta) {
-    var tabs = Array.prototype.slice.call(settingsTabs || []);
+    var tabs = visibleSettingsTabs();
     if (!tabs.length) return;
     var currentIndex = 0;
     for (var i = 0; i < tabs.length; i++) {
@@ -17230,7 +17446,7 @@
     initFontSetting();
     initLanguageSetting();
     clampFontToLanguage();
-    syncFontTabVisibility();
+    syncSettingsTabVisibility();
     if (document.fonts && document.fonts.ready) {
       document.fonts.ready.then(function () {
         try { resyncTopNavThumb(); } catch (err) {}
@@ -17346,6 +17562,7 @@
   var viewportRestartPromptMutedUntil = 0;
 
   function scheduleViewportRestartPrompt() {
+    if (isDesktopRuntime()) return;
     if (!startupEntryComplete || document.hidden) return;
     if (viewportRestartPromptTimer) window.clearTimeout(viewportRestartPromptTimer);
     viewportRestartPromptTimer = window.setTimeout(function () {

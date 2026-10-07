@@ -19,6 +19,10 @@ function urlPath(relativePath) {
 
 function include(relativePath) {
   const normalized = relativePath.split(path.sep).join('/');
+  const baseName = path.basename(normalized).toLowerCase();
+  if (baseName === 'desktop.ini' || baseName === 'thumbs.db' || baseName === '.ds_store') return false;
+  const quality = qualityLevel(normalized);
+  if (quality && quality !== 5) return false;
   if (normalized.indexOf('i18n/') === 0 && /\.csv$/i.test(normalized)) return false;
   return true;
 }
@@ -125,23 +129,17 @@ function isText(relativePath) {
 function levelOf(relativePath, activityId, defaultEmojiNames) {
   if (isText(relativePath)) return 1;
   const normalized = relativePath.replace(/\\/g, '/');
-  const quality = qualityLevel(normalized);
 
   const resourceMatch = /^resources\/([^/]+)\//.exec(normalized);
-  if (resourceMatch) {
-    if (quality && quality !== CURRENT_QUALITY) return 3;
-    return resourceMatch[1] === activityId ? 1 : 2;
-  }
+  if (resourceMatch) return resourceMatch[1] === activityId ? 1 : 2;
 
   const emojiMatch = /^emoji\/[1-5]\/([^/]+)$/.exec(normalized);
   if (emojiMatch) {
-    if (quality && quality !== CURRENT_QUALITY) return 3;
     let name = emojiMatch[1].replace(/\.[^.]+$/, '');
     try { name = decodeURIComponent(name); } catch (err) {}
     return defaultEmojiNames[name] ? 1 : 2;
   }
 
-  if (quality && quality !== CURRENT_QUALITY) return 3;
   return 1;
 }
 
@@ -170,7 +168,7 @@ function levelOf(relativePath, activityId, defaultEmojiNames) {
   await mapLimit(paths, 6, async function (relative) {
     const full = path.join(ROOT, relative);
     const stat = await fsp.stat(full);
-    files.push({ path: urlPath(relative), hash: await hashFile(full), size: stat.size, level: levelOf(relative, activityId, defaultEmojiNames) });
+    files.push({ path: urlPath(relative), hash: await hashFile(full), size: stat.size, level: levelOf(relative, activityId, defaultEmojiNames), quality: qualityLevel(relative) });
   });
   files.sort(function (a, b) { return a.path.localeCompare(b.path); });
   const counts = { 1: 0, 2: 0, 3: 0 };
