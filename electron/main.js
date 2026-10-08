@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, shell, ipcMain, screen, dialog } = require('electron');
+const { app, BrowserWindow, shell, ipcMain, screen, dialog, net } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { createStaticServer } = require('./server');
@@ -247,6 +247,82 @@ ipcMain.on('fgexpig:desktop-aspect:set', function (event, value) {
 
 let staticServer = null;
 let mainWindow = null;
+
+// 地图数据接口由主进程代取：渲染进程直连会被 CORS 挡住（接口的 429/风控响应不带
+// Access-Control-Allow-Origin），既看不到真实状态码，也没法读取 Retry-After。
+const MAP_STATS_API = 'https://api2.fallguysdb.info/api/creative/';
+const MAP_STATS_CODE_RE = /^[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}$/i;
+const MAP_STATS_TIMEOUT_MS = 20000;
+const MAP_STATS_MAX_BODY = 2 * 1024 * 1024;
+
+function fetchMapStats(code) {
+  return new Promise(function (resolve) {
+    const value = String(code || '').trim();
+    if (!MAP_STATS_CODE_RE.test(value)) {
+      resolve({ status: 0, body: '', retryAfterMs: 0 });
+      return;
+    }
+    let request;
+    try {
+      request = net.request({
+        method: 'GET',
+        url: MAP_STATS_API + encodeURIComponent(value) + '.json',
+        useSessionCookies: true
+      });
+    } catch (err) {
+      resolve({ status: 0, body: '', retryAfterMs: 0 });
+      return;
+    }
+    request.setHeader('Accept', 'application/json, text/plain, */*');
+    let status = 0;
+    let retryAfterMs = 0;
+    let settled = false;
+    let size = 0;
+    const chunks = [];
+    const timer = setTimeout(function () {
+      try { request.abort(); } catch (err) {}
+      finish({ status: 0, body: '', retryAfterMs: 0 });
+    }, MAP_STATS_TIMEOUT_MS);
+    function finish(payload) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(payload);
+    }
+    request.on('response', function (response) {
+      status = Number(response.statusCode) || 0;
+      let retryAfter = response.headers && response.headers['retry-after'];
+      if (Array.isArray(retryAfter)) retryAfter = retryAfter[0];
+      const seconds = Number(retryAfter);
+      if (isFinite(seconds) && seconds > 0) {
+        retryAfterMs = Math.min(seconds, 6 * 3600) * 1000;
+      }
+      response.on('data', function (chunk) {
+        size += chunk.length;
+        if (size > MAP_STATS_MAX_BODY) {
+          try { request.abort(); } catch (err) {}
+          finish({ status: status, body: '', retryAfterMs: retryAfterMs });
+          return;
+        }
+        chunks.push(chunk);
+      });
+      response.on('end', function () {
+        finish({ status: status, body: Buffer.concat(chunks).toString('utf8'), retryAfterMs: retryAfterMs });
+      });
+      response.on('error', function () {
+        finish({ status: status, body: '', retryAfterMs: retryAfterMs });
+      });
+    });
+    request.on('error', function () {
+      finish({ status: 0, body: '', retryAfterMs: 0 });
+    });
+    request.end();
+  });
+}
+
+ipcMain.handle('fgexpig:mapstats:fetch', function (event, code) {
+  return fetchMapStats(code);
+});
 
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {

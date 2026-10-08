@@ -15,10 +15,12 @@
   /* ---------- 数据：活动列表 ----------
      底栏槽位以「活动核心数据」为准；没有 logo 图的活动仍显示圆角矩形框（空框，无 logo）。
      LOGOS 为核心数据未加载前的兜底列表（内置文件）。 */
+  // 只列对外可见的活动：隐藏/未举办的活动绝不能放进兜底列表，
+  // 否则核心数据到位前会先选中它们，把不该公开的内容渲染出来。
   var LOGOS = [
-    'JFES110', 'JFES115', 'JFES120', 'JFES130',
-    'JFES140', 'JFES150', 'JFES160', 'JFES170',
-    'JFES175', 'JFES180', 'JFES190', 'JFES200', 'JZP1200'
+    'JFES110', 'JFES115', 'JFES130', 'JFES140',
+    'JFES150', 'JFES160', 'JFES170', 'JFES175',
+    'JFES180', 'JFES190'
   ];
   // 外屏/内屏兼容路径的可见窗口；非外屏改由中间卡片组的实际边界计算。
   var SIDE_SLOTS = 3;
@@ -1182,10 +1184,14 @@
     var previousIndex = state.index;
     state.index = ni >= 0 ? ni : LOGOS.length - 1;
     state.offset = 0;
-    if (pages.length && previousIndex !== state.index && LOGOS[previousIndex]) {
-      if (pages[previousIndex] !== pages[state.index]) releaseActivityView(previousIndex);
-      else pages[state.index]._homeRenderToken = (pages[state.index]._homeRenderToken || 0) + 1;
-      releaseActivityData(LOGOS[previousIndex]);
+    // 列表可能刚被重建（例如启动时先用内置兜底列表、随后换成真实核心数据），
+    // 此时 previousIndex 对应的活动可能已不存在，但上一轮异步渲染仍必须作废，
+    // 否则旧活动内容会在更晚返回时覆盖新页面（exe 首屏显示错误活动数据）。
+    if (pages.length && previousIndex !== state.index) {
+      var previousId = LOGOS[previousIndex];
+      if (previousId && pages[previousIndex] !== pages[state.index]) releaseActivityView(previousIndex);
+      else if (pages[state.index]) pages[state.index]._homeRenderToken = (pages[state.index]._homeRenderToken || 0) + 1;
+      if (previousId) releaseActivityData(previousId);
     }
     if (stagePageMode && stagePage) stagePage.dataset.page = LOGOS[state.index];
     initialSelectionSettled = !!(applyInitialDefault || core.length);
@@ -16728,6 +16734,8 @@
     // 先确保测评和成就数据已加载；渲染时重新取 DOM，避免 buildDock 重建后 sec 失效
     Promise.all([fetchReview(logo), fetchAchv(logo), fetchShop(logo)]).then(function () {
       if (!page.isConnected || renderToken !== (page._homeRenderToken || 0)) return;
+      // 页面当前指向的活动若已改变，说明这是被替换掉的旧渲染，不能覆盖当前内容。
+      if (page.dataset.page && page.dataset.page !== logo) return;
       applyReviewData(logo);
       applyAchvData(logo);
       applyShopData(logo);

@@ -21,5 +21,9 @@ contextBridge.exposeInMainWorld('FGEXPIG_DESKTOP', {
   },
   setAspect: function (value) {
     return ipcRenderer.sendSync('fgexpig:desktop-aspect:set', value);
+  },
+  // 地图数据接口走主进程代取：渲染进程直连会被 CORS 挡住，拿不到真实状态码
+  fetchMapStats: function (code) {
+    return ipcRenderer.invoke('fgexpig:mapstats:fetch', code);
   }
 });

@@ -1,6 +1,6 @@
 {
   "name": "fgexpig-desktop",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "private": true,
   "description": "探索的猪仔官方网站 Electron 桌面端",
   "main": "main.js",

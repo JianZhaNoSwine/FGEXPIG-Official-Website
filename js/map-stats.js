@@ -28,9 +28,10 @@
   var API = 'https://api2.fallguysdb.info/api/creative/';
   var STORAGE_KEY = 'fgexpig.mapstats.v1';
   var CODE_RE = /^[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}$/i;
-  var REQUEST_GAP_MS = 1500;               // 请求间隔基数
-  var REQUEST_JITTER_MS = 400;             // 间隔随机抖动
-  var RATE_LIMIT_PAUSE_MS = 15 * 60 * 1000; // 失败后暂停 15 分钟
+  var REQUEST_GAP_MS = 8000;               // 请求间隔基数（突发请求会被整段封禁，必须放慢）
+  var REQUEST_JITTER_MS = 4000;            // 间隔随机抖动
+  var RATE_LIMIT_PAUSE_MS = 15 * 60 * 1000; // 没拿到 Retry-After 时的兜底暂停
+  var TRANSPORT_RETRY_MS = 60 * 1000;      // 纯网络错误：短退避重试，不算风控
   var REQUEST_TIMEOUT_MS = 15000;
 
   // { codes: {码: {plays,likes,dislikes,at}}, days: {码: 'YYYY-M-D'}, resumeAt }
@@ -195,15 +196,31 @@
       schedulePump(nextGap());
     }, function (err) {
       running = false;
-      if (err && Number(err.status) === 404) {
+      var status = Number(err && err.status) || 0;
+      if (status === 404) {
         // 这个地图暂时没有数据：当天不再重试，明天再试
         store.days[code] = dayKey();
         writeStore();
         schedulePump(nextGap());
         return;
       }
-      // 认为开始被风控：放回队尾，整队暂停 15 分钟后继续
       requeue(code);
+      var retryAfterMs = Number(err && err.retryAfterMs) || 0;
+      if (retryAfterMs > 0) {
+        // 服务端明确给了 Retry-After（实测风控会要求等近 1 小时）：
+        // 严格按它等，避免在封禁期内重试把封禁续上，导致永远刷不到数据。
+        store.resumeAt = Date.now() + retryAfterMs;
+        writeStore();
+        notify();
+        schedulePump(retryAfterMs);
+        return;
+      }
+      if (err && err.transport) {
+        // 纯网络错误（断网 / 超时）：不是风控，不写 resumeAt，短退避后继续
+        schedulePump(TRANSPORT_RETRY_MS);
+        return;
+      }
+      // 其余失败按风控处理：整队暂停 15 分钟后继续
       store.resumeAt = Date.now() + RATE_LIMIT_PAUSE_MS;
       writeStore();
       notify();
@@ -211,7 +228,54 @@
     });
   }
 
-  function fetchCode(code) {
+  function consumePayload(code, json) {
+    if (!json || json.ok !== true || !json.data) {
+      var error = new Error('bad payload');
+      error.status = 0;
+      throw error;
+    }
+    var level = json.data.level || {};
+    var stats = (json.data.snapshot && json.data.snapshot.stats) || {};
+    store.codes[code] = {
+      plays: toCount(level.play_count),
+      likes: toCount(stats.likes),
+      dislikes: toCount(stats.dislikes),
+      at: Date.now()
+    };
+    writeStore();
+  }
+
+  function mapStatsBridge() {
+    var bridge = global.FGEXPIG_DESKTOP && global.FGEXPIG_DESKTOP.fetchMapStats;
+    return typeof bridge === 'function' ? bridge : null;
+  }
+
+  // exe：交给 Electron 主进程代取，绕开 CORS，并能读到真实状态码与 Retry-After
+  function fetchCodeViaBridge(bridge, code) {
+    return Promise.resolve(bridge(code)).then(function (result) {
+      var status = Number(result && result.status) || 0;
+      if (status < 200 || status >= 300) {
+        var error = new Error('HTTP ' + status);
+        error.status = status;
+        error.retryAfterMs = Number(result && result.retryAfterMs) || 0;
+        // 主进程没有 CORS，状态 0 就是真的网络/连接失败，不是风控
+        error.transport = status === 0;
+        throw error;
+      }
+      var json = null;
+      try {
+        json = JSON.parse(result.body);
+      } catch (err) {
+        var parseError = new Error('bad json');
+        parseError.status = 0;
+        throw parseError;
+      }
+      consumePayload(code, json);
+    });
+  }
+
+  // 网页 / 旧版 exe：渲染进程直连（风控响应没有 CORS 头，这里只能看到网络错误）
+  function fetchCodeViaBrowser(code) {
     var controller = typeof global.AbortController === 'function' ? new global.AbortController() : null;
     var timer = 0;
     var options = { cache: 'no-store', credentials: 'omit', mode: 'cors' };
@@ -224,25 +288,14 @@
         if (!response || !response.ok) {
           var error = new Error('HTTP ' + (response ? response.status : 0));
           error.status = response ? Number(response.status) || 0 : 0;
+          var retryAfter = response && response.headers ? Number(response.headers.get('retry-after')) : 0;
+          if (isFinite(retryAfter) && retryAfter > 0) error.retryAfterMs = Math.min(retryAfter, 21600) * 1000;
           throw error;
         }
         return response.json();
       })
       .then(function (json) {
-        if (!json || json.ok !== true || !json.data) {
-          var error = new Error('bad payload');
-          error.status = 0;
-          throw error;
-        }
-        var level = json.data.level || {};
-        var stats = (json.data.snapshot && json.data.snapshot.stats) || {};
-        store.codes[code] = {
-          plays: toCount(level.play_count),
-          likes: toCount(stats.likes),
-          dislikes: toCount(stats.dislikes),
-          at: Date.now()
-        };
-        writeStore();
+        consumePayload(code, json);
       })
       .then(function (value) {
         if (timer) global.clearTimeout(timer);
@@ -251,6 +304,12 @@
         if (timer) global.clearTimeout(timer);
         throw err;
       });
+  }
+
+  function fetchCode(code) {
+    var bridge = mapStatsBridge();
+    if (bridge) return fetchCodeViaBridge(bridge, code);
+    return fetchCodeViaBrowser(code);
   }
 
   /* ---------- 对外：读取汇总 ---------- */

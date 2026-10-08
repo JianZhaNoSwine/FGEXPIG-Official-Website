@@ -129,9 +129,11 @@ async function syncSite(baseUrl, root, onProgress, maxLevel, quality) {
   maxLevel = Math.max(1, Math.min(3, Number(maxLevel) || 3));
   await fsp.mkdir(root, { recursive: true });
   const selectedQuality = Number(quality) === 3 ? 3 : 5;
+  // exe 只用当前画质（5 级），1~4 级资源永远用不到：
+  // 不论同步到第几级，都必须按画质过滤，避免把用不上的画质写进缓存。
   const files = manifest.files.filter(function (entry) {
     const entryQuality = Number(entry.quality) || 0;
-    const qualityMatches = maxLevel >= 3 || !entryQuality || entryQuality === selectedQuality;
+    const qualityMatches = !entryQuality || entryQuality === selectedQuality;
     return qualityMatches && Math.max(1, Math.min(3, Number(entry.level) || 3)) <= maxLevel;
   });
   let current = 0;
@@ -148,7 +150,54 @@ async function syncSite(baseUrl, root, onProgress, maxLevel, quality) {
   });
   const completedLevel = Math.max(Number(local && local.completedLevel) || 0, maxLevel);
   await fsp.writeFile(localManifestPath, JSON.stringify({ version: manifest.version, completedLevel: completedLevel, quality: selectedQuality, files: manifest.files }, null, 2), 'utf8');
-  return { version: manifest.version, count: files.length, level: maxLevel, quality: selectedQuality, completedLevel: completedLevel };
+  const pruned = await pruneStaleFiles(root, manifest);
+  if (pruned) console.log('[desktop] pruned ' + pruned + ' stale cache file(s)');
+  return { version: manifest.version, count: files.length, level: maxLevel, quality: selectedQuality, completedLevel: completedLevel, pruned: pruned };
+}
+
+// 清单里 URL 编码过的路径还原成文件系统相对路径
+function decodeManifestPath(value) {
+  return String(value || '').split('/').map(function (segment) {
+    try { return decodeURIComponent(segment); } catch (err) { return segment; }
+  }).join('/');
+}
+
+// 删除站点缓存里「清单中已不存在」的文件：
+// 历史清单可能包含 1~4 级画质资源，exe 用不到，必须清掉释放空间。
+async function pruneStaleFiles(root, manifest) {
+  const keep = new Set();
+  ((manifest && manifest.files) || []).forEach(function (entry) {
+    if (entry && entry.path) keep.add(decodeManifestPath(entry.path));
+  });
+  if (!keep.size) return 0;
+  let removed = 0;
+  async function walk(dir) {
+    let entries;
+    try {
+      entries = await fsp.readdir(dir, { withFileTypes: true });
+    } catch (err) {
+      return;
+    }
+    for (const entry of entries) {
+      const full = path.join(dir, entry.name);
+      const relative = path.relative(root, full).split(path.sep).join('/');
+      if (entry.isDirectory()) {
+        if (relative === '.downloads') continue;
+        await walk(full);
+        try { await fsp.rmdir(full); } catch (err) {}
+        continue;
+      }
+      if (relative === LOCAL_MANIFEST_NAME) continue;
+      if (!keep.has(relative)) {
+        try {
+          await fsp.rm(full, { force: true });
+          removed += 1;
+        } catch (err) {}
+      }
+    }
+  }
+  await walk(root);
+  return removed;
 }
 
 function hasLocalSite(root) {

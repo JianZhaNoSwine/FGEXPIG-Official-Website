@@ -83,10 +83,39 @@ function sendRange(req, res, filePath, stat) {
   fs.createReadStream(filePath).pipe(res);
 }
 
+// 站点清单里的路径集合：只有清单里存在的文件才值得回源到线上。
+// 站点会为每个活动都尝试读取可选的 review/achievements/news 等文件，
+// 其中绝大多数在服务端本来就不存在；若逐个回源，每个不存在的文本都要走一次
+// 完整网络请求，这是 exe 首屏文字比网页还慢的主因。
+function normalizeRemoteKey(pathname) {
+  let value = String(pathname || '');
+  try { value = decodeURIComponent(value); } catch (err) {}
+  return value.replace(/\\/g, '/').replace(/^\/+/, '');
+}
+
+function loadManifestPaths(root) {
+  const names = ['.desktop-manifest.json', 'desktop-manifest.json'];
+  for (const name of names) {
+    try {
+      const data = JSON.parse(fs.readFileSync(path.join(root, name), 'utf8'));
+      if (!data || !Array.isArray(data.files)) continue;
+      const set = new Set();
+      data.files.forEach(function (entry) {
+        if (!entry || !entry.path) return;
+        set.add(normalizeRemoteKey(entry.path));
+      });
+      if (set.size) return set;
+    } catch (err) {}
+  }
+  return null;
+}
+
 function createStaticServer(rootDir, port, options) {
   const root = path.resolve(rootDir);
   const fallbackBaseUrl = options && options.fallbackBaseUrl ? options.fallbackBaseUrl : '';
-  function proxyRemote(req, res) {
+  const manifestPaths = loadManifestPaths(root);
+  const remoteMisses = new Set();
+  function proxyRemote(req, res, cacheKey) {
     if (!fallbackBaseUrl) {
       res.writeHead(404);
       res.end('Not found');
@@ -107,10 +136,12 @@ function createStaticServer(rootDir, port, options) {
         if (value) responseHeaders[name] = value;
       });
       responseHeaders['Cache-Control'] = 'no-store';
+      if (cacheKey && (response.status === 404 || response.status === 410)) remoteMisses.add(cacheKey);
       res.writeHead(response.status, responseHeaders);
       if (req.method === 'HEAD' || !response.body) return res.end();
       Readable.fromWeb(response.body).pipe(res);
     }).catch(function () {
+      if (cacheKey) remoteMisses.add(cacheKey);
       res.writeHead(404);
       res.end('Not found');
     });
@@ -138,7 +169,20 @@ function createStaticServer(rootDir, port, options) {
     }
     fs.stat(filePath, function (err, stat) {
       if (err || !stat.isFile()) {
-        proxyRemote(req, res);
+        const key = normalizeRemoteKey(pathname);
+        // 清单里没有该文件：直接 404，不回源，避免无谓的网络往返拖慢首屏文字。
+        if (manifestPaths && !manifestPaths.has(key)) {
+          res.writeHead(404);
+          res.end('Not found');
+          return;
+        }
+        // 之前回源已经确认取不到的文件，本次会话内不再重复回源。
+        if (remoteMisses.has(key)) {
+          res.writeHead(404);
+          res.end('Not found');
+          return;
+        }
+        proxyRemote(req, res, key);
         return;
       }
       sendRange(req, res, filePath, stat);
