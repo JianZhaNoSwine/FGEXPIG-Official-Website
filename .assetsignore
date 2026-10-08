@@ -4,7 +4,7 @@
 .gitattributes
 .wrangler
 node_modules
-# 语言源文件：仅供本地开发，不上传到站点
+
 i18n/ui-strings.csv
 i18n/shop-strings.csv
 i18n/resources-strings.csv

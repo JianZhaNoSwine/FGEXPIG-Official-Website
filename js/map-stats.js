@@ -121,6 +121,9 @@
     }
     if (!changed) return;
     buildQueue();
+    // 必须通知一次：队列可能为空（今天已经全部刷新过），
+    // 若不通知，订阅方（首页地图卡片、暂停菜单顶部统计）会一直停在 N/A。
+    notify();
     if (!queueNew.length && !queueStale.length) return;
     var wait = Number(store.resumeAt || 0) - Date.now();
     schedulePump(wait > 0 ? wait : 0);

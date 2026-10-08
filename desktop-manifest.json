@@ -1,6 +1,6 @@
 {
-  "version": "bd6902f26f8f2aee",
-  "generatedAt": "2026-10-08T18:14:46.951Z",
+  "version": "8e438750930fd6f3",
+  "generatedAt": "2026-10-08T18:23:04.970Z",
   "counts": {
     "1": 339,
     "2": 1060,
@@ -5287,15 +5287,15 @@
     },
     {
       "path": "js/main.js",
-      "hash": "6c018f389784ddd1bc4e099155ed567cdf23b043c2d81d82455d858de76fb616",
-      "size": 757700,
+      "hash": "e802328f46f541d22e9e5be9adb2072367d79b24099bb3ae43a0bcc0e4cd4fb3",
+      "size": 757955,
       "level": 1,
       "quality": 0
     },
     {
       "path": "js/map-stats.js",
-      "hash": "7e1e880bf15fda150bc3f4f3dab64d33d7ff4683687e1bda870cc18f0ad22651",
-      "size": 14740,
+      "hash": "15c8cc03f4f7ce56ee9d47ee4fc7ceab4bac9e3b30c69f3dd2398cb8106fdd3c",
+      "size": 14942,
       "level": 1,
       "quality": 0
     },

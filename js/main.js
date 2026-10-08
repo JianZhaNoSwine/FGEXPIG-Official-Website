@@ -17917,7 +17917,12 @@
       window.FgexpigI18n.onChange(refreshMapSummaryCards);
     }
     playInterfaceAnimation(true);
-    initData();
+    initData().then(function () {
+      // 数据（含地图分享码）注册完成后立刻刷新统计：全部更完时不会再收到 notify
+      refreshMapSummaryCards();
+      updatePauseStatBar();
+      updatePauseCacheProgress();
+    }).catch(function () {});
     if (pendingHomeRelocalize) relocalizeActiveHomeData();
     else fillHomeSection(LOGOS[initial]);
     render();
