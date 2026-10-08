@@ -1,6 +1,7 @@
 .git
 .git/*
 .gitignore
+.gitattributes
 .wrangler
 node_modules
 # 语言源文件：仅供本地开发，不上传到站点
@@ -21,3 +22,6 @@ desktop-dist
 desktop-dist/*
 pnpm-workspace.yaml
 tools/build-desktop-manifest.js
+tools/map-lookup-probe.html
+tools/map-lookup-probe.js
+tools/map-lookup-probe.ps1

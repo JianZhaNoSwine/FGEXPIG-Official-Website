@@ -47,6 +47,13 @@ function hashFile(filePath) {
   });
 }
 
+// 文本文件按 LF 归一化后再哈希：Git（core.autocrlf / .gitattributes）
+// 与线上部署都以 LF 存储，而本地工作区可能是 CRLF。
+function normalizeLf(buffer) {
+  if (buffer.indexOf(0x0d) === -1) return buffer;
+  return Buffer.from(buffer.toString('latin1').replace(/\r\n/g, '\n'), 'latin1');
+}
+
 async function mapLimit(items, limit, worker) {
   let next = 0;
   async function run() {
@@ -167,8 +174,17 @@ function levelOf(relativePath, activityId, defaultEmojiNames) {
   const files = [];
   await mapLimit(paths, 6, async function (relative) {
     const full = path.join(ROOT, relative);
-    const stat = await fsp.stat(full);
-    files.push({ path: urlPath(relative), hash: await hashFile(full), size: stat.size, level: levelOf(relative, activityId, defaultEmojiNames), quality: qualityLevel(relative) });
+    let hash;
+    let size;
+    if (isText(relative)) {
+      const normalized = normalizeLf(await fsp.readFile(full));
+      hash = crypto.createHash('sha256').update(normalized).digest('hex');
+      size = normalized.length;
+    } else {
+      hash = await hashFile(full);
+      size = (await fsp.stat(full)).size;
+    }
+    files.push({ path: urlPath(relative), hash: hash, size: size, level: levelOf(relative, activityId, defaultEmojiNames), quality: qualityLevel(relative) });
   });
   files.sort(function (a, b) { return a.path.localeCompare(b.path); });
   const counts = { 1: 0, 2: 0, 3: 0 };

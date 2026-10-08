@@ -1,12 +1,14 @@
-﻿/* 统一缓存机制：
-   - 文本（HTML / CSS / JS / JSON / TXT 等）只联网读取，不进入缓存；
-   - 图片 / 音乐 / 字体 / 视频等二进制资源先读缓存，再联网校验更新；
+/* 统一缓存机制：
+   - 页面导航始终联网取最新（不吃 HTTP 缓存）；
+   - 文本（CSS / JS / JSON / XML / TXT 等）不拦截，交给浏览器按 ETag 条件请求：
+     内容没变是 304（只传响应头），改了立刻拿到新内容，不牺牲即时性；
+   - 图片 / 音乐 / 字体 / 视频等二进制资源缓存优先，命中立刻返回，后台再联网校验更新；
    - 固定缓存名：普通内容更新不清空旧缓存，只替换发生变化的资源；
    - 1/2/3 级缓存的范围由前端下载队列控制，Service Worker 不主动删除已下载的分级资源。 */
 const CACHE_NAME = 'fgexpig-assets';
 const LEGACY_CACHE_PREFIX = 'fgexpig-assets-';
 const ACTIVITY_RELEASE_DELAY = 10000;
-/* 文本类：不缓存 */
+/* 文本类：不放进 Service Worker 缓存，交给浏览器按 ETag 条件请求 */
 const TEXT_PATH_RE = /\.(?:html?|css|js|json|txt|xml|csv|md)$/i;
 
 /* 媒体类：必须支持 Range，否则在线播放时回退/快进会从头开始 */
@@ -241,7 +243,18 @@ function defaultMediaType(path) {
   return 'video/mp4';
 }
 
-async function getMediaPayload(url) {
+/* 缓存优先：命中缓存就立刻返回，同时后台联网校验（下次加载即为最新）。
+   这样重复打开页面不用再为每个图片/字体/音乐等待一次网络往返。 */
+async function serveFromCacheFirst(request, event) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(request, { ignoreVary: true });
+  if (!cached) return revalidateFirst(request);
+  const refresh = revalidateFirst(request).catch(function () {});
+  if (event && typeof event.waitUntil === 'function') event.waitUntil(refresh);
+  return cached;
+}
+
+async function getMediaPayload(url, event) {
   const key = url.href;
   const hit = mediaPayloads.get(key);
   if (hit) {
@@ -249,7 +262,7 @@ async function getMediaPayload(url) {
     mediaPayloads.set(key, hit);
     return hit;
   }
-  const response = await revalidateFirst(new Request(key));
+  const response = await serveFromCacheFirst(new Request(key), event);
   if (!response || !response.ok) throw new Error('media-unavailable');
   const type = response.headers.get('Content-Type') || defaultMediaType(url.pathname);
   const buffer = await response.arrayBuffer();
@@ -258,8 +271,8 @@ async function getMediaPayload(url) {
   return payload;
 }
 
-async function serveMediaFull(request, url) {
-  const response = await revalidateFirst(new Request(url.href));
+async function serveMediaFull(request, url, event) {
+  const response = await serveFromCacheFirst(new Request(url.href), event);
   if (!response || !response.ok) throw new Error('media-unavailable');
   const headers = new Headers(response.headers);
   headers.set('Accept-Ranges', 'bytes');
@@ -288,18 +301,18 @@ function parseRangeHeader(header, size) {
   return { start: start, end: end };
 }
 
-async function serveMedia(request, url) {
+async function serveMedia(request, url, event) {
   const rangeHeader = request.headers.get('range');
   if (!rangeHeader) {
     try {
-      return await serveMediaFull(request, url);
+      return await serveMediaFull(request, url, event);
     } catch (err) {
       return fetch(request).catch(() => Response.error());
     }
   }
   let payload;
   try {
-    payload = await getMediaPayload(url);
+    payload = await getMediaPayload(url, event);
   } catch (err) {
     return fetch(request).catch(() => Response.error());
   }
@@ -324,13 +337,16 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-  if (request.mode === 'navigate' || !cacheKind(url.pathname)) {
+  // 页面导航永远取最新，避免拿到旧 HTML 引用旧版本资源。
+  if (request.mode === 'navigate') {
     event.respondWith(fetch(request, { cache: 'no-store' }));
     return;
   }
+  // 文本类不拦截：浏览器按 ETag 条件请求，未变更返回 304（几乎不耗流量）。
+  if (!cacheKind(url.pathname)) return;
   if (isMediaPath(url.pathname)) {
-    event.respondWith(serveMedia(request, url));
+    event.respondWith(serveMedia(request, url, event));
     return;
   }
-  event.respondWith(revalidateFirst(request));
+  event.respondWith(serveFromCacheFirst(request, event));
 });

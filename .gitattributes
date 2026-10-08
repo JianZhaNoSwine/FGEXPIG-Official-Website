@@ -1,0 +1,4 @@
+# 统一文本文件行尾为 LF。
+# 桌面端 desktop-manifest.json 按 LF 归一化后计算哈希，
+# 避免 Windows 工作区的 CRLF 与线上部署的 LF 不一致导致校验失败。
+* text=auto eol=lf

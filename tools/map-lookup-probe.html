@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>地图数据接口测试（临时探针）</title>
+<style>
+  :root { color-scheme: dark; }
+  body { font-family: "Segoe UI", "Microsoft YaHei", sans-serif; background:#16181d; color:#e8e8ea; margin:0; padding:24px; }
+  h1 { font-size:20px; margin:0 0 6px; }
+  .sub { color:#9aa0a6; font-size:13px; margin-bottom:18px; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+  input { width:230px; padding:10px 12px; font-size:16px; border-radius:8px; border:1px solid #3a3f47; background:#1e2127; color:#fff; letter-spacing:1px; }
+  button { padding:10px 14px; font-size:14px; border-radius:8px; border:1px solid #3a3f47; background:#242832; color:#e8e8ea; cursor:pointer; }
+  button:hover { background:#2d323d; }
+  .chip { padding:6px 10px; font-size:12px; border-radius:20px; background:#1e2127; border:1px solid #3a3f47; cursor:pointer; }
+  .card { background:#1b1e24; border:1px solid #2b3038; border-radius:12px; padding:16px; margin-top:14px; }
+  .k { color:#9aa0a6; font-size:12px; }
+  .v { font-size:15px; margin-bottom:8px; word-break:break-all; }
+  .ok { color:#5ddc7a; } .bad { color:#ff6b6b; } .warn { color:#ffcc00; }
+  pre { background:#0f1115; border:1px solid #2b3038; border-radius:8px; padding:12px; overflow:auto; max-height:420px; font-size:12px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; }
+  .stat { background:#0f1115; border:1px solid #2b3038; border-radius:10px; padding:12px; }
+  .stat .n { font-size:24px; font-weight:600; }
+  img { max-width:260px; border-radius:8px; border:1px solid #2b3038; margin:4px; }
+</style>
+</head>
+<body>
+  <h1>地图数据接口测试（临时探针）</h1>
+  <div class="sub">
+    用来验证能否在浏览器里直接读到地图数据。它不依赖本站任何代码，可以双击打开，也可以放到网站上测。<br>
+    接口：<code>https://api2.fallguysdb.info/api/creative/{分享码}.json</code>
+  </div>
+
+  <div class="row">
+    <input id="code" value="0622-6707-7933" spellcheck="false" placeholder="XXXX-XXXX-XXXX">
+    <button id="go">查询</button>
+  </div>
+  <div class="row">
+    <span class="k">本地 CMS 里的真实分享码：</span>
+    <span class="chip" data-code="0622-6707-7933">0622-6707-7933</span>
+    <span class="chip" data-code="4150-7311-8813">4150-7311-8813</span>
+    <span class="chip" data-code="6929-6036-1695">6929-6036-1695</span>
+    <span class="chip" data-code="8174-3657-4869">8174-3657-4869</span>
+  </div>
+
+  <div id="status" class="card">等待测试…</div>
+  <div id="stats" class="card" style="display:none"></div>
+  <div id="json" class="card" style="display:none"><div class="k">原始返回</div><pre id="raw"></pre></div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var API = 'https://api2.fallguysdb.info/api/creative/';
+
+  function esc(s) { return String(s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
+  function num(n) { return (n === null || n === undefined || n === '') ? '—' : Number(n).toLocaleString('en-US'); }
+
+  $('go').addEventListener('click', function () { run($('code').value.trim()); });
+  $('code').addEventListener('keydown', function (e) { if (e.key === 'Enter') run($('code').value.trim()); });
+  Array.prototype.forEach.call(document.querySelectorAll('.chip'), function (el) {
+    el.addEventListener('click', function () { $('code').value = el.dataset.code; run(el.dataset.code); });
+  });
+
+  function run(code) {
+    if (!/^[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}$/.test(code)) {
+      $('status').innerHTML = '<span class="bad">格式不对</span>，分享码必须是 <code>XXXX-XXXX-XXXX</code> 这种 4-4-4。';
+      $('stats').style.display = 'none'; $('json').style.display = 'none';
+      return;
+    }
+    var url = API + encodeURIComponent(code) + '.json';
+    var t0 = performance.now();
+    $('status').innerHTML = '请求中… <code>' + esc(url) + '</code>';
+    $('stats').style.display = 'none'; $('json').style.display = 'none';
+
+    fetch(url, { cache: 'no-store' })
+      .then(function (res) {
+        var ms = Math.round(performance.now() - t0);
+        return res.text().then(function (text) {
+          return { res: res, text: text, ms: ms };
+        });
+      })
+      .then(function (r) {
+        var ms = r.ms;
+        if (!r.res.ok) {
+          $('status').innerHTML =
+            '<div class="bad">HTTP ' + r.res.status + '（' + ms + ' ms）</div>' +
+            '<div class="k">注意：如果是 403 且带 <code>flag=blocked</code> 或 Cloudflare 拦截页，说明是对方按 IP 拦了，不是我们代码的问题。</div>' +
+            '<pre>' + esc(r.text.slice(0, 1200)) + '</pre>';
+          return;
+        }
+        var json;
+        try { json = JSON.parse(r.text); }
+        catch (e) {
+          $('status').innerHTML = '<div class="bad">返回的不是 JSON</div><pre>' + esc(r.text.slice(0, 800)) + '</pre>';
+          return;
+        }
+        render(code, json, ms);
+      })
+      .catch(function (err) {
+        var ms = Math.round(performance.now() - t0);
+        $('status').innerHTML =
+          '<div class="bad">请求失败（' + ms + ' ms）：' + esc(err && err.message) + '</div>' +
+          '<div class="warn">这类 <code>TypeError: Failed to fetch</code> 基本就是 <b>CORS 被拒</b>或网络不通。' +
+          '打开 F12 → Console / Network 能看到明确原因：CORS 会明确写 “No \'Access-Control-Allow-Origin\' header”。</div>';
+      });
+  }
+
+  function render(code, json, ms) {
+    if (!json || json.ok !== true || !json.data) {
+      $('status').innerHTML = '<div class="bad">接口返回 ok 不为 true</div><pre>' + esc(JSON.stringify(json, null, 2).slice(0, 1200)) + '</pre>';
+      return;
+    }
+    var level = json.data.level || {};
+    var snap = json.data.snapshot || {};
+    var stats = snap.stats || {};
+    var vm = snap.version_metadata || {};
+    var author = (level.player_badge && level.player_badge.name_per_platform) || (snap.author && snap.author.name_per_platform) || {};
+    var authorName = author.eos || Object.keys(author).map(function (k) { return author[k]; })[0] || '—';
+    var images = ((snap.images || {}).PreviewImage || []).filter(function (x) { return x && x.url; }).map(function (x) { return x.url; });
+    if (!images.length && level.thumbnail_image_url) images = [level.thumbnail_image_url];
+
+    $('status').innerHTML =
+      '<div class="ok">接口可用了（HTTP 200，' + ms + ' ms）</div>' +
+      '<div class="k">分享码 ' + esc(code) + ' · 缓存字段由对方接口返回</div>';
+
+    $('stats').style.display = '';
+    $('stats').innerHTML =
+      '<div class="grid">' +
+        '<div class="stat"><div class="k">游玩数 play_count</div><div class="n">' + num(level.play_count) + '</div></div>' +
+        '<div class="stat"><div class="k">点赞 likes</div><div class="n">' + num(stats.likes) + '</div></div>' +
+        '<div class="stat"><div class="k">点踩 dislikes</div><div class="n">' + num(stats.dislikes) + '</div></div>' +
+        '<div class="stat"><div class="k">最大人数</div><div class="n">' + num(level.max_players) + '</div></div>' +
+      '</div>' +
+      '<div style="margin-top:14px">' +
+        '<div class="k">标题</div><div class="v">' + esc(level.title || '—') + '</div>' +
+        '<div class="k">作者</div><div class="v">' + esc(authorName) + '</div>' +
+        '<div class="k">分享码</div><div class="v">' + esc(level.share_code || code) + '</div>' +
+        '<div class="k">主题 / 模式 / 状态</div><div class="v">' + esc([vm.level_theme_id, vm.game_mode_id, vm.status].filter(Boolean).join(' · ') || '—') + '</div>' +
+        '<div class="k">标签</div><div class="v">' + esc((level.creator_tags || vm.creator_tags || []).join(', ') || '—') + '</div>' +
+        '<div class="k">最后修改</div><div class="v">' + esc(vm.last_modified_date || '—') + '</div>' +
+        '<div class="k">预览图</div><div>' + (images.map(function (u) { return '<img src="' + esc(u) + '">'; }).join('') || '—') + '</div>' +
+      '</div>' +
+      '<div class="k" style="margin-top:12px">这些都是我们做“输入地图代码 → 显示游玩数/点赞数”需要的字段。</div>';
+
+    $('json').style.display = '';
+    $('raw').textContent = JSON.stringify(json, null, 2);
+  }
+  // 打开页面就自动查一次默认分享码，双击即可看到结果。
+  run($('code').value.trim());
+})();
+</script>
+</body>
+</html>

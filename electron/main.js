@@ -349,16 +349,29 @@ async function createWindow() {
   const splashStartedAt = Date.now();
 
   const desktopQuality = 5;
-  try {
-    await syncSite(UPDATE_BASE_URL, SITE_ROOT, sendSplashProgress, 1, desktopQuality);
-  } catch (err) {
-    console.error('[desktop] site update failed:', err);
-    if (!hasLocalSite(SITE_ROOT)) {
+  const cacheReady = hasLocalSite(SITE_ROOT);
+  let initialSync;
+  if (cacheReady) {
+    // 本机已有 1 级缓存：先用缓存进入，联网校验最多只等 1.5s，
+    // 超时就在后台继续，避免每次启动都被网络清单的往返拖慢。
+    initialSync = syncSite(UPDATE_BASE_URL, SITE_ROOT, function () {}, 1, desktopQuality);
+    await Promise.race([
+      initialSync.catch(function (err) {
+        console.warn('[desktop] level 1 sync failed, using local cache:', err);
+      }),
+      delay(1500)
+    ]);
+  } else {
+    // 首次运行：必须先下完 1 级缓存，否则没有可显示的页面。
+    try {
+      await syncSite(UPDATE_BASE_URL, SITE_ROOT, sendSplashProgress, 1, desktopQuality);
+    } catch (err) {
+      console.error('[desktop] site update failed:', err);
       dialog.showErrorBox('启动失败', '资源更新失败，且本机没有可用缓存。');
       mainWindow.destroy();
       return;
     }
-    console.warn('[desktop] using existing local site cache');
+    initialSync = Promise.resolve();
   }
 
   sendSplashProgress({ current: 1, target: 1, phase: 'complete', level: 1 });
@@ -388,6 +401,8 @@ async function createWindow() {
   }
 
   (async function () {
+    // 等 1 级校验结束后再顺序拉 2/3 级，避免同一文件被并发下载两次。
+    try { await initialSync; } catch (err) {}
     for (const level of [2, 3]) {
       try {
         await syncSite(UPDATE_BASE_URL, SITE_ROOT, function () {}, level, desktopQuality);

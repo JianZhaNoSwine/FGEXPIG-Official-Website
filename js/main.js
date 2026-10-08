@@ -12570,6 +12570,7 @@
   var scrollStickHoldStart = 0;
   var scrollStickDirection = 0;
   var gamepadScrollTarget = null;
+  var gamepadSuppressedUntilRelease = false;   // 失焦期间按下的键：等全部松开才恢复响应
   var viewerTriggerHoldStart = {};
   var viewerTriggerLastStep = {};
   var viewerPanState = { x: { start: 0, direction: 0 }, y: { start: 0, direction: 0 } };
@@ -13084,12 +13085,22 @@
     }
     performKeyAction(actionId);
   }
+  // 只有网页 / exe 窗口在前台时才响应手柄，切到别的程序时不响应
+  function gamepadWindowActive() {
+    if (typeof document.hasFocus === 'function' && !document.hasFocus()) return false;
+    if (document.visibilityState === 'hidden') return false;
+    return true;
+  }
+
   function pollGamepads() {
     var now = performance.now();
     var frameScale = gamepadLastFrameTime
       ? Math.max(0.5, Math.min(2.5, (now - gamepadLastFrameTime) / 16.67))
       : 1;
     gamepadLastFrameTime = now;
+    var active = gamepadWindowActive();
+    var anyInput = false;
+    if (!active) gamepadSuppressedUntilRelease = true;
     var nextPressed = {};
     var pads = navigator.getGamepads ? navigator.getGamepads() : [];
     var hadInput = false;
@@ -13107,7 +13118,8 @@
       var axisRY = pad.axes && pad.axes.length > 3 ? Number(pad.axes[3]) || 0 : 0;
       var stickActive = Math.abs(axisX) > 0.18 || Math.abs(axisY) > 0.18;
       var titlePanelOpen = isTitlePanelOpen();
-      if (stickActive) {
+      if (stickActive) anyInput = true;
+      if (stickActive && active && !gamepadSuppressedUntilRelease) {
         hadInput = true;
         if (pauseMenu && pauseMenu.classList.contains('is-settings-open') && Math.abs(axisX) > 0.25) {
           adjustSettingsWithStick(axisX, now);
@@ -13137,7 +13149,9 @@
       if (!activeViewer) {
         resetViewerPanState();
       }
-      if (Math.abs(axisRX) > 0.18 || Math.abs(axisRY) > 0.18) {
+      var rightStickActive = Math.abs(axisRX) > 0.18 || Math.abs(axisRY) > 0.18;
+      if (rightStickActive) anyInput = true;
+      if (rightStickActive && active && !gamepadSuppressedUntilRelease) {
         hadInput = true;
         if (activeViewer) {
           var panX = Math.abs(axisRX) > 0.12 ? -axisRX * 12 * frameScale : 0;
@@ -13163,10 +13177,13 @@
           }
           continue;
         }
-        hadInput = true;
+        anyInput = true;
         var stateKey = p + ':' + b;
         nextPressed[stateKey] = true;
         var wasPressed = !!gamepadPressedState[stateKey];
+        // 不在焦点、或刚从失焦恢复但按键还没松开 → 只记录状态，不执行任何操作
+        if (!active || gamepadSuppressedUntilRelease) continue;
+        hadInput = true;
         if (b === 6 || b === 7) {
           if (!startupEntryComplete || (startupOverlay && !startupOverlay.hidden)) {
             setInputMode('gamepad');
@@ -13216,12 +13233,20 @@
         else if (actionId) runGamepadAction(actionId);
       }
     }
-    if (hadInput) setInputMode('gamepad');
+    // 全部松开后才解除抑制，避免一回到窗口就被按住的键触发
+    if (active && gamepadSuppressedUntilRelease && !anyInput) gamepadSuppressedUntilRelease = false;
+    if (active && hadInput) setInputMode('gamepad');
     gamepadPressedState = nextPressed;
     gamepadPollFrame = requestAnimationFrame(pollGamepads);
   }
   function initGamepadControls() {
     if (gamepadPollFrame || !navigator.getGamepads) return;
+    // 失焦立刻挂起手柄输入：rAF 被节流（窗口在后台）时也能及时生效，
+    // 且必须等所有按键 / 摇杆松开才恢复，避免一回到窗口就误触发
+    window.addEventListener('blur', function () { gamepadSuppressedUntilRelease = true; });
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') gamepadSuppressedUntilRelease = true;
+    });
     window.addEventListener('gamepadconnected', function (event) {
       var platform = gamepadPlatformFor(event.gamepad);
       if (platform !== activeGamepadPlatform) {
@@ -13919,6 +13944,27 @@
 
   function shopOf(id) { return (shopStore.shops || {})[id] || null; }
   function hasShop(id) { return !!(shopStore.shops && Object.prototype.hasOwnProperty.call(shopStore.shops, id)); }
+
+  // 把每个活动的分享码交给地图数据模块；order 用发行日期，模块按从新到旧排队抓取
+  function registerMapStatsTargets() {
+    // 地图数据卡片由 exe 独占：网页版不注册目标、也不会请求地图接口
+    if (!isDesktopRuntime()) return;
+    var api = window.FgexpigMapStats;
+    if (!api || typeof api.register !== 'function') return;
+    var core = (typeof dataStore !== 'undefined' && dataStore && dataStore.core) || [];
+    var list = [];
+    Object.keys(shopStore.shops || {}).forEach(function (id) {
+      var codes = activityMapCodes(id);
+      if (!codes.length) return;
+      var row = null;
+      for (var i = 0; i < core.length; i++) {
+        if (core[i] && core[i].id === id) { row = core[i]; break; }
+      }
+      var order = coreReleaseTimestamp(row && row.releaseDate);
+      list.push({ id: id, codes: codes, order: isFinite(order) ? order : 0 });
+    });
+    api.register(list);
+  }
 
   function applyShopData(id) {
     var meta = document.getElementById('shopMeta');
@@ -16286,6 +16332,269 @@
     return metric;
   }
 
+  // 取一个活动在 shop.js 里的全部可用分享码（去重、去空）
+  function activityMapCodes(id) {
+    var shop = shopOf(id);
+    if (!shop || !shop.codes) return [];
+    var codes = [];
+    Object.keys(shop.codes).forEach(function (name) {
+      var value = shopText(shop.codes[name]);
+      if (!value || value === '无代码' || /^-+$/.test(value)) return;
+      if (codes.indexOf(value) < 0) codes.push(value);
+    });
+    return codes;
+  }
+
+  /* ---------- 详情页：地图数据卡片（游玩数 / 点赞数 / 点踩数 / 点赞率 / 赞踩比）
+     接口只提供 游玩数 / 点赞 / 点踩，后两项由这三项算出：
+       点赞率 = 点赞 ÷ 游玩数 × 100%
+       赞踩比 = 点赞 ÷ 点踩 ---------- */
+  function mapSummaryMetrics(id) {
+    var api = window.FgexpigMapStats;
+    var data = (api && typeof api.get === 'function') ? api.get(id) : null;
+    var paused = !!(api && typeof api.isPaused === 'function' && api.isPaused());
+    if (!data && !paused) return null;
+    return {
+      plays: data ? data.plays : 0,
+      likes: data ? data.likes : 0,
+      dislikes: data ? data.dislikes : 0,
+      hasData: !!data,
+      // 该活动的全部地图都拿到数据才算完整，完整后才计算点赞率 / 赞踩比
+      complete: !!(data && data.complete),
+      // 被风控暂停、且这个活动今天还没刷新完 → 数字显示粉色提示
+      rateLimited: paused && !(data && data.fresh),
+      rate: data && data.plays > 0 ? (data.likes / data.plays) * 100 : null,
+      ratio: data && data.dislikes > 0 ? (data.likes / data.dislikes) : (data && data.likes > 0 ? Infinity : null)
+    };
+  }
+
+  /* 数字最多 5 个字符：0~9,999 原样显示，10,000 起用 K / M / B / T */
+  function formatMapCount(value) {
+    if (value == null || !isFinite(value)) return 'N/A';
+    var number = Number(value);
+    var absolute = Math.abs(number);
+    if (absolute < 10000) return Math.round(number).toLocaleString('en-US');
+    var units = [
+      { limit: 1e12, suffix: 'T' },
+      { limit: 1e9, suffix: 'B' },
+      { limit: 1e6, suffix: 'M' },
+      { limit: 1e3, suffix: 'K' }
+    ];
+    for (var i = 0; i < units.length; i++) {
+      if (absolute < units[i].limit) continue;
+      var index = i;
+      var scaled = number / units[index].limit;
+      if (scaled >= 999.95 && index > 0) {
+        index -= 1;
+        scaled = number / units[index].limit;
+      }
+      var text = scaled.toFixed(1);
+      if (parseFloat(text) >= 100) text = scaled.toFixed(0);
+      return text + units[index].suffix;
+    }
+    return Math.round(number).toLocaleString('en-US');
+  }
+
+  // 点赞率：最多 5 个字符（13.3% / 99.9% / 100%）
+  function formatMapRate(value) {
+    if (value == null || !isFinite(value)) return 'N/A';
+    if (value >= 100) return Math.round(value) + '%';
+    var text = value.toFixed(1);
+    if (parseFloat(text) >= 100) return '100%';
+    return text + '%';
+  }
+
+  // 赞踩比：最多 5 个字符（8.3 / 99.9 / 999 / 999+ / ∞）
+  function formatMapRatio(value) {
+    if (value == null) return 'N/A';
+    if (!isFinite(value)) return '∞';
+    if (value >= 1000) return '999+';
+    if (value >= 100) return String(Math.round(value));
+    return value.toFixed(1);
+  }
+
+  // 累加值可能很大：放不下时逐级缩小字号，保证数字完整可见
+  function fitMapSummaryValue(valueEl) {
+    if (!valueEl || !valueEl.style) return;
+    valueEl.style.removeProperty('font-size');
+    if (!valueEl.clientWidth) return;
+    var size = parseFloat(window.getComputedStyle(valueEl).fontSize) || 22;
+    var guard = 0;
+    while (valueEl.scrollWidth > valueEl.clientWidth && size > 11 && guard < 30) {
+      size -= 1;
+      valueEl.style.fontSize = size + 'px';
+      guard += 1;
+    }
+  }
+
+  // 说明文字与成就卡片同字号；窄栏里最多折两行，超过两行才逐级缩小
+  function fitMapSummaryLabel(labelEl, card) {
+    if (!labelEl || !labelEl.style) return;
+    labelEl.style.removeProperty('font-size');
+    if (!card || !card.clientHeight) return;
+    var metric = labelEl.parentElement;
+    var valueEl = metric ? metric.querySelector('.achv-metric-value') : null;
+    var budget = card.clientHeight - (valueEl ? valueEl.offsetHeight : 24) - 8;
+    if (budget < 12) budget = 12;
+    var size = parseFloat(window.getComputedStyle(labelEl).fontSize) || 10;
+    var guard = 0;
+    while (labelEl.scrollHeight > budget && size > 8 && guard < 8) {
+      size -= 1;
+      labelEl.style.fontSize = size + 'px';
+      guard += 1;
+    }
+  }
+
+  /* 卡片同时只显示 3 个数字：
+     第 1 列恒为游玩数；第 2 列叠「点赞数 / 点赞率」；第 3 列叠「点踩数 / 赞踩比」。
+     两面用与等级排行榜相同的 6 秒交叉淡入淡出动画交替。 */
+  function mapSummaryFaces(id) {
+    var stats = mapSummaryMetrics(id);
+    // 只有该活动的全部地图都拿到数据，才计算并展示点赞率 / 赞踩比
+    var complete = !!(stats && stats.complete);
+    var has = !!(stats && stats.hasData);
+    return {
+      complete: complete,
+      rateLimited: !!(stats && stats.rateLimited),
+      groups: [
+        [{ label: '游玩数', text: has ? formatMapCount(stats.plays) : 'N/A', raw: has ? stats.plays : null, format: formatMapCount }],
+        [
+          { label: '点赞数', text: has ? formatMapCount(stats.likes) : 'N/A', raw: has ? stats.likes : null, format: formatMapCount },
+          { label: '点赞率', text: complete ? formatMapRate(stats.rate) : '—', raw: complete ? stats.rate : null, format: formatMapRate }
+        ],
+        [
+          { label: '点踩数', text: has ? formatMapCount(stats.dislikes) : 'N/A', raw: has ? stats.dislikes : null, format: formatMapCount },
+          { label: '赞踩比', text: complete ? formatMapRatio(stats.ratio) : '—', raw: complete ? stats.ratio : null, format: formatMapRatio }
+        ]
+      ]
+    };
+  }
+
+  // 数据更新时数字滚动到新值
+  var MAP_SUMMARY_COUNT_MS = 700;
+
+  function setMapSummaryValue(valueEl, entry) {
+    if (!valueEl) return;
+    if (valueEl._mapCountFrame && window.cancelAnimationFrame) {
+      window.cancelAnimationFrame(valueEl._mapCountFrame);
+      valueEl._mapCountFrame = 0;
+    }
+    var previous = valueEl._mapRawValue;
+    var next = entry.raw;
+    var hasNext = typeof next === 'number' && isFinite(next);
+    var canCount = hasNext && typeof previous === 'number' && isFinite(previous) &&
+      previous !== next && typeof entry.format === 'function' &&
+      typeof window.requestAnimationFrame === 'function';
+    valueEl._mapRawValue = hasNext ? next : null;
+    if (!canCount) {
+      if (valueEl.textContent !== entry.text) valueEl.textContent = entry.text;
+      return;
+    }
+    var from = previous;
+    var to = next;
+    var startTime = 0;
+    valueEl._mapCountFrame = window.requestAnimationFrame(function step(now) {
+      if (!startTime) startTime = now;
+      var t = Math.min(1, (now - startTime) / MAP_SUMMARY_COUNT_MS);
+      var eased = 1 - Math.pow(1 - t, 3);
+      valueEl.textContent = entry.format(from + (to - from) * eased);
+      if (t < 1) {
+        valueEl._mapCountFrame = window.requestAnimationFrame(step);
+      } else {
+        valueEl._mapCountFrame = 0;
+        valueEl.textContent = entry.text;
+      }
+    });
+  }
+
+  function makeMapMetric(labels) {
+    var metric = document.createElement('div');
+    metric.className = 'achv-metric map-metric-pair';
+    labels.forEach(function (label, index) {
+      var face = document.createElement('div');
+      face.className = 'map-metric-face' + (labels.length > 1 ? (index === 0 ? ' is-cycle-a' : ' is-cycle-b') : '');
+      var value = document.createElement('div');
+      value.className = 'achv-metric-value';
+      value.textContent = 'N/A';
+      var labelEl = document.createElement('div');
+      labelEl.className = 'achv-metric-label';
+      labelEl.textContent = label;
+      face.appendChild(value);
+      face.appendChild(labelEl);
+      metric.appendChild(face);
+    });
+    return metric;
+  }
+
+  function renderMapSummary(card, id) {
+    if (!card) return;
+    var main = card.querySelector('.achv-summary-main');
+    if (!main) return;
+    var data = mapSummaryFaces(id);
+    // 被风控暂停且这个活动今天没刷新完 → 数字变粉色
+    card.classList.toggle('is-rate-limited', !!data.rateLimited);
+    var metrics = main.children;
+    for (var i = 0; i < metrics.length && i < data.groups.length; i++) {
+      var faces = metrics[i].querySelectorAll('.map-metric-face');
+      var pair = faces.length > 1;
+      for (var j = 0; j < faces.length && j < data.groups[i].length; j++) {
+        var face = faces[j];
+        // 数据没拿全之前不轮播：第二面隐藏，第一面常显（也不加动画）
+        var faceClass = 'map-metric-face';
+        if (pair) {
+          faceClass += data.complete
+            ? (j === 0 ? ' is-cycle-a' : ' is-cycle-b')
+            : (j === 0 ? '' : ' is-pending');
+        }
+        if (face.className !== faceClass) face.className = faceClass;
+
+        var labelEl = face.querySelector('.achv-metric-label');
+        if (labelEl) {
+          var label = i18nTr(data.groups[i][j].label);
+          if (labelEl.textContent !== label) labelEl.textContent = label;
+        }
+        var valueEl = face.querySelector('.achv-metric-value');
+        if (valueEl) {
+          setMapSummaryValue(valueEl, data.groups[i][j]);
+          var display = data.groups[i][j].text;
+          valueEl.title = (display === 'N/A' || display === '—') ? '' : display;
+        }
+      }
+      // 两面都量一遍：当前隐藏的那面也要保证轮到它时不会被截断
+      for (var k = 0; k < faces.length; k++) {
+        fitMapSummaryLabel(faces[k].querySelector('.achv-metric-label'), card);
+        fitMapSummaryValue(faces[k].querySelector('.achv-metric-value'));
+      }
+    }
+  }
+
+  function makeMapSummaryCard(id) {
+    // 地图数据卡片由 exe 独占，网页版不显示
+    if (!isDesktopRuntime()) return null;
+    // 该活动没有任何地图代码时不显示这张卡（否则永远 N/A）
+    if (!activityMapCodes(id).length) return null;
+    var card = document.createElement('div');
+    card.className = 'achv-summary map-summary';
+    card.dataset.activityId = id;
+    var main = document.createElement('div');
+    main.className = 'achv-summary-main';
+    main.appendChild(makeMapMetric(['游玩数']));
+    main.appendChild(makeMapMetric(['点赞数', '点赞率']));
+    main.appendChild(makeMapMetric(['点踩数', '赞踩比']));
+    card.appendChild(main);
+    renderMapSummary(card, id);
+    // 卡片还没进入布局时量不到宽度，插入后下一帧再校准一次字号
+    if (typeof window.requestAnimationFrame === 'function') {
+      window.requestAnimationFrame(function () { renderMapSummary(card, id); });
+    }
+    return card;
+  }
+
+  function refreshMapSummaryCards() {
+    var cards = document.querySelectorAll('.map-summary[data-activity-id]');
+    for (var i = 0; i < cards.length; i++) renderMapSummary(cards[i], cards[i].dataset.activityId);
+  }
+
   function makeAchvSummary(rows) {
     var stats = achvSummaryOf(rows);
     var summary = document.createElement('div');
@@ -17144,7 +17453,11 @@
 
     function makeDetailOverview() {
       var view = document.createElement('div');
-      view.className = 'home-detail';
+      view.className = 'home-detail home-detail-cards';
+
+      // 地图数据卡片放在 logo 卡片上面（布局与成就计数卡片一致）
+      var mapSummaryCard = makeMapSummaryCard(id);
+      if (mapSummaryCard) view.appendChild(mapSummaryCard);
 
       var logoCard = document.createElement('div');
       logoCard.className = 'home-detail-logo-card';
@@ -17275,6 +17588,7 @@
       applyAccountData();
       applyTitleData();
       applyShopData();
+      registerMapStatsTargets();
       applyLibraryData();
       applyUpdateData();
       applyReviewData();
@@ -17312,6 +17626,10 @@
   ].join(',');
 
   function cardContentUnits(body) {
+    // 详情页这类「卡片列表」：以直属卡片为单位整体上浮（地图卡片 / logo 卡片 / 信息卡 / 商店卡），
+    // 否则只有内部小块在动、邻居不动，看起来像后加进去的。
+    var listView = body.querySelector('.home-detail-cards');
+    if (listView && listView.children.length) return Array.prototype.slice.call(listView.children);
     var units = Array.prototype.slice.call(body.querySelectorAll(CARD_CONTENT_UNIT_SELECTOR));
     if (units.length) return units;
     units = Array.prototype.slice.call(body.children);
@@ -17488,6 +17806,13 @@
 
     buildNav(LOGOS[initial]);
     initRuntimeAssetCache();
+    if (window.FgexpigMapStats && typeof window.FgexpigMapStats.subscribe === 'function') {
+      window.FgexpigMapStats.subscribe(refreshMapSummaryCards);
+    }
+    // 切换语言后说明文字长度会变，需要重新做一次自适应
+    if (window.FgexpigI18n && typeof window.FgexpigI18n.onChange === 'function') {
+      window.FgexpigI18n.onChange(refreshMapSummaryCards);
+    }
     playInterfaceAnimation(true);
     initData();
     if (pendingHomeRelocalize) relocalizeActiveHomeData();

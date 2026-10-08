@@ -877,6 +877,44 @@ html:not([lang^="zh"]):not([lang="ja"]) .hotspot-reply-word { margin-right: 0.32
 .achv-metric-value { font-size: var(--text-display); line-height: 1.05; color: var(--text-primary); }
 .achv-metric-label { margin-top: 3px; font-size: var(--text-small); color: var(--text-secondary); }
 
+/* 地图数据卡片：字号与成就计数卡片一致（数字 --text-display，说明 --text-small）
+   卡片同时只显示 3 个数字：第 2 列在「点赞数 ↔ 点赞率」、第 3 列在「点踩数 ↔ 赞踩比」之间交叉淡入淡出 */
+.map-summary .achv-summary-main {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.map-summary .achv-metric-value {
+  overflow: hidden;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.map-summary .achv-metric-label {
+  line-height: 1.15;
+  overflow-wrap: break-word;
+}
+.map-summary .achv-metric { cursor: default; }
+/* 被风控暂停、且这个活动的数据今天还没刷新完 → 数字显示粉色，提示用户 */
+.map-summary.is-rate-limited .achv-metric-value { color: var(--accent-pink); }
+
+/* 第 2/3 列：同一格里叠两张「面」，用与等级排行榜相同的 6 秒交叉淡入淡出 */
+.map-summary .map-metric-pair { display: grid; justify-items: center; }
+.map-summary .map-metric-face {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+}
+/* 数据没拿全之前：第二面隐藏，第一面常显（不轮播） */
+.map-summary .map-metric-face.is-pending { display: none; }
+.map-summary .map-metric-face.is-cycle-a { animation: pause-leaderboard-value-a 6s ease-in-out infinite; }
+.map-summary .map-metric-face.is-cycle-b { animation: pause-leaderboard-value-b 6s ease-in-out infinite; }
+/* 性能模式 / 减少动态效果：不轮播，只显示第一面，避免两面重叠 */
+html.performance-mode .map-summary .map-metric-face.is-cycle-b { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .map-summary .map-metric-face.is-cycle-b { display: none; }
+}
+
 .achv-tally-row {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

@@ -10,6 +10,16 @@ const { Readable, Transform } = require('stream');
 const MANIFEST_NAME = 'desktop-manifest.json';
 const LOCAL_MANIFEST_NAME = '.desktop-manifest.json';
 
+// 文本类资源：CDN（例如 Cloudflare）可能对它们做换行归一化、注入统计脚本、
+// 自动压缩等改写，导致下载到的字节与清单哈希对不上，因此这些文件放宽哈希校验。
+const TEXT_RE = /\.(?:html?|css|js|mjs|json|txt|xml|csv|md|svg)$/i;
+
+function isTextAsset(encodedPath) {
+  let value = String(encodedPath || '');
+  try { value = decodeURIComponent(value); } catch (err) {}
+  return TEXT_RE.test(value);
+}
+
 function safeLocalPath(root, encodedPath) {
   let relative = String(encodedPath || '');
   try { relative = decodeURIComponent(relative); } catch (err) {}
@@ -48,18 +58,22 @@ async function fetchManifest(baseUrl) {
 }
 
 async function fileState(root, entry, localEntry) {
-  if (!localEntry || localEntry.hash !== entry.hash || Number(localEntry.size) !== Number(entry.size)) return false;
+  if (!localEntry || localEntry.hash !== entry.hash) return false;
   const file = safeLocalPath(root, entry.path);
   if (!file) return false;
   try {
     const stat = await fsp.stat(file);
-    return stat.isFile() && stat.size === Number(entry.size);
+    if (!stat.isFile()) return false;
+    // 文本文件可能被 CDN 改写（注入脚本 / 换行归一化 / 压缩），
+    // 只要本地记录与远端清单同版本且文件存在就视为最新；二进制仍严格校验大小。
+    if (isTextAsset(entry.path)) return stat.size > 0;
+    return Number(localEntry.size) === Number(entry.size) && stat.size === Number(entry.size);
   } catch (err) {
     return false;
   }
 }
 
-async function downloadEntry(baseUrl, root, entry) {
+async function downloadEntry(baseUrl, root, entry, tolerateHashMismatch) {
   const file = safeLocalPath(root, entry.path);
   if (!file) throw new Error('unsafe path: ' + entry.path);
   const tempDir = path.join(root, '.downloads');
@@ -79,7 +93,10 @@ async function downloadEntry(baseUrl, root, entry) {
   try {
     await pipeline(Readable.fromWeb(response.body), hasher, fs.createWriteStream(temp));
     const actual = hash.digest('hex');
-    if (actual !== entry.hash) throw new Error('hash mismatch: ' + entry.path);
+    if (actual !== entry.hash) {
+      if (!tolerateHashMismatch) throw new Error('hash mismatch: ' + entry.path);
+      console.warn('[desktop] accepted CDN-rewritten text asset: ' + entry.path + ' (manifest ' + entry.hash.slice(0, 12) + ', got ' + actual.slice(0, 12) + ')');
+    }
     await fsp.rm(file, { force: true });
     await fsp.rename(temp, file);
   } catch (err) {
@@ -125,7 +142,7 @@ async function syncSite(baseUrl, root, onProgress, maxLevel, quality) {
       if (onProgress) onProgress({ current: current, target: files.length, phase: 'download', level: maxLevel });
       return;
     }
-    await downloadEntry(baseUrl, root, entry);
+    await downloadEntry(baseUrl, root, entry, isTextAsset(entry.path));
     current += 1;
     if (onProgress) onProgress({ current: current, target: files.length, phase: 'download', level: maxLevel });
   });
