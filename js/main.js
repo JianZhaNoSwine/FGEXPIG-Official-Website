@@ -11,6 +11,8 @@
   function isDesktopRuntime() {
     return !!(window.FGEXPIG_DESKTOP && window.FGEXPIG_DESKTOP.isDesktop);
   }
+  // 桌面端标记：CSS 借此区分 exe 与网页版（如暂停菜单顶部只有 exe 才有地图统计数据）
+  if (isDesktopRuntime()) document.documentElement.classList.add('desktop-runtime');
 
   /* ---------- 数据：活动列表 ----------
      底栏槽位以「活动核心数据」为准；没有 logo 图的活动仍显示圆角矩形框（空框，无 logo）。
@@ -8631,6 +8633,13 @@
   var startupSyncFillEl = document.getElementById('startupSyncFill');
   var startupSyncCountEl = document.getElementById('startupSyncCount');
   var pauseCacheProgressEl = document.getElementById('pauseCacheProgress');
+  var pauseStatBarEl = document.getElementById('pauseStatBar');
+  var pauseStatValueEls = {};
+  if (pauseStatBarEl) {
+    Array.prototype.forEach.call(pauseStatBarEl.querySelectorAll('.pause-stat-value[data-stat]'), function (el) {
+      pauseStatValueEls[el.dataset.stat] = el;
+    });
+  }
   var startupSyncActive = false;
   var backgroundCacheStarted = false;
   var backgroundCacheProgress = { level: 0, current: 0, target: 0, all: 0, done: true };
@@ -8863,26 +8872,87 @@
     return current + ' / ' + target;
   }
 
-  function formatBackgroundCacheProgress(progress) {
+  /* ---------- 暂停菜单顶部：全地图统计合计（游玩/点赞/点踩/点赞率/赞踩比） ---------- */
+  function mapStatsTotals() {
+    var api = window.FgexpigMapStats;
+    if (!api || typeof api.all !== 'function') return null;
+    try { return api.all(); } catch (err) { return null; }
+  }
+
+  function setPauseStatValue(name, text) {
+    var el = pauseStatValueEls[name];
+    if (!el || el.textContent === text) return;
+    el.textContent = text;
+  }
+
+  // 顶部统计用完整数字（千分位），不缩写为 K/M —— 与网页价值风格一致
+  function formatPauseStatCount(value) {
+    var num = Number(value);
+    if (!isFinite(num)) return 'N/A';
+    return Math.round(num).toLocaleString('en-US');
+  }
+
+  function updatePauseStatBar() {
+    if (!pauseStatBarEl) return;
+    var totals = mapStatsTotals();
+    var has = !!(totals && totals.covered > 0);
+    setPauseStatValue('plays', has ? formatPauseStatCount(totals.plays) : 'N/A');
+    setPauseStatValue('likes', has ? formatPauseStatCount(totals.likes) : 'N/A');
+    setPauseStatValue('dislikes', has ? formatPauseStatCount(totals.dislikes) : 'N/A');
+    setPauseStatValue('likeRate', has && totals.plays > 0 ? formatMapRate((totals.likes / totals.plays) * 100) : 'N/A');
+    var ratio = null;
+    if (has) {
+      if (totals.dislikes > 0) ratio = totals.likes / totals.dislikes;
+      else if (totals.likes > 0) ratio = Infinity;
+    }
+    setPauseStatValue('likeRatio', formatMapRatio(ratio));
+  }
+
+  /* ---------- 暂停菜单右下：DOWNLOADING xx%（缓存） / UPDATING xx%（地图数据） ---------- */
+  var pauseCacheLineEls = null;
+
+  function ensurePauseCacheLines() {
+    if (!pauseCacheProgressEl) return null;
+    if (pauseCacheLineEls) return pauseCacheLineEls;
+    pauseCacheProgressEl.textContent = '';
+    var updating = document.createElement('span');
+    updating.className = 'pause-cache-line is-updating';
+    var downloading = document.createElement('span');
+    downloading.className = 'pause-cache-line is-downloading';
+    pauseCacheProgressEl.appendChild(updating);
+    pauseCacheProgressEl.appendChild(downloading);
+    pauseCacheLineEls = { updating: updating, downloading: downloading };
+    return pauseCacheLineEls;
+  }
+
+  function backgroundDownloadingText() {
+    var progress = backgroundCacheProgress;
+    if (!progress || !progress.level || (progress.level === 3 && progress.done)) return '';
     var target = Math.max(0, Number(progress.target) || 0);
-    var current = Math.max(0, Math.min(Number(progress.current) || 0, target || Number(progress.current) || 0));
-    var all = Math.max(target, Number(progress.all) || target || 0);
+    var current = Math.max(0, Math.min(Number(progress.current) || 0, target || 0));
     var percent = target ? Math.round((Math.min(current, target) / target) * 100) : 100;
-    var counts = progress.level === 2
-      ? current + '/' + target + '/' + all
-      : current + '/' + all;
-    return 'DOWNLOADING ' + percent + '% ( ' + counts + ' )';
+    return 'DOWNLOADING ' + percent + '%';
+  }
+
+  function mapUpdatingText() {
+    var totals = mapStatsTotals();
+    if (!totals || !totals.total || totals.refreshed >= totals.total) return '';
+    var percent = Math.round((Math.min(totals.refreshed, totals.total) / totals.total) * 100);
+    return 'UPDATING ' + percent + '%';
   }
 
   function updatePauseCacheProgress() {
     if (!pauseCacheProgressEl) return;
-    var progress = backgroundCacheProgress;
-    if (!progress || !progress.level || (progress.level === 3 && progress.done)) {
-      pauseCacheProgressEl.hidden = true;
-      return;
-    }
-    pauseCacheProgressEl.hidden = false;
-    pauseCacheProgressEl.textContent = formatBackgroundCacheProgress(progress);
+    var lines = ensurePauseCacheLines();
+    if (!lines) return;
+    var updating = mapUpdatingText();
+    var downloading = backgroundDownloadingText();
+    if (lines.updating.textContent !== updating) lines.updating.textContent = updating;
+    lines.updating.hidden = !updating;
+    if (lines.downloading.textContent !== downloading) lines.downloading.textContent = downloading;
+    lines.downloading.hidden = !downloading;
+    // 两行底对齐：下载完只留 UPDATING（它会自然落到最底部）
+    pauseCacheProgressEl.hidden = !updating && !downloading;
   }
 
   function countCachedStartupUrls(urls) {
@@ -16539,6 +16609,7 @@
     var data = mapSummaryFaces(id);
     // 被风控暂停且这个活动今天没刷新完 → 数字变粉色
     card.classList.toggle('is-rate-limited', !!data.rateLimited);
+    syncMapRefreshBadge(card, id);
     var metrics = main.children;
     for (var i = 0; i < metrics.length && i < data.groups.length; i++) {
       var faces = metrics[i].querySelectorAll('.map-metric-face');
@@ -16594,6 +16665,17 @@
       window.requestAnimationFrame(function () { renderMapSummary(card, id); });
     }
     return card;
+  }
+
+  // 详情卡右上角的刷新图标：该活动今天还没把地图数据全部刷新完时显示
+  function syncMapRefreshBadge(mapCard, id) {
+    var host = mapCard && mapCard.closest ? mapCard.closest('.home-detail-card') : null;
+    var badge = host ? host.querySelector('.map-refresh-badge') : null;
+    if (!badge) return;
+    var api = window.FgexpigMapStats;
+    var data = (api && typeof api.get === 'function') ? api.get(id) : null;
+    var needed = isDesktopRuntime() && activityMapCodes(id).length > 0 && (!data || !data.fresh);
+    if (badge.hidden !== !needed) badge.hidden = !needed;
   }
 
   function refreshMapSummaryCards() {
@@ -17223,6 +17305,15 @@
     detailBackBtn.hidden = true;
     detailBackBtn.onclick = showDetailOverview;
     detailTitleEl.appendChild(detailBackBtn);
+    // 地图数据待刷新提示：位置/尺寸参考评论卡片的升序降序按钮，纯提示不可点击
+    var mapRefreshBadge = document.createElement('span');
+    mapRefreshBadge.className = 'map-refresh-badge';
+    mapRefreshBadge.hidden = true;
+    // 纯提示：不吃鼠标事件（避免挡住卡片标题区域的点击）
+    mapRefreshBadge.style.pointerEvents = 'none';
+    mapRefreshBadge.setAttribute('aria-hidden', 'true');
+    mapRefreshBadge.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>';
+    detailTitleEl.appendChild(mapRefreshBadge);
     var detailOverviewScrollTop = 0;
 
     // 活动名使用商店 CSV 的独立词条，不再从版本包含内容反推。
@@ -17816,7 +17907,11 @@
     initRuntimeAssetCache();
     if (window.FgexpigMapStats && typeof window.FgexpigMapStats.subscribe === 'function') {
       window.FgexpigMapStats.subscribe(refreshMapSummaryCards);
+      window.FgexpigMapStats.subscribe(updatePauseStatBar);
+      window.FgexpigMapStats.subscribe(updatePauseCacheProgress);
     }
+    updatePauseStatBar();
+    updatePauseCacheProgress();
     // 切换语言后说明文字长度会变，需要重新做一次自适应
     if (window.FgexpigI18n && typeof window.FgexpigI18n.onChange === 'function') {
       window.FgexpigI18n.onChange(refreshMapSummaryCards);

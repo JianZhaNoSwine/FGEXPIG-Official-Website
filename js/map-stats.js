@@ -347,6 +347,41 @@
     };
   }
 
+  // 全站合计（暂停菜单顶部统计用）：所有已注册活动下的所有地图
+  function all() {
+    var plays = 0;
+    var likes = 0;
+    var dislikes = 0;
+    var covered = 0;
+    var total = 0;
+    var refreshed = 0;
+    var today = dayKey();
+    Object.keys(activities).forEach(function (id) {
+      var activity = activities[id];
+      if (!activity || !activity.codes) return;
+      activity.codes.forEach(function (code) {
+        total += 1;
+        if (store.days[code] === today) refreshed += 1;
+        var rec = store.codes[code];
+        if (!rec) return;
+        plays += toCount(rec.plays);
+        likes += toCount(rec.likes);
+        dislikes += toCount(rec.dislikes);
+        covered += 1;
+      });
+    });
+    return {
+      plays: plays,
+      likes: likes,
+      dislikes: dislikes,
+      covered: covered,
+      total: total,
+      refreshed: refreshed,
+      complete: total > 0 && covered === total,
+      fresh: total > 0 && refreshed === total
+    };
+  }
+
   function subscribe(fn) {
     if (typeof fn !== 'function') return function () {};
     listeners.push(fn);
@@ -384,6 +419,7 @@
   global.FgexpigMapStats = {
     register: register,
     get: get,
+    all: all,
     subscribe: subscribe,
     isPaused: isPaused,
     state: state,

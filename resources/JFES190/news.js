@@ -137,6 +137,107 @@
           }
         ],
         "commentCount": 0
+      },
+      {
+        "id": "hotspot-2",
+        "title": "线性唯一路线",
+        "time": "2026/10/09/17:00",
+        "content": "线性唯一路线已公布！",
+        "comments": [
+          {
+            "name": "企鹅",
+            "text": "\\我天高雅啊",
+            "replies": []
+          },
+          {
+            "name": "企鹅",
+            "text": "小吃摊的食材是从墓地获取的吗",
+            "replies": [
+              {
+                "name": "炸鸡",
+                "text": "细思鼻孔",
+                "replies": [
+                  {
+                    "name": "企鹅",
+                    "text": "鼻孔大开大合",
+                    "replies": []
+                  }
+                ]
+              },
+              {
+                "name": "炸鸡",
+                "text": "\\鹅屁屁",
+                "replies": []
+              },
+              {
+                "name": "掉线",
+                "text": "很有可能",
+                "replies": []
+              },
+              {
+                "name": "掉线",
+                "text": "去举办一下食品安全问题",
+                "replies": []
+              }
+            ]
+          },
+          {
+            "name": "企鹅",
+            "text": "然后厨余垃圾就扔炼药锅👍",
+            "replies": [
+              {
+                "name": "掉线",
+                "text": "原来炸鸡是在这种环境出生的😱",
+                "replies": [
+                  {
+                    "name": "炸鸡",
+                    "text": "？",
+                    "replies": [
+                      {
+                        "name": "掉线",
+                        "text": "有参考文献",
+                        "replies": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "企鹅",
+            "text": "好环保👍",
+            "replies": []
+          },
+          {
+            "name": "掉线",
+            "text": "好多蜘蛛网",
+            "replies": []
+          },
+          {
+            "name": "掉线",
+            "text": "谁把蜘蛛杀一下",
+            "replies": [
+              {
+                "name": "炸鸡",
+                "text": "是蜘蛛还是只猪",
+                "replies": [
+                  {
+                    "name": "掉线",
+                    "text": "可以都是",
+                    "replies": []
+                  },
+                  {
+                    "name": "掉线",
+                    "text": "不杀猪哪来你吃的猪肉🤔",
+                    "replies": []
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "commentCount": 0
       }
     ]
   }

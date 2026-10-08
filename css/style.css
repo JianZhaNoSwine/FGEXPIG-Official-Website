@@ -270,6 +270,11 @@ html.ui-hidden .bg-tint {
   -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;
 }
+/* 详情卡滚动区底部留 2px 余量：
+   容器高度/位置常带小数（如 535.612px），而 scrollHeight/clientHeight 会取整，
+   导致滚动到底时最后一张卡片的下边缘被裁掉约 0.4~1px（卡片数为奇数时才会出现）。
+   这 2px 属于滚动内容，不改变卡片高度，只保证最后一张卡片能完整露出。 */
+.home-detail-card > .section-card-body { padding-bottom: 2px; }
 /* 确保激活页内的卡片可交互（避免被父级 pointer-events:none 或堆叠上下文影响） */
 .page.active .page-section.active,
 .page.active .page-section.active .section-card,
@@ -894,6 +899,30 @@ html:not([lang^="zh"]):not([lang="ja"]) .hotspot-reply-word { margin-right: 0.32
 .map-summary .achv-metric { cursor: default; }
 /* 被风控暂停、且这个活动的数据今天还没刷新完 → 数字显示粉色，提示用户 */
 .map-summary.is-rate-limited .achv-metric-value { color: var(--accent-pink); }
+
+/* 详情卡右上角：地图数据待刷新提示。
+   位置/尺寸/颜色参考评论卡片的升序降序按钮，但纯提示不可点击。 */
+.map-refresh-badge {
+  position: absolute;
+  right: -9px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  opacity: 0.9;
+  pointer-events: none;
+  user-select: none;
+}
+.map-refresh-badge svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+.map-refresh-badge[hidden] { display: none !important; }
 
 /* 第 2/3 列：同一格里叠两张「面」，用与等级排行榜相同的 6 秒交叉淡入淡出 */
 .map-summary .map-metric-pair { display: grid; justify-items: center; }
@@ -1801,28 +1830,66 @@ html.pause-menu-open .tb-avatar-level { display: none; }
   visibility: visible;
   pointer-events: auto;
 }
-.pause-site-value {
+/* 暂停菜单顶部：全地图统计（5 项）+ 网页价值，一行 6 项居中；
+   每项上下两行（上=白色数字，下=粉色文字），正中一条细分隔线；顶部间距与原网页价值一致 */
+.pause-stat-bar {
   position: absolute;
   top: calc(env(safe-area-inset-top, 0px) + var(--pause-margin-top));
-  right: var(--pause-margin-right);
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 4;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 3px;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: clamp(10px, 1.7vw, 26px);
   width: max-content;
+  max-width: calc(100vw - 2 * var(--pause-margin-left) - 24px);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  pointer-events: none;
+  user-select: none;
+}
+.pause-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+}
+.pause-stat-value {
+  color: #fff;
   font-size: var(--text-large);
   line-height: 1.15;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-  pointer-events: none;
-}
-.pause-site-value-item {
   white-space: nowrap;
 }
+.pause-stat-label {
+  color: var(--accent-pink);
+  font-size: var(--text-large);
+  line-height: 1.15;
+  white-space: nowrap;
+}
+.pause-stat-divider {
+  align-self: stretch;
+  width: 1px;
+  min-height: calc(2 * var(--text-large) + 3px);
+  background: rgba(255, 255, 255, 0.3);
+}
+.pause-site-value-item { white-space: nowrap; }
 .pause-site-value-item.is-visits { color: #fff; }
 .pause-site-value-item.is-value { color: var(--accent-pink); }
-.pause-menu.is-subpage-open .pause-site-value { display: none; }
+.pause-menu.is-subpage-open .pause-stat-bar { display: none; }
+/* 网页版没有地图数据：前 5 项统计与分割线不显示，网页价值仍固定在右上角（与原样式一致） */
+html:not(.desktop-runtime) .pause-stat-bar {
+  left: auto;
+  right: var(--pause-margin-right);
+  transform: none;
+}
+html:not(.desktop-runtime) .pause-stat-item:not(.is-site-value),
+html:not(.desktop-runtime) .pause-stat-divider { display: none; }
+html:not(.desktop-runtime) .pause-stat-item.is-site-value {
+  align-items: flex-end;
+  text-align: right;
+}
 .pause-menu .pause-menu-inner {
   grid-column: 1;
   width: 100%;
@@ -2439,6 +2506,7 @@ html.pause-menu-open .account-page input { cursor: text !important; }
   .hotspot-reply-target,
   .topnav-item.active .topnav-item-label,
   .pause-site-value-item.is-value,
+  .pause-stat-label,
   .bottom-exp-hud .sidebar-level-badge,
   .account-login-card .login-btn,
   .keybind-button.is-capturing,
@@ -2642,6 +2710,10 @@ html.has-card-blur .pause-menu .settings-page .font-item {
   right: var(--pause-margin-right);
   bottom: var(--pause-margin-bottom, 16px);
   z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
   max-width: min(520px, calc(100vw - 32px));
   color: #fff;
   font-size: var(--text-large);
@@ -2649,11 +2721,12 @@ html.has-card-blur .pause-menu .settings-page .font-item {
   line-height: 1;
   text-align: right;
   text-shadow: 0 1px 1px #000, 0 0 4px rgba(0, 0, 0, 0.92);
-  white-space: nowrap;
   pointer-events: none;
   user-select: none;
 }
 .pause-cache-progress[hidden] { display: none; }
+.pause-cache-line { white-space: nowrap; }
+.pause-cache-line[hidden] { display: none !important; }
 .pause-menu.is-subpage-open .pause-cache-progress { display: none; }
 .pause-menu.open .pause-cache-progress:not([hidden]) {
   animation: pause-control-in-right 0.46s var(--ease-out) 0.12s backwards;
@@ -2797,12 +2870,21 @@ html.has-card-blur .pause-menu .settings-page .font-item {
 .pause-menu.open .pause-ad-slot:nth-child(1) { animation-delay: 0.08s; }
 .pause-menu.open .pause-ad-slot:nth-child(2) { animation-delay: 0.15s; }
 .pause-menu.open .pause-ad-slot:nth-child(3) { animation-delay: 0.22s; }
-.pause-menu.open .pause-site-value-item.is-visits {
-  animation: pause-control-in-right 0.46s var(--ease-out) 0.04s backwards;
+/* 暂停菜单顶部统计条：自上往下入场，6 个数据（含 5 条分割线）依次错峰 */
+.pause-menu.open .pause-stat-bar > * {
+  animation: pause-control-in-top 0.46s var(--ease-out) backwards;
 }
-.pause-menu.open .pause-site-value-item.is-value {
-  animation: pause-control-in-right 0.46s var(--ease-out) 0.10s backwards;
-}
+.pause-menu.open .pause-stat-bar > *:nth-child(1) { animation-delay: 0.04s; }
+.pause-menu.open .pause-stat-bar > *:nth-child(2) { animation-delay: 0.07s; }
+.pause-menu.open .pause-stat-bar > *:nth-child(3) { animation-delay: 0.10s; }
+.pause-menu.open .pause-stat-bar > *:nth-child(4) { animation-delay: 0.13s; }
+.pause-menu.open .pause-stat-bar > *:nth-child(5) { animation-delay: 0.16s; }
+.pause-menu.open .pause-stat-bar > *:nth-child(6) { animation-delay: 0.19s; }
+.pause-menu.open .pause-stat-bar > *:nth-child(7) { animation-delay: 0.22s; }
+.pause-menu.open .pause-stat-bar > *:nth-child(8) { animation-delay: 0.25s; }
+.pause-menu.open .pause-stat-bar > *:nth-child(9) { animation-delay: 0.28s; }
+.pause-menu.open .pause-stat-bar > *:nth-child(10) { animation-delay: 0.31s; }
+.pause-menu.open .pause-stat-bar > *:nth-child(11) { animation-delay: 0.34s; }
 .pause-menu.open .settings-topnav {
   animation: pause-control-in-top 0.42s var(--ease-out) backwards;
 }
@@ -4784,10 +4866,13 @@ body.minigame-open { overflow: hidden; }
     grid-row: 1;
     height: auto;
   }
-  .pause-site-value {
+  .pause-stat-bar {
     top: calc(env(safe-area-inset-top, 0px) + 24px);
-    right: 24px;
+    gap: 10px;
+    max-width: calc(100vw - 24px);
   }
+  html:not(.desktop-runtime) .pause-stat-bar { right: 24px; }
+  .pause-stat-item { min-width: 0; }
   .pause-menu-ads {
     grid-column: 1;
     grid-row: 2;

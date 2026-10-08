@@ -2,6 +2,11 @@
   "lists": {
     "JFES190": [
       {
+        "file": "3地图.png",
+        "title": "地图",
+        "category": "资源文件"
+      },
+      {
         "file": "2说明.png",
         "title": "说明",
         "category": "宣传文件"
