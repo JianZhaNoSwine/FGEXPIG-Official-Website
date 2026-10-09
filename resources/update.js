@@ -1,6 +1,14 @@
 (window.FGEXPIG_DATA_FILES = window.FGEXPIG_DATA_FILES || {})["resources/update.js"] = {
   "updates": [
     {
+      "version": "V2.201.000 Release",
+      "content": [
+        "更新内容",
+        "- 网页版现直接提供下载服务",
+        "- 修复了部分已知问题"
+      ]
+    },
+    {
       "version": "V2.105.000 Release",
       "content": [
         "更新内容",
