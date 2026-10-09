@@ -12245,9 +12245,25 @@
   document.getElementById('navSettings').addEventListener('click', function () { openSettingsPanel('interface'); });
   var githubRepositoryBtn = document.getElementById('navGithubRepository');
   if (githubRepositoryBtn) {
-    githubRepositoryBtn.addEventListener('click', function () {
-      window.open('https://github.com/JianZhaNoSwine/FGEXPIG-Official-Website', '_blank', 'noopener,noreferrer');
-    });
+    if (isDesktopRuntime()) {
+      // exe：这一项改成「退出至菜单」，点击回到 exe 启动器主菜单
+      var githubRepositoryLabel = githubRepositoryBtn.querySelector('span');
+      if (githubRepositoryLabel) githubRepositoryLabel.textContent = '退出至菜单';
+      var githubRepositoryIcon = githubRepositoryBtn.querySelector('svg');
+      if (githubRepositoryIcon) {
+        // 换成"菜单"图标（三条横线），与 GitHub 图标区分
+        githubRepositoryIcon.innerHTML = '<path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>';
+      }
+      githubRepositoryBtn.addEventListener('click', function () {
+        if (window.FGEXPIG_DESKTOP && typeof window.FGEXPIG_DESKTOP.backToMenu === 'function') {
+          window.FGEXPIG_DESKTOP.backToMenu();
+        }
+      });
+    } else {
+      githubRepositoryBtn.addEventListener('click', function () {
+        window.open('https://github.com/JianZhaNoSwine/FGEXPIG-Official-Website', '_blank', 'noopener,noreferrer');
+      });
+    }
   }
   document.getElementById('navBack').addEventListener('click', closeSidebars);
   if (accountLogoutTop) accountLogoutTop.addEventListener('click', logoutInlineAccount);

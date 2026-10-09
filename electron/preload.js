@@ -22,6 +22,8 @@ contextBridge.exposeInMainWorld('FGEXPIG_DESKTOP', {
   setAspect: function (value) {
     return ipcRenderer.sendSync('fgexpig:desktop-aspect:set', value);
   },
+  // exe：退回启动器主菜单
+  backToMenu: function () { ipcRenderer.send('fgexpig:launcher:back-to-menu'); },
   // 地图数据接口走主进程代取：渲染进程直连会被 CORS 挡住，拿不到真实状态码
   fetchMapStats: function (code) {
     return ipcRenderer.invoke('fgexpig:mapstats:fetch', code);
@@ -38,6 +40,8 @@ contextBridge.exposeInMainWorld('FGEXPIG_LAUNCHER', {
   music: function () {
     return ipcRenderer.invoke('fgexpig:launcher:music');
   },
+  // 开屏页结束（此之前主进程不开始下载任何缓存）
+  splashDone: function () { ipcRenderer.send('fgexpig:launcher:splash-done'); },
   enter: function () { ipcRenderer.send('fgexpig:launcher:enter'); },
   openSite: function () { ipcRenderer.send('fgexpig:launcher:open-site'); },
   github: function () { ipcRenderer.send('fgexpig:launcher:github'); },

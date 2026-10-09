@@ -2522,14 +2522,14 @@ html.pause-menu-open .account-page input { cursor: text !important; }
 .pause-menu .settings-page .font-item.is-gamepad-selected .font-item-name {
   color: var(--accent-pink);
 }
-/* 粉色在白底/深色墙上会显得更细，所有粉色文字统一补同色微描边。 */
+/* 粉色在白底/深色墙上会显得更细，统一补同色微描边。
+   注意：暂停菜单顶部区域（网页价值金额 / 全地图统计）与排行榜标题不加描边，
+   否则粉色文字会被看成"额外加粗"（见 .pause-stat-label / .pause-ad-title / .pause-site-value-item.is-value 不加）。 */
 :where(
   .hotspot-keyword-pill.is-selected,
   .hotspot-reply-more,
   .hotspot-reply-target,
   .topnav-item.active .topnav-item-label,
-  .pause-site-value-item.is-value,
-  .pause-stat-label,
   .bottom-exp-hud .sidebar-level-badge,
   .account-login-card .login-btn,
   .keybind-button.is-capturing,
@@ -2542,7 +2542,6 @@ html.pause-menu-open .account-page input { cursor: text !important; }
   .pause-menu .sidebar-item:hover > span,
   .pause-menu .sidebar-item:focus-visible > span,
   .pause-menu .sidebar-item.is-selected > span,
-  .pause-ad-title,
   .resource-calendar-day.has-event .resource-calendar-day-number
 ) {
   -webkit-text-stroke: var(--accent-pink-text-stroke) currentColor;

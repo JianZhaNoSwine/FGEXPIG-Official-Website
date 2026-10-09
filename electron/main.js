@@ -9,6 +9,7 @@ const {
   hasLocalSite,
   fetchManifest,
   isPriorityEntry,
+  isBundledAsset,
   collectWallpapers,
   syncEntries,
   verifyEntries,
@@ -368,6 +369,38 @@ function readLocalManifest() {
   return null;
 }
 
+let launcherSplashResolve = null;
+// 开屏页结束信号：之前不下载任何缓存
+function waitForSplashDone() {
+  return new Promise(function (resolve) { launcherSplashResolve = resolve; });
+}
+
+ipcMain.on('fgexpig:launcher:splash-done', function () {
+  if (launcherSplashResolve) {
+    const done = launcherSplashResolve;
+    launcherSplashResolve = null;
+    done();
+  }
+});
+
+// 记住站点地址与清单：从网页退回启动器主菜单时要用
+let launcherSiteBaseUrl = '';
+let launcherManifest = null;
+
+// exe 内点「退出至菜单」：重新加载启动器并直接显示主菜单（缓存已完整）
+ipcMain.on('fgexpig:launcher:back-to-menu', async function () {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  try {
+    await mainWindow.loadFile(path.join(__dirname, 'launcher.html'));
+    if (launcherManifest && launcherSiteBaseUrl) {
+      sendLauncherMessage({ type: 'slides', wallpapers: collectWallpapers(launcherSiteBaseUrl, launcherManifest) });
+    }
+    sendLauncherMessage({ type: 'ready' });
+  } catch (err) {
+    console.warn('[desktop] back to launcher failed:', err);
+  }
+});
+
 let launcherEnterResolve = null;
 function waitForLauncherEnter() {
   return new Promise(function (resolve) { launcherEnterResolve = resolve; });
@@ -448,10 +481,14 @@ async function createWindow() {
   });
 
   const siteUrl = await startStaticServer();
+  launcherSiteBaseUrl = siteUrl;
   await mainWindow.loadFile(path.join(__dirname, 'launcher.html'));
   mainWindow.show();
 
-  // 1) 资源清单（联网失败时用本地清单兜底）
+  // 1) 等开屏页播完（开屏期间不下载缓存）
+  await waitForSplashDone();
+
+  // 2) 资源清单（联网失败时用本地清单兜底）
   let manifest = null;
   try {
     manifest = await fetchManifest(UPDATE_BASE_URL);
@@ -459,6 +496,7 @@ async function createWindow() {
     console.warn('[desktop] manifest fetch failed, fall back to local manifest:', err);
   }
   if (!manifest) manifest = readLocalManifest();
+  launcherManifest = manifest || null;
   if (!manifest || !Array.isArray(manifest.files)) {
     dialog.showErrorBox('启动失败', '资源清单获取失败，且本机没有可用缓存。');
     mainWindow.destroy();
@@ -466,7 +504,9 @@ async function createWindow() {
   }
 
   const priorityEntries = manifest.files.filter(isPriorityEntry);
-  const otherEntries = manifest.files.filter(function (entry) { return !isPriorityEntry(entry); });
+  // 字体已打包进 exe（server.js 直接内置返回），不参与下载与校验
+  const otherEntries = manifest.files.filter(function (entry) { return !isPriorityEntry(entry) && !isBundledAsset(entry); });
+  const verifyEntriesList = manifest.files.filter(function (entry) { return !isBundledAsset(entry); });
 
   // 2) 优先缓存（所有壁纸 + 启动视频）→ open.webp 上的进度条
   try {
@@ -492,14 +532,14 @@ async function createWindow() {
 
   // 4) 校验（哈希）；失败的文件补下一次再校验
   try {
-    const verified = await verifyEntries(SITE_ROOT, manifest.files, function (progress) {
+    const verified = await verifyEntries(SITE_ROOT, verifyEntriesList, function (progress) {
       // 校验不显示百分比：显示「已校验 / 全部」的资源数
       sendLauncherMessage({ type: 'verify', current: progress.current, total: progress.target });
     });
     const failed = (verified && verified.failed) || [];
     if (failed.length) {
       console.warn('[desktop] verify failed for ' + failed.length + ' file(s), re-downloading');
-      const retryEntries = manifest.files.filter(function (entry) { return failed.indexOf(entry.path) >= 0; });
+      const retryEntries = manifest.files.filter(function (entry) { return failed.indexOf(entry.path) >= 0 && !isBundledAsset(entry); });
       try {
         await syncEntries(UPDATE_BASE_URL, SITE_ROOT, manifest, retryEntries, function () {});
         await verifyEntries(SITE_ROOT, retryEntries, function (progress) {
@@ -512,7 +552,7 @@ async function createWindow() {
   } catch (err) {
     console.warn('[desktop] verify failed:', err);
   }
-  sendLauncherMessage({ type: 'verify', current: manifest.files.length, total: manifest.files.length });
+  sendLauncherMessage({ type: 'verify', current: verifyEntriesList.length, total: verifyEntriesList.length });
 
   // 5) 显示菜单（menu.png + 4 个按钮），等待用户点“进入应用”
   sendLauncherMessage({ type: 'ready' });

@@ -159,6 +159,12 @@ async function syncSite(baseUrl, root, onProgress, maxLevel, quality) {
   return { version: manifest.version, count: files.length, level: maxLevel, quality: selectedQuality, completedLevel: completedLevel, pruned: pruned };
 }
 
+// exe 内置资源（字体已打包进 exe，不再从网站下载/校验）
+function isBundledAsset(entry) {
+  const p = String((entry && entry.path) || '').replace(/\\/g, '/');
+  return p.indexOf('fonts/') === 0;
+}
+
 // 优先缓存：所有壁纸 + 启动视频（wallpaper/ 下的图片与 mp4）
 function isPriorityEntry(entry) {
   const p = String((entry && entry.path) || '').replace(/\\/g, '/');
@@ -329,6 +335,7 @@ module.exports = {
   LOCAL_MANIFEST_NAME,
   fetchManifest,
   isPriorityEntry,
+  isBundledAsset,
   collectWallpapers,
   syncEntries,
   verifyEntries,

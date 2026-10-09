@@ -31,6 +31,28 @@ const MIME_TYPES = {
   '.otf': 'font/otf'
 };
 
+// exe 内置字体：网站请求 /fonts/xxx 时直接用打包进 exe 的字体，不再依赖站点缓存
+const BUNDLED_FONT_DIR = path.join(__dirname, 'assets', 'fonts');
+const BUNDLED_FONTS = {
+  '等距更纱黑体(默认).woff': 'default.woff',
+  '等距更纱黑体(默认).ttf': 'default.woff',
+  '楷体.woff': 'kaiti.woff',
+  '楷体.ttf': 'kaiti.woff',
+  '萌芽熊体.woff': 'mengya.woff',
+  '萌芽熊体.ttf': 'mengya.woff',
+  '山海仲夏夜物语.woff': 'shanhai.woff',
+  '山海仲夏夜物语.ttf': 'shanhai.woff'
+};
+
+function bundledFontFile(pathname) {
+  const match = /^\/fonts\/(.+)$/.exec(pathname);
+  if (!match) return null;
+  let name = match[1];
+  try { name = decodeURIComponent(name); } catch (err) {}
+  const file = BUNDLED_FONTS[name];
+  return file ? path.join(BUNDLED_FONT_DIR, file) : null;
+}
+
 function mimeType(filePath) {
   return MIME_TYPES[path.extname(filePath).toLowerCase()] || 'application/octet-stream';
 }
@@ -165,6 +187,18 @@ function createStaticServer(rootDir, port, options) {
     if (!filePath) {
       res.writeHead(403);
       res.end();
+      return;
+    }
+    // 字体优先用 exe 内置字体
+    const bundledFont = bundledFontFile(pathname);
+    if (bundledFont) {
+      fs.stat(bundledFont, function (fontErr, fontStat) {
+        if (!fontErr && fontStat.isFile()) sendRange(req, res, bundledFont, fontStat);
+        else {
+          res.writeHead(404);
+          res.end('Not found');
+        }
+      });
       return;
     }
     fs.stat(filePath, function (err, stat) {

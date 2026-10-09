@@ -1,6 +1,6 @@
 {
-  "version": "8315892998e2ee85",
-  "generatedAt": "2026-10-09T05:57:34.650Z",
+  "version": "f65ebbba9ba8fb7e",
+  "generatedAt": "2026-10-09T10:42:36.574Z",
   "counts": {
     "1": 339,
     "2": 1060,
@@ -723,8 +723,8 @@
     },
     {
       "path": "css/style.css",
-      "hash": "98c4825faeaf8dd2e1f463d0f78cb7d95dc6e080bee9b68125c45f889be2298b",
-      "size": 250290,
+      "hash": "217a994cb407b7c5c6a544661d2e0d9484e49438f0c10c79b5d64613ea28e7f7",
+      "size": 250446,
       "level": 1,
       "quality": 0
     },
@@ -5161,92 +5161,92 @@
     },
     {
       "path": "i18n/index.js",
-      "hash": "7744507d5199c61e31d0eeb3880917f80ed6fc728c5ff92eaac5e48e402c6324",
-      "size": 143551,
+      "hash": "9f8707a06d62d85b0d7237fe7bb00d0c18cee0a0a043428f5687fe0d074001d1",
+      "size": 143635,
       "level": 1,
       "quality": 0
     },
     {
       "path": "i18n/lang/ar.js",
-      "hash": "1ac257f387ca5dd6288a829b4ad22d4483eafc76e914d48a6b9b517f1e574cf4",
-      "size": 92993,
+      "hash": "41faf4f729c3d892c3229690de5cc1a45ef4432e32f37efcf9aca810f3d1de63",
+      "size": 93054,
       "level": 1,
       "quality": 0
     },
     {
       "path": "i18n/lang/de.js",
-      "hash": "24e8d79b94b6eef68617007c6a3e1fc0fbb72deb31875058f85ddd4f496fb82c",
-      "size": 70217,
+      "hash": "f95d64882094674b3547bd330d01f2eb9d60a727e0d6563bd3a34c1b923e87e7",
+      "size": 70267,
       "level": 1,
       "quality": 0
     },
     {
       "path": "i18n/lang/en.js",
-      "hash": "fdc685538751b3b0f0bf1ef85345c590e5a8eee485093358d80071df4cc9e9fc",
-      "size": 65856,
+      "hash": "1650464c1c474ac0db3c71efacd429fa4f40daad1272a0c1cd2e132c4879c495",
+      "size": 65895,
       "level": 1,
       "quality": 0
     },
     {
       "path": "i18n/lang/es-ES.js",
-      "hash": "ede4883f5acca486934a1ea1d038963047255a01f8dbcfcf3f58b97421cbc217",
-      "size": 72611,
+      "hash": "78e944343c13731779014a3d508e8fd93e3b60a1494eb9d2bcb1b02b04ab05be",
+      "size": 72652,
       "level": 1,
       "quality": 0
     },
     {
       "path": "i18n/lang/fr.js",
-      "hash": "7b86a994f4b0a44aad502ed7700d813afc4aebeca623df195296f2b2b9994128",
-      "size": 73641,
+      "hash": "a38725279ec685e9c89dd7e8d35ee8144e4ea58e93041e7e7310b38919856e4e",
+      "size": 73688,
       "level": 1,
       "quality": 0
     },
     {
       "path": "i18n/lang/it.js",
-      "hash": "0cd479428c6e533e74b279e936abbbeb5f771e12375284fed24cf3e4fa074f12",
-      "size": 72173,
+      "hash": "ba55345622312b55c3357ac756dc373aa2339767964993fbdd2ebf78917a3c36",
+      "size": 72212,
       "level": 1,
       "quality": 0
     },
     {
       "path": "i18n/lang/ja.js",
-      "hash": "862811a93f9ab90879b6ee29fc5b6647c9a1d3043cf91de29ba4273e9267298e",
-      "size": 76027,
+      "hash": "e4877bbd569cfe2def6ed09e9da24c9bdc86feb4bf32bfcba30c8c6f5d444227",
+      "size": 76075,
       "level": 1,
       "quality": 0
     },
     {
       "path": "i18n/lang/ko.js",
-      "hash": "2783f4a67cf7df78f54a97b189ec875ff8fe6d5c5a9282cc1854c6e2fa3257bb",
-      "size": 68420,
+      "hash": "86dec432b8744953c71ed15634909b0db608a61773213aa61f17572bd2ff0c79",
+      "size": 68466,
       "level": 1,
       "quality": 0
     },
     {
       "path": "i18n/lang/pl.js",
-      "hash": "00b78ecdee8b0d71d7d8b578dc8c27ee9d010686e1689200a8365e0e92276aea",
-      "size": 73266,
+      "hash": "e92fb88d8276d44bb5c8b5a0d7805a060e643a6608b6401db7ae6960e96d6a1a",
+      "size": 73307,
       "level": 1,
       "quality": 0
     },
     {
       "path": "i18n/lang/pt-BR.js",
-      "hash": "8301605ca9def256ab9e8191f98887531530cedd43f96cf9cd46d797893ea72a",
-      "size": 71786,
+      "hash": "e6fee01b34a6fcd46b1f668f1438f3e8c8776f85154bffdb9c29b6ed32a7ec7d",
+      "size": 71829,
       "level": 1,
       "quality": 0
     },
     {
       "path": "i18n/lang/ru.js",
-      "hash": "5a257f4fdacad90ada9a52339ba937b7baf315f6c9e13812223c70ea30d23ab7",
-      "size": 100496,
+      "hash": "27993cd8f43a188d2c1106e33761f2062e0b058cab1d7c4354f3095daf6d019f",
+      "size": 100545,
       "level": 1,
       "quality": 0
     },
     {
       "path": "i18n/lang/zh-Hant.js",
-      "hash": "daeb82d21b9e082908fca3a93761d53d8c960f5c834bef0c13327a205796ad7a",
-      "size": 61034,
+      "hash": "4bbe8d47e853a6260abaa8c6ff467012cbf26171aeaaa85b2e6cd8ec35556677",
+      "size": 61076,
       "level": 1,
       "quality": 0
     },
@@ -5287,8 +5287,8 @@
     },
     {
       "path": "js/main.js",
-      "hash": "2fb1cda296b919a4b8984ea16819c8fa317613d3dddcbdb6904f450640c0dd34",
-      "size": 758672,
+      "hash": "0a5041aa2dab24abf49a62e47e2c5cf7f7b4ccf347e1144cfcb1f1f30ecd5104",
+      "size": 759585,
       "level": 1,
       "quality": 0
     },

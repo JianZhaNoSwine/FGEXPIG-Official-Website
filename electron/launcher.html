@@ -5,9 +5,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FGEXPIG</title>
 <style>
+  /* exe 内置字体（与网站同一套，打包进 exe，不再走站点缓存） */
+  @font-face { font-family: 'FgexpigDefault'; src: url('assets/fonts/default.woff') format('woff'); font-display: block; }
+  @font-face { font-family: 'FgexpigKaiti'; src: url('assets/fonts/kaiti.woff') format('woff'); font-display: swap; }
+  @font-face { font-family: 'FgexpigMengyaBear'; src: url('assets/fonts/mengya.woff') format('woff'); font-display: swap; }
+  @font-face { font-family: 'FgexpigShanhaiSummer'; src: url('assets/fonts/shanhai.woff') format('woff'); font-display: swap; }
   html, body {
     margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000;
-    font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", "Sarasa Gothic SC", system-ui, sans-serif;
+    /* 开屏到主菜单统一使用默认字体 */
+    font-family: 'FgexpigDefault', "Microsoft YaHei", system-ui, sans-serif;
     -webkit-user-select: none; user-select: none;
   }
   #stage { position: fixed; inset: 0; }
@@ -26,26 +32,29 @@
   /* 1) open.webp + 优先缓存进度条（高度 92.59%，宽度 75.73% ~ 94.77%） */
   #openLayer { position: absolute; inset: 0; z-index: 30; background: #000; transition: opacity 500ms ease; }
   #openLayer > img { display: block; width: 100%; height: 100%; object-fit: cover; }
-  #priorityBar {
-    position: absolute; left: 75.73%; width: 19.04%; top: 92.59%;
-    height: 8px; transform: translateY(-50%);
-    border-radius: 999px; background: rgba(255, 255, 255, 0.22); overflow: hidden;
-  }
-  #priorityBar > i { display: block; height: 100%; width: 0%; background: #fff; transition: width 180ms linear; }
+  /* 开屏不再显示优先缓存进度条（改为底部居中的胶囊进度） */
 
   /* 4) 普通缓存下载 / 校验进度（右下角） */
   /* 下载 / 校验普通缓存时的文字：套一层黑色胶囊底 */
   #taskProgress {
-    position: absolute; right: 16px; bottom: 16px; z-index: 45;
-    color: #fff; font-size: 14px; line-height: 1.2; text-align: right;
+    position: absolute; left: 50%; bottom: 28px; z-index: 45;
+    transform: translateX(-50%);
+    color: #fff; font-size: 20px; font-weight: 600; line-height: 1.2; text-align: center;
     font-variant-numeric: tabular-nums;
-    padding: 7px 16px;
+    padding: 12px 32px;
     border-radius: 999px;
-    background: rgba(0, 0, 0, 0.8);
-    -webkit-backdrop-filter: blur(6px);
-    backdrop-filter: blur(6px);
+    background: rgba(0, 0, 0, 0.82);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
     pointer-events: none;
     white-space: nowrap;
+    text-shadow: 0 2px 3px rgba(0, 0, 0, 0.6);
+    border: 1px solid transparent;
+  }
+  /* 校验阶段：粉色描边 + 淡粉字，和下载阶段明显区分 */
+  #taskProgress[data-phase="verify"] {
+    border-color: rgba(255, 114, 182, 0.85);
+    color: #ffd9ec;
   }
   #taskProgress[hidden] { display: none; }
 
@@ -71,7 +80,8 @@
   .menu-button:nth-of-type(2) { top: 55%; }
   .menu-button:nth-of-type(3) { top: 60%; }
   .menu-button:nth-of-type(4) { top: 65%; }
-  .menu-button:hover, .menu-button:focus-visible {
+  .menu-button:hover, .menu-button:focus-visible,
+  .menu-button.is-selected {
     color: #ff72b6; outline: none; transform: translateY(-50%) translateX(6px);
   }
 </style>
@@ -85,17 +95,16 @@
 
   <div id="openLayer">
     <img src="assets/open.webp" alt="" draggable="false">
-    <div id="priorityBar"><i id="priorityFill"></i></div>
   </div>
 
   <div id="taskProgress" hidden></div>
 
   <div id="menuLayer">
     <img src="assets/menu.png" alt="" draggable="false">
-    <button class="menu-button" type="button" id="btnEnter">进入应用</button>
-    <button class="menu-button" type="button" id="btnSite">访问官网</button>
-    <button class="menu-button" type="button" id="btnGithub">GITHUB REPOSITORY</button>
-    <button class="menu-button" type="button" id="btnQuit">退出应用</button>
+    <button class="menu-button" type="button" id="btnEnter">Main Story</button>
+    <button class="menu-button" type="button" id="btnSite">Website</button>
+    <button class="menu-button" type="button" id="btnGithub">GitHub Repository</button>
+    <button class="menu-button" type="button" id="btnQuit">Exit</button>
   </div>
 </div>
 <script>
@@ -104,9 +113,14 @@
   var api = window.FGEXPIG_LAUNCHER || null;
   var slideEls = [document.getElementById('slideA'), document.getElementById('slideB')];
   var openLayer = document.getElementById('openLayer');
-  var priorityFill = document.getElementById('priorityFill');
   var taskProgress = document.getElementById('taskProgress');
   var menuLayer = document.getElementById('menuLayer');
+  var MIN_PHASE_MS = 2000;      // 下载 / 校验各自至少显示 2 秒
+  var SPLASH_MS = 2000;         // 开屏页固定展示 2 秒，期间不下载、不显示进度
+  var bootAt = Date.now();
+  var splashEnded = false;
+  var downloadingAt = 0;
+  var verifyingAt = 0;
   var current = 0;
   var playlist = [];
   var playIndex = 0;
@@ -125,19 +139,31 @@
   var SLIDE_TRAVEL_MS = 8000;  // 位移仍按 8 秒走完全程（速度不变），因此 6 秒时不会移动完
   var DIRS = ['up', 'down', 'left', 'right'];
 
+  // 开屏不再有进度条：优先缓存的进度直接走底部胶囊的 DOWNLOADING
   function setPriorityPercent(percent) {
     var value = Math.max(0, Math.min(100, Number(percent) || 0));
-    priorityFill.style.width = value.toFixed(1) + '%';
+    if (value >= 100) return;
+    setTaskText('DOWNLOADING ' + value.toFixed(2) + '%');
   }
 
-  function setTaskText(text) {
+  function setTaskText(text, phase) {
     if (!text) {
       taskProgress.hidden = true;
       taskProgress.textContent = '';
       return;
     }
     taskProgress.hidden = false;
+    if (phase && taskProgress.dataset.phase !== phase) taskProgress.dataset.phase = phase;
     if (taskProgress.textContent !== text) taskProgress.textContent = text;
+  }
+
+  // 开屏结束：淡出 open.webp，并通知主进程「可以开始下载缓存了」
+  function endSplash() {
+    if (splashEnded) return;
+    splashEnded = true;
+    openLayer.classList.add('fade-out');
+    window.setTimeout(function () { openLayer.style.display = 'none'; }, 520);
+    if (api && typeof api.splashDone === 'function') api.splashDone();
   }
 
   var wallpapersPool = [];
@@ -277,19 +303,119 @@
     }).catch(fallback);
   }
 
+  function showDownloading(percent) {
+    if (!downloadingAt) downloadingAt = Date.now();
+    setTaskText('DOWNLOADING ' + (Number(percent) || 0).toFixed(2) + '%', 'download');
+  }
+
+  function showVerifying(current, total) {
+    if (!verifyingAt) verifyingAt = Date.now();
+    setTaskText('VERIFYING (' + (current || 0) + '/' + (total || 0) + ')', 'verify');
+  }
+
   function onMessage(message) {
     if (!message) return;
-    if (message.type === 'priority') setPriorityPercent(message.percent);
-    else if (message.type === 'slides') startSlides(message.wallpapers || []);
-    else if (message.type === 'other') setTaskText('DOWNLOADING ' + (Number(message.percent) || 0).toFixed(2) + '%');
-    else if (message.type === 'verify') setTaskText('VERIFYING (' + (message.current || 0) + '/' + (message.total || 0) + ')');
-    else if (message.type === 'ready') {
-      taskProgress.hidden = true;
-      menuLayer.classList.add('is-visible');
+    if (message.type === 'priority') {
+      showDownloading(message.percent);
+    } else if (message.type === 'slides') {
+      startSlides(message.wallpapers || []);
+    } else if (message.type === 'other') {
+      showDownloading(message.percent);
+    } else if (message.type === 'verify') {
+      var firstVerify = !verifyingAt;
+      if (firstVerify) verifyingAt = Date.now();
+      // 下载阶段至少显示 2 秒
+      var waitVerify = firstVerify ? Math.max(0, MIN_PHASE_MS - (Date.now() - (downloadingAt || bootAt))) : 0;
+      if (waitVerify) window.setTimeout(function () { showVerifying(message.current, message.total); }, waitVerify);
+      else showVerifying(message.current, message.total);
+    } else if (message.type === 'ready') {
+      // 校验至少显示 2 秒后再显示主菜单
+      var waitReady = Math.max(0, MIN_PHASE_MS - (Date.now() - (verifyingAt || bootAt)));
+      window.setTimeout(function () {
+        taskProgress.hidden = true;
+        menuLayer.classList.add('is-visible');
+        setMenuIndex(0);
+        setMenuInputMode('pointer');
+      }, waitReady);
     }
   }
 
   if (api && typeof api.onMessage === 'function') api.onMessage(onMessage);
+
+  /* ---------- 主菜单：手柄 / 键鼠 双模式热切换（与网页手柄适配一致） ---------- */
+  var menuButtons = Array.prototype.slice.call(document.querySelectorAll('.menu-button'));
+  var menuIndex = 0;
+  var menuInputMode = 'pointer';
+  var padEdge = { up: false, down: false, confirm: false };
+  var PAD_DEADZONE = 0.5;
+
+  function menuIsOpen() { return menuLayer.classList.contains('is-visible'); }
+  function padActive() { return document.hasFocus() && document.visibilityState !== 'hidden'; }
+
+  function paintMenuSelection() {
+    for (var i = 0; i < menuButtons.length; i++) {
+      menuButtons[i].classList.toggle('is-selected', menuInputMode === 'gamepad' && i === menuIndex);
+    }
+  }
+
+  function setMenuIndex(index) {
+    if (!menuButtons.length) return;
+    menuIndex = ((index % menuButtons.length) + menuButtons.length) % menuButtons.length;
+    paintMenuSelection();
+  }
+
+  function setMenuInputMode(mode) {
+    if (menuInputMode === mode) return;
+    menuInputMode = mode;
+    paintMenuSelection();
+  }
+
+  function firstGamepad() {
+    var pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    for (var i = 0; i < pads.length; i++) if (pads[i]) return pads[i];
+    return null;
+  }
+
+  function pollMenuGamepad() {
+    if (menuIsOpen()) {
+      var pad = firstGamepad();
+      if (!pad) {
+        padEdge.up = padEdge.down = padEdge.confirm = false;
+      } else {
+        var up = false, down = false, confirm = false;
+        if (padActive()) {
+          up = !!(pad.buttons[12] && pad.buttons[12].pressed) || (pad.axes[1] < -PAD_DEADZONE);
+          down = !!(pad.buttons[13] && pad.buttons[13].pressed) || (pad.axes[1] > PAD_DEADZONE);
+          confirm = !!(pad.buttons[0] && pad.buttons[0].pressed);
+        }
+        if (up || down || confirm) setMenuInputMode('gamepad');
+        if (up && !padEdge.up) setMenuIndex(menuIndex - 1);
+        if (down && !padEdge.down) setMenuIndex(menuIndex + 1);
+        if (confirm && !padEdge.confirm && menuButtons[menuIndex]) menuButtons[menuIndex].click();
+        padEdge.up = up;
+        padEdge.down = down;
+        padEdge.confirm = confirm;
+      }
+    }
+    window.requestAnimationFrame(pollMenuGamepad);
+  }
+
+  // 键盘方向键 / Enter 与手柄同属"非指针"模式；鼠标一动就切回指针模式
+  window.addEventListener('keydown', function (event) {
+    if (!menuIsOpen()) return;
+    if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      setMenuInputMode('gamepad');
+      setMenuIndex(menuIndex + (event.key === 'ArrowUp' ? -1 : 1));
+    } else if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      setMenuInputMode('gamepad');
+      if (menuButtons[menuIndex]) menuButtons[menuIndex].click();
+    }
+  }, true);
+  window.addEventListener('mousemove', function () { setMenuInputMode('pointer'); }, true);
+  window.addEventListener('mousedown', function () { setMenuInputMode('pointer'); }, true);
+  window.requestAnimationFrame(pollMenuGamepad);
 
   document.getElementById('btnEnter').addEventListener('click', function () {
     document.getElementById('stage').classList.add('fade-out');
@@ -300,7 +426,7 @@
   document.getElementById('btnQuit').addEventListener('click', function () { if (api && api.quit) api.quit(); });
 
   startMusic();
-  setPriorityPercent(0);
+  window.setTimeout(endSplash, SPLASH_MS);
 })();
 </script>
 </body>
