@@ -64,9 +64,13 @@ async function fileState(root, entry, localEntry) {
   try {
     const stat = await fsp.stat(file);
     if (!stat.isFile()) return false;
-    // 文本文件可能被 CDN 改写（注入脚本 / 换行归一化 / 压缩），
-    // 只要本地记录与远端清单同版本且文件存在就视为最新；二进制仍严格校验大小。
-    if (isTextAsset(entry.path)) return stat.size > 0;
+    // 文本文件可能被 CDN 改写（注入脚本 / 换行归一化 / 压缩），因此不能比对哈希；
+    // 改为比对「上次同步后记录的实际落盘大小」，大小不符说明是旧文件，必须重新下载。
+    if (isTextAsset(entry.path)) {
+      const recorded = Number(localEntry.localSize) || 0;
+      if (recorded > 0) return stat.size === recorded;
+      return stat.size > 0;
+    }
     return Number(localEntry.size) === Number(entry.size) && stat.size === Number(entry.size);
   } catch (err) {
     return false;
@@ -180,8 +184,20 @@ async function syncEntries(baseUrl, root, manifest, entries, onProgress) {
   const local = await readJson(localManifestPath);
   const localMap = {};
   if (local && Array.isArray(local.files)) {
-    local.files.forEach(function (entry) { localMap[entry.path] = entry; });
+    local.files.forEach(function (entry) { if (entry && entry.path) localMap[entry.path] = entry; });
   }
+  // 迁移：旧版清单没记录文本资源实际大小（历史上出现过「清单已更新但文件还是旧的」），
+  // 这里强制重新下载一遍文本资源，把旧缓存纠正过来；完成后不再重复。
+  const hasTextLocalSize = Object.keys(localMap).some(function (p) {
+    return isTextAsset(p) && Number(localMap[p].localSize) > 0;
+  });
+  const migrateText = Object.keys(localMap).length > 0 && !hasTextLocalSize;
+
+  const sitePaths = new Set();
+  ((manifest && manifest.files) || []).forEach(function (entry) {
+    if (entry && entry.path) sitePaths.add(entry.path);
+  });
+
   await fsp.mkdir(root, { recursive: true });
   const list = Array.isArray(entries) ? entries : [];
   const target = list.length;
@@ -189,21 +205,42 @@ async function syncEntries(baseUrl, root, manifest, entries, onProgress) {
   let downloaded = 0;
   if (onProgress) onProgress({ current: 0, target: target, phase: 'download', downloaded: 0 });
   await mapLimit(list, 6, async function (entry) {
-    if (await fileState(root, entry, localMap[entry.path])) {
-      current += 1;
-      if (onProgress) onProgress({ current: current, target: target, phase: 'download', downloaded: downloaded });
-      return;
+    const file = safeLocalPath(root, entry.path);
+    const localEntry = localMap[entry.path];
+    const forceText = migrateText && isTextAsset(entry.path) && !!localEntry;
+    let keep = false;
+    if (!forceText) {
+      try {
+        keep = await fileState(root, entry, localEntry);
+      } catch (err) {
+        keep = false;
+      }
     }
-    await downloadEntry(baseUrl, root, entry, isTextAsset(entry.path));
-    downloaded += 1;
+    if (!keep) {
+      await downloadEntry(baseUrl, root, entry, isTextAsset(entry.path));
+      downloaded += 1;
+    }
+    let size = 0;
+    try {
+      if (file) size = (await fsp.stat(file)).size;
+    } catch (err) {
+      size = 0;
+    }
+    // 记录「本次确实处理过」的条目（含实际落盘大小）；未处理的条目保持旧记录，
+    // 否则没下载的文件会被误标成最新，之后再也不会更新。
+    localMap[entry.path] = Object.assign({}, entry, { localSize: size });
     current += 1;
     if (onProgress) onProgress({ current: current, target: target, phase: 'download', downloaded: downloaded });
   });
+
+  const merged = Object.keys(localMap)
+    .filter(function (p) { return sitePaths.has(p); })
+    .map(function (p) { return localMap[p]; });
   await fsp.writeFile(localManifestPath, JSON.stringify({
     version: manifest.version,
     completedLevel: 3,
     quality: 5,
-    files: manifest.files
+    files: merged
   }, null, 2), 'utf8');
   return { target: target, downloaded: downloaded };
 }

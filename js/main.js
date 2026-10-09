@@ -10205,6 +10205,9 @@
     syncKeyIconVisibility();
     syncImmersiveCursorState();
     if (open) {
+      // 打开暂停菜单时立刻收起首页的底栏选中框：
+      // 否则「回主页 → 马上再按 Esc」时，那个 3 秒的选中框会短暂停在暂停菜单上。
+      hideDockSelectedFrame();
       clearCursorNearTargets();
       pauseMenuSelectionIndex = 0;
       requestAnimationFrame(function () {

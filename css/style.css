@@ -35,6 +35,7 @@
   --text-secondary: rgba(255, 255, 255, 0.45);
   --accent-pink: #ff72b6;
   --accent-pink-text-stroke: 0.28px;
+  /* 楷体笔画细，同色描边需要更粗才看得见（见 html[data-font="kaiti"] 覆盖） */
   --accent-pink-rgb: 255, 114, 182;
   --wallpaper-dim-top: 0.175;
   --wallpaper-dim-bottom: 0.42;
@@ -1861,15 +1862,14 @@ html.desktop-runtime .pause-site-currency { display: none; }
 .pause-stat-bar {
   position: absolute;
   top: calc(env(safe-area-inset-top, 0px) + var(--pause-margin-top));
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
   z-index: 4;
   display: flex;
   flex-direction: row;
   align-items: flex-start;
+  justify-content: center;
   gap: clamp(10px, 1.7vw, 26px);
-  width: max-content;
-  max-width: calc(100vw - 2 * var(--pause-margin-left) - 24px);
   font-variant-numeric: tabular-nums;
   text-align: center;
   pointer-events: none;
@@ -1895,9 +1895,8 @@ html.desktop-runtime .pause-site-currency { display: none; }
   white-space: nowrap;
 }
 .pause-stat-scope {
-  /* 拉丁/其它语言：前缀与文案之间需要一个空格 */
+  /* 与后面的文案完全同格式（同色/同字号/同透明度），只负责语言相关间距 */
   margin-right: 0.34em;
-  opacity: 0.85;
 }
 /* 中文 / 日文不加空格；韩文与其它语言一样保留一个空格 */
 html:lang(zh) .pause-stat-scope,
@@ -2547,7 +2546,11 @@ html.pause-menu-open .account-page input { cursor: text !important; }
   .resource-calendar-day.has-event .resource-calendar-day-number
 ) {
   -webkit-text-stroke: var(--accent-pink-text-stroke) currentColor;
+  /* 先描边后填充，避免描边吃掉笔画 */
+  paint-order: stroke fill;
 }
+/* 楷体笔画细：粉色描边加粗到 0.7px，避免看起来"没有描边" */
+html[data-font="kaiti"] { --accent-pink-text-stroke: 0.7px; }
 .pause-menu .settings-page .font-item-name { font-size: var(--text-large); }
 .pause-menu .settings-page .font-item.is-active {
   border-color: rgba(255, 255, 255, 0.62);
@@ -2894,21 +2897,11 @@ html.has-card-blur .pause-menu .settings-page .font-item {
 .pause-menu.open .pause-ad-slot:nth-child(1) { animation-delay: 0.08s; }
 .pause-menu.open .pause-ad-slot:nth-child(2) { animation-delay: 0.15s; }
 .pause-menu.open .pause-ad-slot:nth-child(3) { animation-delay: 0.22s; }
-/* 暂停菜单顶部统计条：自上往下入场，6 个数据（含 5 条分割线）依次错峰 */
-.pause-menu.open .pause-stat-bar > * {
-  animation: pause-control-in-top 0.46s var(--ease-out) backwards;
+/* 暂停菜单顶部：网页价值 + 5 个全地图数据视为一个整体，自上而下一起入场（与底部自下而上对称） */
+.pause-menu.open .pause-stat-bar,
+.pause-menu.open .pause-site-value {
+  animation: pause-control-in-top 0.5s var(--ease-out) 0.04s backwards;
 }
-.pause-menu.open .pause-stat-bar > *:nth-child(1) { animation-delay: 0.04s; }
-.pause-menu.open .pause-stat-bar > *:nth-child(2) { animation-delay: 0.07s; }
-.pause-menu.open .pause-stat-bar > *:nth-child(3) { animation-delay: 0.10s; }
-.pause-menu.open .pause-stat-bar > *:nth-child(4) { animation-delay: 0.13s; }
-.pause-menu.open .pause-stat-bar > *:nth-child(5) { animation-delay: 0.16s; }
-.pause-menu.open .pause-stat-bar > *:nth-child(6) { animation-delay: 0.19s; }
-.pause-menu.open .pause-stat-bar > *:nth-child(7) { animation-delay: 0.22s; }
-.pause-menu.open .pause-stat-bar > *:nth-child(8) { animation-delay: 0.25s; }
-.pause-menu.open .pause-stat-bar > *:nth-child(9) { animation-delay: 0.28s; }
-.pause-menu.open .pause-stat-bar > *:nth-child(10) { animation-delay: 0.31s; }
-.pause-menu.open .pause-stat-bar > *:nth-child(11) { animation-delay: 0.34s; }
 .pause-menu.open .settings-topnav {
   animation: pause-control-in-top 0.42s var(--ease-out) backwards;
 }
