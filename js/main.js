@@ -9001,6 +9001,11 @@
 
   function startBackgroundCacheDownloads() {
     if (backgroundCacheStarted) return;
+    // exe 使用启动器自己的两类缓存（优先 = 壁纸+启动视频，其他 = 其余），不再占用网页版三级缓存
+    if (isDesktopRuntime()) {
+      backgroundCacheStarted = true;
+      return;
+    }
     backgroundCacheStarted = true;
     var run = function (level) {
       if (level > 3) return Promise.resolve();
@@ -9343,6 +9348,13 @@
     startupVideo.addEventListener('error', closeStartupOverlay);
     startupVideo.addEventListener('play', scheduleStartupCrossfade);
     startupVideo.addEventListener('playing', scheduleStartupCrossfade);
+    if (isDesktopRuntime()) {
+      // exe：open.webp 与 PRESS ANY BUTTON 已由 exe 启动器承担，这里直接播放开场视频
+      startupLanding.hidden = true;
+      startupOverlay.classList.remove('is-landing');
+      attemptStartupVideoPlay();
+      return;
+    }
     startStartupLanding();
 
     startupOverlay.addEventListener('click', function (event) {

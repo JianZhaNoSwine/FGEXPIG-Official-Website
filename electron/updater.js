@@ -155,6 +155,87 @@ async function syncSite(baseUrl, root, onProgress, maxLevel, quality) {
   return { version: manifest.version, count: files.length, level: maxLevel, quality: selectedQuality, completedLevel: completedLevel, pruned: pruned };
 }
 
+// 优先缓存：所有壁纸 + 启动视频（wallpaper/ 下的图片与 mp4）
+function isPriorityEntry(entry) {
+  const p = String((entry && entry.path) || '').replace(/\\/g, '/');
+  if (p.indexOf('wallpaper/') !== 0) return false;
+  return /\.(?:webp|jpe?g|png|gif|avif|mp4)$/i.test(p);
+}
+
+// 启动器幻灯片用壁纸地址（活动壁纸：wallpaper/<画质>/xxx，排除 open.webp / 二维码 / 视频）
+function collectWallpapers(baseUrl, manifest) {
+  const list = [];
+  ((manifest && manifest.files) || []).forEach(function (entry) {
+    const p = String((entry && entry.path) || '').replace(/\\/g, '/');
+    // 只取画质 5 文件夹里的活动壁纸；文件夹外的收款码等图片不参与幻灯片
+    if (!/^wallpaper\/5\/[^/]+\.(?:webp|jpe?g|png|gif|avif)$/i.test(p)) return;
+    try { list.push(new URL(p, baseUrl).toString()); } catch (err) {}
+  });
+  return list;
+}
+
+// 按给定条目集合下载（exe 自有的两类缓存都走这里）
+async function syncEntries(baseUrl, root, manifest, entries, onProgress) {
+  const localManifestPath = path.join(root, LOCAL_MANIFEST_NAME);
+  const local = await readJson(localManifestPath);
+  const localMap = {};
+  if (local && Array.isArray(local.files)) {
+    local.files.forEach(function (entry) { localMap[entry.path] = entry; });
+  }
+  await fsp.mkdir(root, { recursive: true });
+  const list = Array.isArray(entries) ? entries : [];
+  const target = list.length;
+  let current = 0;
+  let downloaded = 0;
+  if (onProgress) onProgress({ current: 0, target: target, phase: 'download', downloaded: 0 });
+  await mapLimit(list, 6, async function (entry) {
+    if (await fileState(root, entry, localMap[entry.path])) {
+      current += 1;
+      if (onProgress) onProgress({ current: current, target: target, phase: 'download', downloaded: downloaded });
+      return;
+    }
+    await downloadEntry(baseUrl, root, entry, isTextAsset(entry.path));
+    downloaded += 1;
+    current += 1;
+    if (onProgress) onProgress({ current: current, target: target, phase: 'download', downloaded: downloaded });
+  });
+  await fsp.writeFile(localManifestPath, JSON.stringify({
+    version: manifest.version,
+    completedLevel: 3,
+    quality: 5,
+    files: manifest.files
+  }, null, 2), 'utf8');
+  return { target: target, downloaded: downloaded };
+}
+
+// 校验：逐个重算哈希（文本类允许被 CDN 改写，只校验存在）
+async function verifyEntries(root, entries, onProgress) {
+  const list = Array.isArray(entries) ? entries : [];
+  const target = list.length;
+  let current = 0;
+  const failed = [];
+  if (onProgress) onProgress({ current: 0, target: target, phase: 'verify', failed: 0 });
+  await mapLimit(list, 4, async function (entry) {
+    const file = safeLocalPath(root, entry.path);
+    let ok = false;
+    if (file) {
+      try {
+        const stat = await fsp.stat(file);
+        if (stat.isFile()) {
+          if (isTextAsset(entry.path)) ok = stat.size > 0;
+          else ok = (await hashFile(file)) === entry.hash;
+        }
+      } catch (err) {
+        ok = false;
+      }
+    }
+    if (!ok) failed.push(entry.path);
+    current += 1;
+    if (onProgress) onProgress({ current: current, target: target, phase: 'verify', failed: failed.length });
+  });
+  return { failed: failed };
+}
+
 // 清单里 URL 编码过的路径还原成文件系统相对路径
 function decodeManifestPath(value) {
   return String(value || '').split('/').map(function (segment) {
@@ -204,4 +285,15 @@ function hasLocalSite(root) {
   return fs.existsSync(path.join(root, 'index.html'));
 }
 
-module.exports = { syncSite, hasLocalSite, MANIFEST_NAME };
+module.exports = {
+  syncSite,
+  hasLocalSite,
+  MANIFEST_NAME,
+  LOCAL_MANIFEST_NAME,
+  fetchManifest,
+  isPriorityEntry,
+  collectWallpapers,
+  syncEntries,
+  verifyEntries,
+  pruneStaleFiles
+};

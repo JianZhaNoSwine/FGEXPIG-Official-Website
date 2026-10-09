@@ -128,22 +128,22 @@
 
 <!-- 全屏暂停菜单 -->
 <section class="pause-menu" id="pauseMenu" aria-hidden="true">
-  <!-- 暂停菜单顶部：全地图统计（游玩数/点赞数/点踩数/点赞率/赞踩比）+ 网页价值 -->
+  <!-- 网页价值：网页版在右上角，exe 在左上角 -->
+  <div class="pause-site-value" role="img" aria-label="7,854,289,584；￥288.00 CNY">
+    <span class="pause-stat-value pause-site-value-item is-visits" aria-hidden="true">7,854,289,584</span>
+    <span class="pause-stat-label pause-site-value-item is-value" aria-hidden="true"><span class="pause-site-currency">￥</span>288.00 CNY</span>
+  </div>
+  <!-- 暂停菜单顶部：全地图统计（exe 独占，5 项，中间 4 条分割线） -->
   <div class="pause-stat-bar" id="pauseStatBar">
-    <div class="pause-stat-item"><span class="pause-stat-value" data-stat="plays">N/A</span><span class="pause-stat-label">游玩数</span></div>
+    <div class="pause-stat-item"><span class="pause-stat-value" data-stat="plays">N/A</span><span class="pause-stat-label"><span class="pause-stat-scope">全地图</span>游玩数</span></div>
     <span class="pause-stat-divider" aria-hidden="true"></span>
-    <div class="pause-stat-item"><span class="pause-stat-value" data-stat="likes">N/A</span><span class="pause-stat-label">点赞数</span></div>
+    <div class="pause-stat-item"><span class="pause-stat-value" data-stat="likes">N/A</span><span class="pause-stat-label"><span class="pause-stat-scope">全地图</span>点赞数</span></div>
     <span class="pause-stat-divider" aria-hidden="true"></span>
-    <div class="pause-stat-item"><span class="pause-stat-value" data-stat="dislikes">N/A</span><span class="pause-stat-label">点踩数</span></div>
+    <div class="pause-stat-item"><span class="pause-stat-value" data-stat="dislikes">N/A</span><span class="pause-stat-label"><span class="pause-stat-scope">全地图</span>点踩数</span></div>
     <span class="pause-stat-divider" aria-hidden="true"></span>
-    <div class="pause-stat-item"><span class="pause-stat-value" data-stat="likeRate">N/A</span><span class="pause-stat-label">点赞率</span></div>
+    <div class="pause-stat-item"><span class="pause-stat-value" data-stat="likeRate">N/A</span><span class="pause-stat-label"><span class="pause-stat-scope">全地图</span>点赞率</span></div>
     <span class="pause-stat-divider" aria-hidden="true"></span>
-    <div class="pause-stat-item"><span class="pause-stat-value" data-stat="likeRatio">N/A</span><span class="pause-stat-label">赞踩比</span></div>
-    <span class="pause-stat-divider" aria-hidden="true"></span>
-    <div class="pause-stat-item is-site-value" role="img" aria-label="7,854,289,584；￥288.00 CNY">
-      <span class="pause-stat-value pause-site-value-item is-visits" aria-hidden="true">7,854,289,584</span>
-      <span class="pause-stat-label pause-site-value-item is-value" aria-hidden="true">￥288.00 CNY</span>
-    </div>
+    <div class="pause-stat-item"><span class="pause-stat-value" data-stat="likeRatio">N/A</span><span class="pause-stat-label"><span class="pause-stat-scope">全地图</span>赞踩比</span></div>
   </div>
   <!-- 左下角版本号（按键 + 文字，点击或按 V / RS / R3 进入更新日志） -->
   <div class="pause-version-hint" id="pauseVersionHint"></div>

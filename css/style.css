@@ -1830,8 +1830,34 @@ html.pause-menu-open .tb-avatar-level { display: none; }
   visibility: visible;
   pointer-events: auto;
 }
-/* 暂停菜单顶部：全地图统计（5 项）+ 网页价值，一行 6 项居中；
-   每项上下两行（上=白色数字，下=粉色文字），正中一条细分隔线；顶部间距与原网页价值一致 */
+/* 网页价值：网页版右上角（原样式），exe 移到左上角 */
+.pause-site-value {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + var(--pause-margin-top));
+  right: var(--pause-margin-right);
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  width: max-content;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  pointer-events: none;
+  user-select: none;
+}
+html.desktop-runtime .pause-site-value {
+  right: auto;
+  left: var(--pause-margin-left);
+  align-items: flex-start;
+  text-align: left;
+}
+/* exe 不显示货币符号￥（保留 CNY） */
+html.desktop-runtime .pause-site-currency { display: none; }
+.pause-menu.is-subpage-open .pause-site-value { display: none; }
+
+/* 暂停菜单顶部：全地图统计（exe 独占，5 项居中）
+   每项上下两行（上=白色数字，下=粉色文字「全地图XX」），中间 4 条细分隔线 */
 .pause-stat-bar {
   position: absolute;
   top: calc(env(safe-area-inset-top, 0px) + var(--pause-margin-top));
@@ -1868,6 +1894,14 @@ html.pause-menu-open .tb-avatar-level { display: none; }
   line-height: 1.15;
   white-space: nowrap;
 }
+.pause-stat-scope {
+  /* 拉丁/其它语言：前缀与文案之间需要一个空格 */
+  margin-right: 0.34em;
+  opacity: 0.85;
+}
+/* 中文 / 日文不加空格；韩文与其它语言一样保留一个空格 */
+html:lang(zh) .pause-stat-scope,
+html:lang(ja) .pause-stat-scope { margin-right: 0; }
 .pause-stat-divider {
   align-self: stretch;
   width: 1px;
@@ -1878,18 +1912,8 @@ html.pause-menu-open .tb-avatar-level { display: none; }
 .pause-site-value-item.is-visits { color: #fff; }
 .pause-site-value-item.is-value { color: var(--accent-pink); }
 .pause-menu.is-subpage-open .pause-stat-bar { display: none; }
-/* 网页版没有地图数据：前 5 项统计与分割线不显示，网页价值仍固定在右上角（与原样式一致） */
-html:not(.desktop-runtime) .pause-stat-bar {
-  left: auto;
-  right: var(--pause-margin-right);
-  transform: none;
-}
-html:not(.desktop-runtime) .pause-stat-item:not(.is-site-value),
-html:not(.desktop-runtime) .pause-stat-divider { display: none; }
-html:not(.desktop-runtime) .pause-stat-item.is-site-value {
-  align-items: flex-end;
-  text-align: right;
-}
+/* 网页版没有地图数据：整条统计条不显示（网页价值是独立块） */
+html:not(.desktop-runtime) .pause-stat-bar { display: none; }
 .pause-menu .pause-menu-inner {
   grid-column: 1;
   width: 100%;
@@ -4871,7 +4895,6 @@ body.minigame-open { overflow: hidden; }
     gap: 10px;
     max-width: calc(100vw - 24px);
   }
-  html:not(.desktop-runtime) .pause-stat-bar { right: 24px; }
   .pause-stat-item { min-width: 0; }
   .pause-menu-ads {
     grid-column: 1;

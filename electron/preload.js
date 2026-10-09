@@ -27,3 +27,19 @@ contextBridge.exposeInMainWorld('FGEXPIG_DESKTOP', {
     return ipcRenderer.invoke('fgexpig:mapstats:fetch', code);
   }
 });
+
+// 启动器（launcher.html）专用接口
+contextBridge.exposeInMainWorld('FGEXPIG_LAUNCHER', {
+  onMessage: function (callback) {
+    if (typeof callback !== 'function') return;
+    ipcRenderer.on('fgexpig:launcher:message', function (event, data) { callback(data); });
+  },
+  // 菜单音乐（打包在 exe 内）：返回字节，用于 Web Audio 无缝循环
+  music: function () {
+    return ipcRenderer.invoke('fgexpig:launcher:music');
+  },
+  enter: function () { ipcRenderer.send('fgexpig:launcher:enter'); },
+  openSite: function () { ipcRenderer.send('fgexpig:launcher:open-site'); },
+  github: function () { ipcRenderer.send('fgexpig:launcher:github'); },
+  quit: function () { ipcRenderer.send('fgexpig:launcher:quit'); }
+});

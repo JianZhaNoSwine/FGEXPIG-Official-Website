@@ -4,7 +4,17 @@ const { app, BrowserWindow, shell, ipcMain, screen, dialog, net } = require('ele
 const path = require('path');
 const fs = require('fs');
 const { createStaticServer } = require('./server');
-const { syncSite, hasLocalSite } = require('./updater');
+const {
+  syncSite,
+  hasLocalSite,
+  fetchManifest,
+  isPriorityEntry,
+  collectWallpapers,
+  syncEntries,
+  verifyEntries,
+  pruneStaleFiles,
+  LOCAL_MANIFEST_NAME
+} = require('./updater');
 
 const DESKTOP_PORT = Number(process.env.FGEXPIG_DESKTOP_PORT || 37655);
 const UPDATE_BASE_URL = String(process.env.FGEXPIG_UPDATE_BASE_URL || 'https://fgexpig.cc/').replace(/\/?$/, '/');
@@ -23,7 +33,6 @@ const CARD_HEIGHT_VIEWPORT_RATIO = 0.076;
 // 首页成就卡正文外固定占用：顶部76 + 底栏/提示67 + 页面内边距32 + 卡片内边距32 + 卡片边框2 + 标题区46 = 255
 const ACHV_BODY_CHROME_HEIGHT = 255;
 
-const SPLASH_MIN_VISIBLE_MS = 1000;
 
 const ASPECT_OPTIONS = [
   { id: '16:9', ratio: 16 / 9 },
@@ -336,43 +345,62 @@ if (!gotLock) {
 }
 
 
-function sendSplashProgress(progress) {
-  if (!mainWindow || !mainWindow.webContents) return;
-  const script = 'window.updateDesktopSplashProgress && window.updateDesktopSplashProgress(' + JSON.stringify(progress) + ');';
-  mainWindow.webContents.executeJavaScript(script).catch(function () {});
+// 启动器（launcher.html）消息：进度 / 幻灯片列表 / 菜单就绪
+function sendLauncherMessage(message) {
+  if (!mainWindow || mainWindow.isDestroyed() || !mainWindow.webContents) return;
+  try { mainWindow.webContents.send('fgexpig:launcher:message', message); } catch (err) {}
 }
+
+function progressPercent(progress) {
+  const target = Math.max(0, Number(progress && progress.target) || 0);
+  if (!target) return 100;
+  const current = Math.max(0, Math.min(Number(progress.current) || 0, target));
+  // 不取整：下载进度保留两位小数由启动器格式化
+  return (current / target) * 100;
+}
+
+// 读本地清单：离线时启动器仍可用（用上次同步的清单做校验与幻灯片）
+function readLocalManifest() {
+  try {
+    const data = JSON.parse(fs.readFileSync(path.join(SITE_ROOT, LOCAL_MANIFEST_NAME), 'utf8'));
+    if (data && Array.isArray(data.files)) return data;
+  } catch (err) {}
+  return null;
+}
+
+let launcherEnterResolve = null;
+function waitForLauncherEnter() {
+  return new Promise(function (resolve) { launcherEnterResolve = resolve; });
+}
+
+ipcMain.on('fgexpig:launcher:enter', function () {
+  if (launcherEnterResolve) {
+    const done = launcherEnterResolve;
+    launcherEnterResolve = null;
+    done();
+  }
+});
+ipcMain.on('fgexpig:launcher:open-site', function () {
+  shell.openExternal(UPDATE_BASE_URL);
+});
+ipcMain.on('fgexpig:launcher:github', function () {
+  shell.openExternal('https://github.com/JianZhaNoSwine/FGEXPIG-Official-Website');
+});
+ipcMain.on('fgexpig:launcher:quit', function () {
+  app.quit();
+});
+ipcMain.handle('fgexpig:launcher:music', function () {
+  try {
+    return fs.readFileSync(path.join(__dirname, 'assets', 'menu.mp3'));
+  } catch (err) {
+    return null;
+  }
+});
 
 function delay(ms) {
   return new Promise(function (resolve) {
     setTimeout(resolve, Math.max(0, Number(ms) || 0));
   });
-}
-
-async function waitForSplashImages(window) {
-  if (!window || !window.webContents) return;
-  try {
-    await window.webContents.executeJavaScript(`
-      new Promise(function (resolve) {
-        var images = Array.prototype.slice.call(document.images);
-        var pending = images.filter(function (img) { return !img.complete; });
-        if (!pending.length) {
-          requestAnimationFrame(function () { requestAnimationFrame(resolve); });
-          return;
-        }
-        var left = pending.length;
-        var done = function () {
-          left -= 1;
-          if (left <= 0) requestAnimationFrame(function () { requestAnimationFrame(resolve); });
-        };
-        pending.forEach(function (img) {
-          img.addEventListener('load', done, { once: true });
-          img.addEventListener('error', done, { once: true });
-        });
-      })
-    `);
-  } catch (err) {
-    console.warn('[desktop] splash image wait failed:', err);
-  }
 }
 
 async function startStaticServer() {
@@ -419,75 +447,94 @@ async function createWindow() {
     mainWindow.setTitle('FGEXPIG');
   });
 
-  await mainWindow.loadFile(path.join(__dirname, 'splash.html'));
-  await waitForSplashImages(mainWindow);
+  const siteUrl = await startStaticServer();
+  await mainWindow.loadFile(path.join(__dirname, 'launcher.html'));
   mainWindow.show();
-  const splashStartedAt = Date.now();
 
-  const desktopQuality = 5;
-  const cacheReady = hasLocalSite(SITE_ROOT);
-  let initialSync;
-  if (cacheReady) {
-    // 本机已有 1 级缓存：先用缓存进入，联网校验最多只等 1.5s，
-    // 超时就在后台继续，避免每次启动都被网络清单的往返拖慢。
-    initialSync = syncSite(UPDATE_BASE_URL, SITE_ROOT, function () {}, 1, desktopQuality);
-    await Promise.race([
-      initialSync.catch(function (err) {
-        console.warn('[desktop] level 1 sync failed, using local cache:', err);
-      }),
-      delay(1500)
-    ]);
-  } else {
-    // 首次运行：必须先下完 1 级缓存，否则没有可显示的页面。
-    try {
-      await syncSite(UPDATE_BASE_URL, SITE_ROOT, sendSplashProgress, 1, desktopQuality);
-    } catch (err) {
-      console.error('[desktop] site update failed:', err);
-      dialog.showErrorBox('启动失败', '资源更新失败，且本机没有可用缓存。');
-      mainWindow.destroy();
-      return;
-    }
-    initialSync = Promise.resolve();
+  // 1) 资源清单（联网失败时用本地清单兜底）
+  let manifest = null;
+  try {
+    manifest = await fetchManifest(UPDATE_BASE_URL);
+  } catch (err) {
+    console.warn('[desktop] manifest fetch failed, fall back to local manifest:', err);
+  }
+  if (!manifest) manifest = readLocalManifest();
+  if (!manifest || !Array.isArray(manifest.files)) {
+    dialog.showErrorBox('启动失败', '资源清单获取失败，且本机没有可用缓存。');
+    mainWindow.destroy();
+    return;
   }
 
-  sendSplashProgress({ current: 1, target: 1, phase: 'complete', level: 1 });
-  const splashRemaining = SPLASH_MIN_VISIBLE_MS - (Date.now() - splashStartedAt);
-  if (splashRemaining > 0) await delay(splashRemaining);
-  try {
-    await mainWindow.webContents.executeJavaScript("document.querySelector('.splash') && document.querySelector('.splash').classList.add('is-leaving');");
-  } catch (err) {}
-  await delay(220);
+  const priorityEntries = manifest.files.filter(isPriorityEntry);
+  const otherEntries = manifest.files.filter(function (entry) { return !isPriorityEntry(entry); });
 
-  const url = await startStaticServer();
+  // 2) 优先缓存（所有壁纸 + 启动视频）→ open.webp 上的进度条
+  try {
+    await syncEntries(UPDATE_BASE_URL, SITE_ROOT, manifest, priorityEntries, function (progress) {
+      sendLauncherMessage({ type: 'priority', percent: progressPercent(progress) });
+    });
+  } catch (err) {
+    console.warn('[desktop] priority cache failed:', err);
+  }
+  sendLauncherMessage({ type: 'priority', percent: 100 });
+  sendLauncherMessage({ type: 'slides', wallpapers: collectWallpapers(siteUrl, manifest) });
+
+  // 3) 其他缓存 → 幻灯片右下角下载进度；随后校验
+  try {
+    await syncEntries(UPDATE_BASE_URL, SITE_ROOT, manifest, otherEntries, function (progress) {
+      sendLauncherMessage({ type: 'other', percent: progressPercent(progress) });
+    });
+    await pruneStaleFiles(SITE_ROOT, manifest);
+  } catch (err) {
+    console.warn('[desktop] other cache failed:', err);
+  }
+  sendLauncherMessage({ type: 'other', percent: 100 });
+
+  // 4) 校验（哈希）；失败的文件补下一次再校验
+  try {
+    const verified = await verifyEntries(SITE_ROOT, manifest.files, function (progress) {
+      // 校验不显示百分比：显示「已校验 / 全部」的资源数
+      sendLauncherMessage({ type: 'verify', current: progress.current, total: progress.target });
+    });
+    const failed = (verified && verified.failed) || [];
+    if (failed.length) {
+      console.warn('[desktop] verify failed for ' + failed.length + ' file(s), re-downloading');
+      const retryEntries = manifest.files.filter(function (entry) { return failed.indexOf(entry.path) >= 0; });
+      try {
+        await syncEntries(UPDATE_BASE_URL, SITE_ROOT, manifest, retryEntries, function () {});
+        await verifyEntries(SITE_ROOT, retryEntries, function (progress) {
+          sendLauncherMessage({ type: 'verify', current: progress.current, total: progress.target });
+        });
+      } catch (err) {
+        console.warn('[desktop] verify repair failed:', err);
+      }
+    }
+  } catch (err) {
+    console.warn('[desktop] verify failed:', err);
+  }
+  sendLauncherMessage({ type: 'verify', current: manifest.files.length, total: manifest.files.length });
+
+  // 5) 显示菜单（menu.png + 4 个按钮），等待用户点“进入应用”
+  sendLauncherMessage({ type: 'ready' });
+  await waitForLauncherEnter();
+
+  // 6) 淡出后进入网页：站点启动流程会直接播放 start.mp4 再进首页
   mainWindow.webContents.on('will-navigate', function (event, targetUrl) {
     let targetOrigin = '';
     let localOrigin = '';
     try {
       targetOrigin = new URL(targetUrl).origin;
-      localOrigin = new URL(url).origin;
+      localOrigin = new URL(siteUrl).origin;
     } catch (e) {}
     if (targetOrigin && targetOrigin === localOrigin) return;
     event.preventDefault();
     if (/^https?:/i.test(targetUrl)) shell.openExternal(targetUrl);
   });
 
-  await mainWindow.loadURL(url);
+  await mainWindow.loadURL(siteUrl);
   if (process.env.FGEXPIG_DEVTOOLS === '1') {
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   }
-
-  (async function () {
-    // 等 1 级校验结束后再顺序拉 2/3 级，避免同一文件被并发下载两次。
-    try { await initialSync; } catch (err) {}
-    for (const level of [2, 3]) {
-      try {
-        await syncSite(UPDATE_BASE_URL, SITE_ROOT, function () {}, level, desktopQuality);
-      } catch (err) {
-        console.warn('[desktop] background cache level ' + level + ' failed:', err);
-        return;
-      }
-    }
-  })();
 }
 
 app.whenReady().then(function () {
