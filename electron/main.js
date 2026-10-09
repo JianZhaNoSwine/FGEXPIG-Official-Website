@@ -386,12 +386,47 @@ ipcMain.on('fgexpig:launcher:splash-done', function () {
 // 记住站点地址与清单：从网页退回启动器主菜单时要用
 let launcherSiteBaseUrl = '';
 let launcherManifest = null;
+let launcherEnterResolve = null;
+let enteringSite = false;
+let siteNavigationGuardInstalled = false;
 
-// exe 内点「退出至菜单」：重新加载启动器并直接显示主菜单（缓存已完整）
+function installSiteNavigationGuard(siteUrl) {
+  if (siteNavigationGuardInstalled || !mainWindow || mainWindow.isDestroyed()) return;
+  siteNavigationGuardInstalled = true;
+  mainWindow.webContents.on('will-navigate', function (event, targetUrl) {
+    let targetOrigin = '';
+    let localOrigin = '';
+    try {
+      targetOrigin = new URL(targetUrl).origin;
+      localOrigin = new URL(siteUrl).origin;
+    } catch (e) {}
+    if (targetOrigin && targetOrigin === localOrigin) return;
+    event.preventDefault();
+    if (/^https?:/i.test(targetUrl)) shell.openExternal(targetUrl);
+  });
+}
+
+async function enterSiteFromLauncher() {
+  if (!mainWindow || mainWindow.isDestroyed() || !launcherSiteBaseUrl || enteringSite) return;
+  enteringSite = true;
+  try {
+    installSiteNavigationGuard(launcherSiteBaseUrl);
+    await mainWindow.loadURL(launcherSiteBaseUrl);
+    if (process.env.FGEXPIG_DEVTOOLS === '1') {
+      mainWindow.webContents.openDevTools({ mode: 'detach' });
+    }
+  } catch (err) {
+    console.warn('[desktop] enter site failed:', err);
+  } finally {
+    enteringSite = false;
+  }
+}
+
+// exe 内点「退出至菜单」：重新加载启动器并以 resume 模式直接显示主菜单（不重新开屏/下载/校验）
 ipcMain.on('fgexpig:launcher:back-to-menu', async function () {
   if (!mainWindow || mainWindow.isDestroyed()) return;
   try {
-    await mainWindow.loadFile(path.join(__dirname, 'launcher.html'));
+    await mainWindow.loadFile(path.join(__dirname, 'launcher.html'), { query: { resume: '1' } });
     if (launcherManifest && launcherSiteBaseUrl) {
       sendLauncherMessage({ type: 'slides', wallpapers: collectWallpapers(launcherSiteBaseUrl, launcherManifest) });
     }
@@ -401,7 +436,6 @@ ipcMain.on('fgexpig:launcher:back-to-menu', async function () {
   }
 });
 
-let launcherEnterResolve = null;
 function waitForLauncherEnter() {
   return new Promise(function (resolve) { launcherEnterResolve = resolve; });
 }
@@ -411,7 +445,11 @@ ipcMain.on('fgexpig:launcher:enter', function () {
     const done = launcherEnterResolve;
     launcherEnterResolve = null;
     done();
+    return;
   }
+  enterSiteFromLauncher().catch(function (err) {
+    console.warn('[desktop] launcher enter failed:', err);
+  });
 });
 ipcMain.on('fgexpig:launcher:open-site', function () {
   shell.openExternal(UPDATE_BASE_URL);
@@ -558,23 +596,8 @@ async function createWindow() {
   sendLauncherMessage({ type: 'ready' });
   await waitForLauncherEnter();
 
-  // 6) 淡出后进入网页：站点启动流程会直接播放 start.mp4 再进首页
-  mainWindow.webContents.on('will-navigate', function (event, targetUrl) {
-    let targetOrigin = '';
-    let localOrigin = '';
-    try {
-      targetOrigin = new URL(targetUrl).origin;
-      localOrigin = new URL(siteUrl).origin;
-    } catch (e) {}
-    if (targetOrigin && targetOrigin === localOrigin) return;
-    event.preventDefault();
-    if (/^https?:/i.test(targetUrl)) shell.openExternal(targetUrl);
-  });
-
-  await mainWindow.loadURL(siteUrl);
-  if (process.env.FGEXPIG_DEVTOOLS === '1') {
-    mainWindow.webContents.openDevTools({ mode: 'detach' });
-  }
+  // 6) 进入网页：站点启动流程会直接播放 start.mp4 再进首页
+  await enterSiteFromLauncher();
 }
 
 app.whenReady().then(function () {

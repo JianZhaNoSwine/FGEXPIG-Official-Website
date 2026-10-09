@@ -1,6 +1,6 @@
 {
-  "version": "f65ebbba9ba8fb7e",
-  "generatedAt": "2026-10-09T10:42:36.574Z",
+  "version": "c8bbc40b9001cf29",
+  "generatedAt": "2026-10-09T11:30:39.907Z",
   "counts": {
     "1": 339,
     "2": 1060,
@@ -5252,7 +5252,7 @@
     },
     {
       "path": "index.html",
-      "hash": "2ba88fd7cfc9bb94d002826665aa5e6168deea5e9641c1207f89f405adf2f1ea",
+      "hash": "fbdb94225796a22edd7a093b6575ec4cbc065b0a5a2b4bfe7b2382ffbf9b4152",
       "size": 33752,
       "level": 1,
       "quality": 0
@@ -9648,8 +9648,8 @@
     },
     {
       "path": "resources/update.js",
-      "hash": "9075b7b6aaed7245ced09fc3621c2f11826eea0043ce6769074cc32c981ffcaf",
-      "size": 10064,
+      "hash": "97ee07fbf383b009f3a67350279194ad2c3c776c22a01788fe960abdb92eae00",
+      "size": 10401,
       "level": 1,
       "quality": 0
     },

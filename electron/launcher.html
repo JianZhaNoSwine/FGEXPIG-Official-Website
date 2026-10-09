@@ -67,6 +67,7 @@
     transition: clip-path 3200ms linear;
   }
   #menuLayer.is-visible { clip-path: inset(0 0 0 0); pointer-events: auto; }
+  #menuLayer.is-instant { transition: none; }
   #menuLayer > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .menu-button {
     position: absolute; left: 11.95%; transform: translateY(-50%);
@@ -117,8 +118,9 @@
   var menuLayer = document.getElementById('menuLayer');
   var MIN_PHASE_MS = 2000;      // 下载 / 校验各自至少显示 2 秒
   var SPLASH_MS = 2000;         // 开屏页固定展示 2 秒，期间不下载、不显示进度
+  var resumeMenu = /[?&]resume=1(?:&|$)/.test(window.location.search);
   var bootAt = Date.now();
-  var splashEnded = false;
+  var splashEnded = resumeMenu;
   var downloadingAt = 0;
   var verifyingAt = 0;
   var current = 0;
@@ -127,6 +129,11 @@
   var slidesRunning = false;
   var lastSrc = '';
   var lastDir = '';
+
+  if (resumeMenu) {
+    openLayer.style.display = 'none';
+    taskProgress.hidden = true;
+  }
 
   // 平移方向（图片为 130%，四周各多出约 15% 画面 ≈ 11.5% 元素尺寸，取 ±8% 留余量）
   var MOTION = {
@@ -313,6 +320,14 @@
     setTaskText('VERIFYING (' + (current || 0) + '/' + (total || 0) + ')', 'verify');
   }
 
+  function showMenu() {
+    taskProgress.hidden = true;
+    if (resumeMenu) menuLayer.classList.add('is-instant');
+    menuLayer.classList.add('is-visible');
+    setMenuIndex(0);
+    setMenuInputMode('pointer');
+  }
+
   function onMessage(message) {
     if (!message) return;
     if (message.type === 'priority') {
@@ -329,14 +344,13 @@
       if (waitVerify) window.setTimeout(function () { showVerifying(message.current, message.total); }, waitVerify);
       else showVerifying(message.current, message.total);
     } else if (message.type === 'ready') {
-      // 校验至少显示 2 秒后再显示主菜单
-      var waitReady = Math.max(0, MIN_PHASE_MS - (Date.now() - (verifyingAt || bootAt)));
-      window.setTimeout(function () {
-        taskProgress.hidden = true;
-        menuLayer.classList.add('is-visible');
-        setMenuIndex(0);
-        setMenuInputMode('pointer');
-      }, waitReady);
+      if (resumeMenu) {
+        showMenu();
+      } else {
+        // 校验至少显示 2 秒后再显示主菜单
+        var waitReady = Math.max(0, MIN_PHASE_MS - (Date.now() - (verifyingAt || bootAt)));
+        window.setTimeout(showMenu, waitReady);
+      }
     }
   }
 
@@ -426,7 +440,7 @@
   document.getElementById('btnQuit').addEventListener('click', function () { if (api && api.quit) api.quit(); });
 
   startMusic();
-  window.setTimeout(endSplash, SPLASH_MS);
+  if (!resumeMenu) window.setTimeout(endSplash, SPLASH_MS);
 })();
 </script>
 </body>

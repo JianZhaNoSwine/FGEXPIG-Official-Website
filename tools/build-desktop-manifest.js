@@ -24,6 +24,8 @@ function include(relativePath) {
   const quality = qualityLevel(normalized);
   if (quality && quality !== 5) return false;
   if (normalized.indexOf('i18n/') === 0 && /\.csv$/i.test(normalized)) return false;
+  // 网页版下载页专用资源，不进入 exe 缓存。
+  if (normalized === 'css/home.css' || normalized === 'js/home.js') return false;
   return true;
 }
 
