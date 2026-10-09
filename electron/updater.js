@@ -214,8 +214,11 @@ async function syncEntries(baseUrl, root, manifest, entries, onProgress) {
     const file = safeLocalPath(root, entry.path);
     const localEntry = localMap[entry.path];
     const forceText = migrateText && isTextAsset(entry.path) && !!localEntry;
+    // 入口 HTML 强制刷新：历史上曾出现过下载页被缓存成 index.html，
+    // 而本地清单仍记录旧应用哈希，仅比 localSize 会误判为最新。
+    const forceIndexRefresh = entry.path === 'index.html';
     let keep = false;
-    if (!forceText) {
+    if (!forceText && !forceIndexRefresh) {
       try {
         keep = await fileState(root, entry, localEntry);
       } catch (err) {
