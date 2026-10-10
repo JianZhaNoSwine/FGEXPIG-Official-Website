@@ -58,7 +58,10 @@
     var empty = { codes: {}, days: {}, resumeAt: 0 };
     var parsed = null;
     try {
-      var raw = global.localStorage && global.localStorage.getItem(STORAGE_KEY);
+      var bridge = global.FGEXPIG_DESKTOP;
+      var raw = bridge && typeof bridge.getMapStatsStore === 'function'
+        ? bridge.getMapStatsStore()
+        : (global.localStorage && global.localStorage.getItem(STORAGE_KEY));
       if (raw) parsed = JSON.parse(raw);
     } catch (err) {
       parsed = null;
@@ -79,7 +82,10 @@
 
   function writeStore() {
     try {
-      global.localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+      var text = JSON.stringify(store);
+      var bridge = global.FGEXPIG_DESKTOP;
+      if (bridge && typeof bridge.setMapStatsStore === 'function') bridge.setMapStatsStore(text);
+      else global.localStorage.setItem(STORAGE_KEY, text);
     } catch (err) {}
   }
 

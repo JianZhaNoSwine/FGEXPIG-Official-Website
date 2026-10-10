@@ -23,6 +23,7 @@ app.setName('FGEXPIG');
 app.setPath('userData', path.join(app.getPath('appData'), 'fgexpig-desktop'));
 const SITE_ROOT = path.join(app.getPath('userData'), 'site');
 const DESKTOP_SETTINGS_FILE = path.join(app.getPath('userData'), 'desktop-settings.json');
+const MAP_STATS_STORAGE_FILE = path.join(app.getPath('userData'), 'mapstats.json');
 
 const ACHV_ITEM_HEIGHT = 58;
 const SUBCARD_GAP = 10;
@@ -332,6 +333,31 @@ function fetchMapStats(code) {
 
 ipcMain.handle('fgexpig:mapstats:fetch', function (event, code) {
   return fetchMapStats(code);
+});
+
+function readMapStatsStorage() {
+  try {
+    return fs.readFileSync(MAP_STATS_STORAGE_FILE, 'utf8');
+  } catch (err) {
+    return '';
+  }
+}
+
+function writeMapStatsStorage(value) {
+  try {
+    fs.mkdirSync(path.dirname(MAP_STATS_STORAGE_FILE), { recursive: true });
+    fs.writeFileSync(MAP_STATS_STORAGE_FILE, String(value || ''), 'utf8');
+  } catch (err) {
+    console.warn('[desktop] failed to save map stats storage:', err);
+  }
+}
+
+ipcMain.on('fgexpig:mapstats:storage:get', function (event) {
+  event.returnValue = readMapStatsStorage();
+});
+
+ipcMain.on('fgexpig:mapstats:storage:set', function (event, value) {
+  writeMapStatsStorage(value);
 });
 
 const gotLock = app.requestSingleInstanceLock();

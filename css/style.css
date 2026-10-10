@@ -1834,9 +1834,9 @@ html.pause-menu-open .tb-avatar-level { display: none; }
 /* 网页价值：网页版右上角（原样式），exe 移到左上角 */
 .pause-site-value {
   position: absolute;
-  top: calc(env(safe-area-inset-top, 0px) + var(--pause-margin-top));
   right: var(--pause-margin-right);
-  z-index: 4;
+  bottom: var(--pause-margin-bottom, 16px);
+  z-index: 6;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -1846,12 +1846,6 @@ html.pause-menu-open .tb-avatar-level { display: none; }
   text-align: right;
   pointer-events: none;
   user-select: none;
-}
-html.desktop-runtime .pause-site-value {
-  right: auto;
-  left: var(--pause-margin-left);
-  align-items: flex-start;
-  text-align: left;
 }
 /* exe 不显示货币符号￥（保留 CNY） */
 html.desktop-runtime .pause-site-currency { display: none; }
@@ -2734,7 +2728,7 @@ html.has-card-blur .pause-menu .settings-page .font-item {
 .pause-cache-progress {
   position: absolute;
   right: var(--pause-margin-right);
-  bottom: var(--pause-margin-bottom, 16px);
+  bottom: calc(var(--pause-margin-bottom, 16px) + 20px);
   z-index: 6;
   display: flex;
   flex-direction: column;
@@ -2809,6 +2803,12 @@ html.has-card-blur .pause-menu .settings-page .font-item {
   vector-effect: non-scaling-stroke;
   shape-rendering: crispEdges;
 }
+
+.pause-leaderboard-grid-line.is-value-divider,
+.pause-leaderboard-grid-line.is-last {
+  stroke: #fff;
+  stroke-width: 1.4;
+}
 .pause-leaderboard-axis {
   stroke: #fff;
   stroke-width: 1.4;
@@ -2841,19 +2841,30 @@ html.has-card-blur .pause-menu .settings-page .font-item {
   font-variant-numeric: tabular-nums;
   white-space: pre;
 }
-.pause-leaderboard-bar-label.is-marquee {
+.pause-leaderboard-label-object {
+  overflow: visible;
+}
+
+.pause-leaderboard-html-label {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  color: #fff;
+  font-size: var(--text-large);
+  line-height: 1.2;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
   pointer-events: all;
-  cursor: help;
-  will-change: transform;
 }
 
-.pause-leaderboard-bar-label.is-marquee.is-scrolling {
-  animation: pause-leaderboard-label-scroll 2.2s ease-in-out infinite alternate;
+.pause-leaderboard-html-label.is-top {
+  color: var(--accent-pink);
 }
 
-@keyframes pause-leaderboard-label-scroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(var(--pause-leaderboard-scroll, 0px)); }
+.pause-leaderboard-html-label .line-marquee {
+  width: 100%;
 }
 
 .pause-leaderboard-bar-label.is-top,

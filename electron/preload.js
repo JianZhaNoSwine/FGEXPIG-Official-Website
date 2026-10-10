@@ -2,6 +2,25 @@
 
 const { contextBridge, ipcRenderer } = require('electron');
 const resolution = ipcRenderer.sendSync('fgexpig:desktop-resolution:get');
+const MAP_STATS_STORAGE_KEY = 'fgexpig.mapstats.v1';
+
+function getMapStatsStore() {
+  let fileValue = '';
+  try { fileValue = ipcRenderer.sendSync('fgexpig:mapstats:storage:get') || ''; } catch (err) {}
+  let localValue = '';
+  try { localValue = window.localStorage.getItem(MAP_STATS_STORAGE_KEY) || ''; } catch (err) {}
+  if (!fileValue && localValue) {
+    ipcRenderer.send('fgexpig:mapstats:storage:set', localValue);
+    return localValue;
+  }
+  return fileValue || localValue;
+}
+
+function setMapStatsStore(value) {
+  const text = String(value || '');
+  ipcRenderer.send('fgexpig:mapstats:storage:set', text);
+  try { window.localStorage.setItem(MAP_STATS_STORAGE_KEY, text); } catch (err) {}
+}
 
 contextBridge.exposeInMainWorld('FGEXPIG_DESKTOP', {
   isDesktop: true,
@@ -27,7 +46,9 @@ contextBridge.exposeInMainWorld('FGEXPIG_DESKTOP', {
   // 地图数据接口走主进程代取：渲染进程直连会被 CORS 挡住，拿不到真实状态码
   fetchMapStats: function (code) {
     return ipcRenderer.invoke('fgexpig:mapstats:fetch', code);
-  }
+  },
+  getMapStatsStore: getMapStatsStore,
+  setMapStatsStore: setMapStatsStore
 });
 
 // 启动器（launcher.html）专用接口

@@ -15982,49 +15982,17 @@
     return width;
   }
 
-  function pauseLeaderboardEllipsize(text, maxWidth) {
-    var value = String(text == null ? '' : text);
-    if (!value || !isFinite(maxWidth) || maxWidth <= 0) return value;
-    if (pauseLeaderboardEstimatedTextWidth(value) <= maxWidth) return value;
-    var ellipsis = '…';
-    var ellipsisWidth = pauseLeaderboardEstimatedTextWidth(ellipsis);
-    var chars = Array.from(value);
-    var out = '';
-    var used = 0;
-    for (var i = 0; i < chars.length; i++) {
-      var charWidth = pauseLeaderboardEstimatedTextWidth(chars[i]);
-      if (used + charWidth + ellipsisWidth > maxWidth) break;
-      out += chars[i];
-      used += charWidth;
-    }
-    return (out || chars[0] || '') + ellipsis;
-  }
-
-  function bindPauseLeaderboardLabelMotion(label, fullText, shownText, shouldMarquee, maxWidth) {
-    if (!label || !shouldMarquee) return;
-    var fullName = String(fullText == null ? '' : fullText);
-    var shownName = String(shownText == null ? '' : shownText);
-    if (!fullName || fullName === shownName) return;
-    var fullWidth = pauseLeaderboardEstimatedTextWidth(fullName);
-    var shownWidth = pauseLeaderboardEstimatedTextWidth(shownName);
-    var distance = Math.max(0, fullWidth - shownWidth);
-    if (!distance) return;
-    label.classList.add('is-marquee');
-    label.style.setProperty('--pause-leaderboard-scroll', '-' + Math.ceil(distance) + 'px');
-    label.addEventListener('mouseenter', function () {
-      label.classList.add('is-scrolling');
-    });
-    label.addEventListener('mouseleave', function () {
-      label.classList.remove('is-scrolling');
-    });
-  }
-
   function createPauseLeaderboardSvgElement(tag, attributes) {
     var element = document.createElementNS('http://www.w3.org/2000/svg', tag);
     Object.keys(attributes || {}).forEach(function (key) {
       element.setAttribute(key, attributes[key]);
     });
     return element;
+  }
+
+  function pauseLeaderboardValueText(value, valueFormatter) {
+    var raw = valueFormatter ? valueFormatter(value) : pauseLeaderboardFullNumber(value);
+    return Array.isArray(raw) ? raw.join(' ') : String(raw == null ? '' : raw);
   }
 
   function drawPauseLeaderboardChart(chart, rows, valueFormatter, barValueFormatter) {
@@ -16050,6 +16018,11 @@
     });
     rows = groupedRows;
 
+    var maxValueTextWidth = 0;
+    rows.forEach(function (row) {
+      maxValueTextWidth = Math.max(maxValueTextWidth, pauseLeaderboardEstimatedTextWidth(pauseLeaderboardValueText(Math.max(0, Number(row.value) || 0), valueFormatter)));
+    });
+
     var measuredHeight = chart.clientHeight || pauseLeaderboardAvailableHeight(chart) || 140;
     var visibleHeight = Math.max(96, Math.floor(measuredHeight));
     var width = Math.max(180, Math.floor(chart.clientWidth || 0));
@@ -16064,6 +16037,9 @@
       barHeight = 15;
     }
     var plotWidth = Math.max(1, width - margin.left - margin.right);
+    var barPlotWidth = plotWidth * 0.75;
+    var valueColumnX = margin.left + barPlotWidth + 7;
+    var valueRightX = margin.left + plotWidth - 6;
     var axisY = margin.top + rows.length * rowStep;
     var contentHeight = axisY + margin.bottom;
     var svgHeight = Math.max(visibleHeight, contentHeight);
@@ -16084,12 +16060,12 @@
     svg.style.width = width + 'px';
     svg.style.height = svgHeight + 'px';
 
-    var tickCount = 4;
+    var tickCount = 3;
     for (var tick = 0; tick <= tickCount; tick++) {
-      var tickX = margin.left + plotWidth * tick / tickCount;
+      var tickX = margin.left + barPlotWidth * tick / tickCount;
       if (tick > 0) {
         svg.appendChild(createPauseLeaderboardSvgElement('line', {
-          'class': 'pause-leaderboard-grid-line',
+          'class': 'pause-leaderboard-grid-line' + (tick === tickCount ? ' is-value-divider' : ''),
           x1: tickX,
           y1: margin.top,
           x2: tickX,
@@ -16100,11 +16076,18 @@
         'class': 'pause-leaderboard-axis-value',
         x: tickX,
         y: axisY + 16,
-        'text-anchor': tick === 0 ? 'start' : (tick === tickCount ? 'end' : 'middle')
+        'text-anchor': tick === 0 ? 'start' : 'middle'
       });
       tickLabel.textContent = pauseLeaderboardAxisNumber(chartMaximum * tick / tickCount);
       svg.appendChild(tickLabel);
     }
+    svg.appendChild(createPauseLeaderboardSvgElement('line', {
+      'class': 'pause-leaderboard-grid-line is-last',
+      x1: margin.left + plotWidth,
+      y1: margin.top,
+      x2: margin.left + plotWidth,
+      y2: axisY
+    }));
 
     var previousValue = null;
     var currentRank = 0;
@@ -16117,7 +16100,7 @@
       }
       nextRank = currentRank + row.names.length;
       var isTop = currentRank === 1;
-      var barWidth = Math.max(0, plotWidth * value / chartMaximum);
+      var barWidth = Math.max(0, barPlotWidth * value / chartMaximum);
       var barY = margin.top + index * rowStep + (rowStep - barHeight) / 2;
       var rankLabel = createPauseLeaderboardSvgElement('text', {
         'class': 'pause-leaderboard-axis-rank' + (isTop ? ' is-top' : ''),
@@ -16139,33 +16122,42 @@
       var fullNameText = row.fullName != null
         ? String(row.fullName)
         : row.names.map(function (name) { return i18nHotspotText(name); }).filter(Boolean).join('、');
-      var valueTextRaw = valueFormatter ? valueFormatter(value) : pauseLeaderboardFullNumber(value);
-      var valueText = Array.isArray(valueTextRaw) ? valueTextRaw.join(' ') : String(valueTextRaw == null ? '' : valueTextRaw);
-      var maxMapNameWidth = row.marquee ? Math.max(80, width * 2 / 3) : Infinity;
-      var displayName = row.marquee
-        ? pauseLeaderboardEllipsize(fullNameText, maxMapNameWidth)
-        : fullNameText;
-      var labelText = displayName + ' (' + valueText + ')';
-      var fullLabelText = fullNameText + ' (' + valueText + ')';
+      var valueText = pauseLeaderboardValueText(value, valueFormatter);
+      var nameMaxWidth = Math.max(60, barPlotWidth - 18);
       barTitle.textContent = fullNameText + '：' + valueText;
       bar.appendChild(barTitle);
       svg.appendChild(bar);
 
-      // 三类排行榜统一：名称始终在左侧，数值紧跟名称并放在括号内。
-      var nameLabel = createPauseLeaderboardSvgElement('text', {
-        'class': 'pause-leaderboard-bar-label' + (isTop ? ' is-top' : ''),
+      // 前 3 区：条和名称；最后 1 区：数值。
+      // 名称复用项目的 .line-marquee：默认省略号，悬停滚动。
+      var labelObject = createPauseLeaderboardSvgElement('foreignObject', {
+        'class': 'pause-leaderboard-label-object',
         x: margin.left + 7,
-        y: barY + barHeight / 2 + 3.5,
-        'text-anchor': 'start'
+        y: barY,
+        width: nameMaxWidth,
+        height: barHeight
       });
-      nameLabel.textContent = labelText;
-      nameLabel.setAttribute('xml:space', 'preserve');
-      var nameTitle = createPauseLeaderboardSvgElement('title');
-      nameTitle.textContent = fullLabelText;
-      nameLabel.appendChild(nameTitle);
-      bindPauseLeaderboardLabelMotion(nameLabel, fullLabelText, labelText, !!row.marquee, maxMapNameWidth);
-      svg.appendChild(nameLabel);
-      requiredSvgWidth = Math.max(requiredSvgWidth, margin.left + 7 + pauseLeaderboardEstimatedTextWidth(labelText) + 8);
+      var labelShell = document.createElementNS('http://www.w3.org/1999/xhtml', 'div');
+      labelShell.className = 'pause-leaderboard-html-label' + (isTop ? ' is-top' : '');
+      labelShell.setAttribute('title', fullNameText);
+      var marquee = document.createElementNS('http://www.w3.org/1999/xhtml', 'span');
+      marquee.className = 'line-marquee';
+      marquee.textContent = fullNameText;
+      labelShell.appendChild(marquee);
+      labelObject.appendChild(labelShell);
+      svg.appendChild(labelObject);
+      if (typeof initLineMarquee === 'function') initLineMarquee(marquee);
+
+      var valueLabel = createPauseLeaderboardSvgElement('text', {
+        'class': 'pause-leaderboard-bar-value' + (isTop ? ' is-top' : ''),
+        x: valueRightX,
+        y: barY + barHeight / 2 + 3.5,
+        'text-anchor': 'end'
+      });
+      valueLabel.textContent = valueText;
+      valueLabel.setAttribute('xml:space', 'preserve');
+      svg.appendChild(valueLabel);
+      requiredSvgWidth = Math.max(requiredSvgWidth, valueRightX + 6);
     });
 
     if (requiredSvgWidth > width) {
@@ -16322,7 +16314,7 @@
         }
       } else if (type === 'value') {
         renderPauseLeaderboardSlot(slot, '全勤价值榜', valueRows, function (value) {
-          return pauseLeaderboardFullNumber(value);
+          return Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         });
       } else if (type === 'comments') {
         renderPauseLeaderboardSlot(slot, '水军发言榜', commentRows, function (value) {
