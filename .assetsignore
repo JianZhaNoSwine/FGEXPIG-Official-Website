@@ -25,3 +25,4 @@ tools/build-desktop-manifest.js
 tools/map-lookup-probe.html
 tools/map-lookup-probe.js
 tools/map-lookup-probe.ps1
+tools/rebuild-desktop-manifest.bat

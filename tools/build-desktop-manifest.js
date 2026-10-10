@@ -10,8 +10,11 @@ const ROOT = path.resolve(__dirname, '..');
 const OUTPUT = path.join(ROOT, 'desktop-manifest.json');
 const ROOT_FILES = ['index.html', 'sw.js', 'favicon.ico', 'robots.txt', 'sitemap.xml'];
 const DIRS = ['button', 'css', 'emoji', 'fonts', 'i18n', 'js', 'logo', 'music', 'profile', 'resources', 'wallpaper'];
-const TEXT_RE = /\.(?:html?|css|js|json|txt|xml|csv|md)$/i;
+const TEXT_RE = /\.(?:html?|css|js|mjs|json|txt|xml|csv|md|svg)$/i;
 const CURRENT_QUALITY = 5;
+// 发布盐：文本资源每次构建都换一个盐，旧 exe 会据此强制重下文本资源，
+// 避免新旧文件大小相同导致的漏更新。需要固定盐时可设置 FGEXPIG_RELEASE_SALT。
+const RELEASE_SALT = String(process.env.FGEXPIG_RELEASE_SALT || new Date().toISOString());
 
 function urlPath(relativePath) {
   return relativePath.split(path.sep).map(encodeURIComponent).join('/');
@@ -135,6 +138,10 @@ function isText(relativePath) {
   return TEXT_RE.test(relativePath);
 }
 
+function withReleaseSalt(hash) {
+  return crypto.createHash('sha256').update(String(hash) + '|' + RELEASE_SALT).digest('hex');
+}
+
 function levelOf(relativePath, activityId, defaultEmojiNames) {
   if (isText(relativePath)) return 1;
   const normalized = relativePath.replace(/\\/g, '/');
@@ -142,7 +149,7 @@ function levelOf(relativePath, activityId, defaultEmojiNames) {
   const resourceMatch = /^resources\/([^/]+)\//.exec(normalized);
   if (resourceMatch) return resourceMatch[1] === activityId ? 1 : 2;
 
-  const emojiMatch = /^emoji\/[1-5]\/([^/]+)$/.exec(normalized);
+  const emojiMatch = /^emoji\/([^/]+)$/.exec(normalized);
   if (emojiMatch) {
     let name = emojiMatch[1].replace(/\.[^.]+$/, '');
     try { name = decodeURIComponent(name); } catch (err) {}
@@ -178,9 +185,10 @@ function levelOf(relativePath, activityId, defaultEmojiNames) {
     const full = path.join(ROOT, relative);
     let hash;
     let size;
-    if (isText(relative)) {
+    const textFile = isText(relative);
+    if (textFile) {
       const normalized = normalizeLf(await fsp.readFile(full));
-      hash = crypto.createHash('sha256').update(normalized).digest('hex');
+      hash = withReleaseSalt(crypto.createHash('sha256').update(normalized).digest('hex'));
       size = normalized.length;
     } else {
       hash = await hashFile(full);
@@ -189,12 +197,13 @@ function levelOf(relativePath, activityId, defaultEmojiNames) {
     files.push({ path: urlPath(relative), hash: hash, size: size, level: levelOf(relative, activityId, defaultEmojiNames), quality: qualityLevel(relative) });
   });
   files.sort(function (a, b) { return a.path.localeCompare(b.path); });
+
   const counts = { 1: 0, 2: 0, 3: 0 };
   files.forEach(function (file) { counts[file.level] += 1; });
   const version = crypto.createHash('sha256').update(JSON.stringify(files)).digest('hex').slice(0, 16);
-  const manifest = { version: version, generatedAt: new Date().toISOString(), counts: counts, files: files };
+  const manifest = { version: version, generatedAt: new Date().toISOString(), releaseSalt: RELEASE_SALT, counts: counts, files: files };
   await fsp.writeFile(OUTPUT, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
-  console.log('desktop manifest:', files.length, 'files, levels', JSON.stringify(counts), 'version', version);
+  console.log('desktop manifest:', files.length, 'files, levels', JSON.stringify(counts), 'version', version, 'releaseSalt', RELEASE_SALT);
 })().catch(function (err) {
   console.error(err);
   process.exit(1);

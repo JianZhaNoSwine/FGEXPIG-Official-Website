@@ -98,11 +98,12 @@
     var file = parts.pop() || '';
     var dot = file.lastIndexOf('.');
     var base = dot > 0 ? file.slice(0, dot) : file;
-    var qualityLevel = normalizeImageQuality(level);
-    if (parts.length && /^[1-5]$/.test(parts[parts.length - 1])) {
-      parts[parts.length - 1] = String(qualityLevel);
-    } else {
-      parts.push(String(qualityLevel));
+    // 壁纸继续使用 /5/；其他资源已平铺到画质文件夹同级目录。
+    if (/^wallpaper\//i.test(path)) {
+      if (parts.length && /^[1-5]$/.test(parts[parts.length - 1])) parts[parts.length - 1] = '5';
+      else parts.push('5');
+    } else if (parts.length && /^[1-5]$/.test(parts[parts.length - 1])) {
+      parts.pop();
     }
     parts.push(base + '.webp');
     var result = parts.join('/') + suffix;
@@ -8652,7 +8653,7 @@
       var path = url.split(/[?#]/)[0];
       var query = url.indexOf('?') >= 0 ? '&' : '?';
       if (/^button\//i.test(path)) return url + query + 'v=' + encodeURIComponent(KEY_ICON_ASSET_VERSION);
-      if (/(?:\/([1-5]))\/[^/]+$/i.test(path)) return url + query + 'imgv=' + encodeURIComponent(ASSET_REVISION);
+      if (/^(?:wallpaper|logo|profile|resources|emoji)\//i.test(path) && /\.(?:webp|jpe?g|png|gif|avif)$/i.test(path)) return url + query + 'imgv=' + encodeURIComponent(ASSET_REVISION);
       return url;
     });
   }
@@ -14052,6 +14053,16 @@
   function shopOf(id) { return (shopStore.shops || {})[id] || null; }
   function hasShop(id) { return !!(shopStore.shops && Object.prototype.hasOwnProperty.call(shopStore.shops, id)); }
 
+  // 临时清单：后续活动正式上线后逐项删除。
+  var FUTURE_MAP_CODES = {
+    '1877-1111-3386': 'UI World',
+    '1111-8008-2292': 'UI World II',
+    '6682-7138-7777': 'Superstar',
+    '3564-3840-6826': 'Leap of Faith',
+    '3403-9887-1813': 'Master Assassin Retrain',
+    '5096-5586-6625': 'Assassin Museum V2'
+  };
+
   // 把每个活动的分享码交给地图数据模块；order 用发行日期，模块按从新到旧排队抓取
   function registerMapStatsTargets() {
     // 地图数据卡片由 exe 独占：网页版不注册目标、也不会请求地图接口
@@ -14070,6 +14081,11 @@
       var order = coreReleaseTimestamp(row && row.releaseDate);
       list.push({ id: id, codes: codes, order: isFinite(order) ? order : 0 });
     });
+    var futureCodes = Object.keys(FUTURE_MAP_CODES);
+    if (futureCodes.length) {
+      // 临时后续活动地图：按最新处理，优先进入抓取队列。
+      list.push({ id: '__future__', codes: futureCodes, order: Number.MAX_SAFE_INTEGER });
+    }
     api.register(list);
   }
 
@@ -15832,6 +15848,86 @@
     });
   }
 
+  function pauseMapContentName(activityId, code) {
+    var target = String(code || '').toUpperCase();
+    if (FUTURE_MAP_CODES[target]) return FUTURE_MAP_CODES[target];
+    var shop = shopOf(activityId);
+    var codes = shop && shop.codes ? shop.codes : {};
+    var name = '';
+    Object.keys(codes).some(function (contentName) {
+      if (shopText(codes[contentName]).toUpperCase() !== target) return false;
+      name = contentName;
+      return true;
+    });
+    return name ? i18nTr(name) : target;
+  }
+
+  // 方案 D：地图跑分 = 999983 × (0.30H + 0.70QC)
+  // exe 模式下用逐地图数据重算；Rmin/Rmax 根据本地点赞率分位数校准。
+  function buildPauseMapScoreRows() {
+    if (!isDesktopRuntime()) return [];
+    var api = window.FgexpigMapStats;
+    if (!api || typeof api.entries !== 'function') return [];
+    var entries = api.entries().filter(function (entry) {
+      return Number(entry && entry.plays) > 0;
+    });
+    if (!entries.length) return [];
+
+    var totalP = 0;
+    var totalL = 0;
+    var totalD = 0;
+    entries.forEach(function (entry) {
+      totalP += Math.max(0, Number(entry.plays) || 0);
+      totalL += Math.max(0, Number(entry.likes) || 0);
+      totalD += Math.max(0, Number(entry.dislikes) || 0);
+    });
+    if (!totalP) return [];
+    var rBar = totalL / totalP;
+    var qBar = totalD ? totalL / totalD : 20;
+    var dBar = totalD / totalP || 0.05;
+    var rates = entries.map(function (entry) {
+      return (Number(entry.likes) || 0) / (Number(entry.plays) || 1);
+    }).sort(function (a, b) { return a - b; });
+    var rMin = 0.50;
+    var rMax = 0.95;
+    if (rates.length >= 5) {
+      var p10 = rates[Math.max(0, Math.floor((rates.length - 1) * 0.10))];
+      var p90 = rates[Math.min(rates.length - 1, Math.ceil((rates.length - 1) * 0.90))];
+      if (p90 - p10 > 0.01) {
+        rMin = p10;
+        rMax = p90;
+      }
+    }
+
+    var rows = [];
+    entries.forEach(function (entry) {
+      var plays = Math.max(0, Number(entry.plays) || 0);
+      var likes = Math.max(0, Number(entry.likes) || 0);
+      var dislikes = Math.max(0, Number(entry.dislikes) || 0);
+      var rHat = (likes + 100 * rBar) / (plays + 100);
+      var R = Math.max(0, Math.min(1, (rHat - rMin) / (rMax - rMin)));
+      var qHat = (likes + 100 * qBar) / (dislikes + 100);
+      var S = qHat / (qHat + 10);
+      var dHat = (dislikes + 100 * dBar) / (plays + 100);
+      var DPrime = 1 - dHat / (dHat + dBar);
+      var H = 0.7 * plays / (plays + 1000) + 0.3 * likes / (likes + 800);
+      var Q = 0.45 * R + 0.45 * S + 0.10 * DPrime;
+      var C = plays / (plays + 1000);
+      var score = Math.round(999983 * (0.30 * H + 0.70 * Q * C));
+      var mapName = pauseMapContentName(entry.id, entry.code);
+      rows.push({
+        name: mapName,
+        fullName: mapName,
+        marquee: true,
+        value: score
+      });
+    });
+    rows.sort(function (a, b) {
+      return b.value - a.value || a.name.localeCompare(b.name, 'zh-CN');
+    });
+    return rows;
+  }
+
   function pauseLeaderboardChartNumber(value) {
     var number = Number(value) || 0;
     var absolute = Math.abs(number);
@@ -15886,6 +15982,43 @@
     return width;
   }
 
+  function pauseLeaderboardEllipsize(text, maxWidth) {
+    var value = String(text == null ? '' : text);
+    if (!value || !isFinite(maxWidth) || maxWidth <= 0) return value;
+    if (pauseLeaderboardEstimatedTextWidth(value) <= maxWidth) return value;
+    var ellipsis = '…';
+    var ellipsisWidth = pauseLeaderboardEstimatedTextWidth(ellipsis);
+    var chars = Array.from(value);
+    var out = '';
+    var used = 0;
+    for (var i = 0; i < chars.length; i++) {
+      var charWidth = pauseLeaderboardEstimatedTextWidth(chars[i]);
+      if (used + charWidth + ellipsisWidth > maxWidth) break;
+      out += chars[i];
+      used += charWidth;
+    }
+    return (out || chars[0] || '') + ellipsis;
+  }
+
+  function bindPauseLeaderboardLabelMotion(label, fullText, shownText, shouldMarquee, maxWidth) {
+    if (!label || !shouldMarquee) return;
+    var fullName = String(fullText == null ? '' : fullText);
+    var shownName = String(shownText == null ? '' : shownText);
+    if (!fullName || fullName === shownName) return;
+    var fullWidth = pauseLeaderboardEstimatedTextWidth(fullName);
+    var shownWidth = pauseLeaderboardEstimatedTextWidth(shownName);
+    var distance = Math.max(0, fullWidth - shownWidth);
+    if (!distance) return;
+    label.classList.add('is-marquee');
+    label.style.setProperty('--pause-leaderboard-scroll', '-' + Math.ceil(distance) + 'px');
+    label.addEventListener('mouseenter', function () {
+      label.classList.add('is-scrolling');
+    });
+    label.addEventListener('mouseleave', function () {
+      label.classList.remove('is-scrolling');
+    });
+  }
+
   function createPauseLeaderboardSvgElement(tag, attributes) {
     var element = document.createElementNS('http://www.w3.org/2000/svg', tag);
     Object.keys(attributes || {}).forEach(function (key) {
@@ -15903,6 +16036,19 @@
       if (chart.closest('.settings-rank-slot')) isSettingsRankSlot = true;
     }
     var previousScrollTop = chart.scrollTop || 0;
+
+    // 同分值合并为一条：名称用「、」连接，名次按参与人数计算。
+    var groupedRows = [];
+    rows.forEach(function (row) {
+      var value = Math.max(0, Number(row.value) || 0);
+      var last = groupedRows[groupedRows.length - 1];
+      if (last && Math.abs(last.value - value) <= 1e-9) {
+        last.names.push(row.name);
+      } else {
+        groupedRows.push({ value: value, names: [row.name] });
+      }
+    });
+    rows = groupedRows;
 
     var measuredHeight = chart.clientHeight || pauseLeaderboardAvailableHeight(chart) || 140;
     var visibleHeight = Math.max(96, Math.floor(measuredHeight));
@@ -15962,12 +16108,14 @@
 
     var previousValue = null;
     var currentRank = 0;
+    var nextRank = 1;
     rows.forEach(function (row, index) {
       var value = Math.max(0, Number(row.value) || 0);
       if (index === 0 || Math.abs(value - previousValue) > 1e-9) {
-        currentRank = index + 1;
+        currentRank = nextRank;
         previousValue = value;
       }
+      nextRank = currentRank + row.names.length;
       var isTop = currentRank === 1;
       var barWidth = Math.max(0, plotWidth * value / chartMaximum);
       var barY = margin.top + index * rowStep + (rowStep - barHeight) / 2;
@@ -15988,79 +16136,36 @@
         height: barHeight
       });
       var barTitle = createPauseLeaderboardSvgElement('title');
-      var displayName = i18nHotspotText(row.name);
-      barTitle.textContent = displayName + '：' + (valueFormatter ? valueFormatter(value) : pauseLeaderboardChartNumber(value));
+      var fullNameText = row.fullName != null
+        ? String(row.fullName)
+        : row.names.map(function (name) { return i18nHotspotText(name); }).filter(Boolean).join('、');
+      var valueTextRaw = valueFormatter ? valueFormatter(value) : pauseLeaderboardFullNumber(value);
+      var valueText = Array.isArray(valueTextRaw) ? valueTextRaw.join(' ') : String(valueTextRaw == null ? '' : valueTextRaw);
+      var maxMapNameWidth = row.marquee ? Math.max(80, width * 2 / 3) : Infinity;
+      var displayName = row.marquee
+        ? pauseLeaderboardEllipsize(fullNameText, maxMapNameWidth)
+        : fullNameText;
+      var labelText = displayName + ' (' + valueText + ')';
+      var fullLabelText = fullNameText + ' (' + valueText + ')';
+      barTitle.textContent = fullNameText + '：' + valueText;
       bar.appendChild(barTitle);
       svg.appendChild(bar);
 
-      var formattedValue = barValueFormatter ? barValueFormatter(value) : pauseLeaderboardFullNumber(value);
-      var valueTexts = Array.isArray(formattedValue)
-        ? formattedValue.map(function (item) { return String(item); })
-        : [String(formattedValue)];
-      var valueWidth = Math.max.apply(null, valueTexts.map(function (item) {
-        return pauseLeaderboardEstimatedTextWidth(item);
-      }));
-      var nameText = String(displayName == null ? '' : displayName);
-      var nameWidth = pauseLeaderboardEstimatedTextWidth(nameText);
-      var nameInside = barWidth >= nameWidth + 14;
-      var valueInside = nameInside && barWidth >= 14 + nameWidth + 8 + valueWidth;
-      var barEndX = margin.left + barWidth;
-      var nameOutsideText = '(' + nameText + ')';
-      var nameOutsideWidth = pauseLeaderboardEstimatedTextWidth(nameOutsideText);
-      var nameOutsideX = barEndX + 6;
-      var valueX = valueInside
-        ? barEndX - 7
-        : (nameInside ? barEndX + 6 : nameOutsideX + nameOutsideWidth + 8);
-
-      if (nameInside) {
-        var nameLabel = createPauseLeaderboardSvgElement('text', {
-          'class': 'pause-leaderboard-bar-label' + (isTop ? ' is-top' : ''),
-          x: margin.left + 7,
-          y: barY + barHeight / 2 + 3.5,
-          'text-anchor': 'start'
-        });
-        nameLabel.textContent = nameText;
-        var nameTitle = createPauseLeaderboardSvgElement('title');
-        nameTitle.textContent = nameText;
-        nameLabel.appendChild(nameTitle);
-        svg.appendChild(nameLabel);
-      } else {
-        var outsideNameLabel = createPauseLeaderboardSvgElement('text', {
-          'class': 'pause-leaderboard-bar-label is-outside' + (isTop ? ' is-top' : ''),
-          x: nameOutsideX,
-          y: barY + barHeight / 2 + 3.5,
-          'text-anchor': 'start'
-        });
-        outsideNameLabel.textContent = nameOutsideText;
-        outsideNameLabel.setAttribute('xml:space', 'preserve');
-        var outsideNameTitle = createPauseLeaderboardSvgElement('title');
-        outsideNameTitle.textContent = nameText;
-        outsideNameLabel.appendChild(outsideNameTitle);
-        svg.appendChild(outsideNameLabel);
-        var measuredNameWidth = 0;
-        try { measuredNameWidth = outsideNameLabel.getComputedTextLength(); } catch (err) {}
-        valueX = nameOutsideX + (measuredNameWidth > 0 ? measuredNameWidth : nameOutsideWidth + 8);
-        requiredSvgWidth = Math.max(requiredSvgWidth, nameOutsideX + nameOutsideWidth + 6);
-      }
-
-      valueTexts.forEach(function (valueText, valueIndex) {
-        var cycleClass = valueTexts.length > 1
-          ? (valueIndex === 0 ? ' is-cycle-a' : ' is-cycle-b')
-          : '';
-        var valueLabel = createPauseLeaderboardSvgElement('text', {
-          'class': 'pause-leaderboard-bar-value' +
-            (isTop ? ' is-top' : '') +
-            (valueInside ? '' : ' is-outside') +
-            cycleClass,
-          x: valueX,
-          y: barY + barHeight / 2 + 3.5,
-          'text-anchor': valueInside ? 'end' : 'start'
-        });
-        if (!valueInside) valueLabel.setAttribute('xml:space', 'preserve');
-        valueLabel.textContent = valueInside ? valueText : '\u00A0' + valueText;
-        svg.appendChild(valueLabel);
+      // 三类排行榜统一：名称始终在左侧，数值紧跟名称并放在括号内。
+      var nameLabel = createPauseLeaderboardSvgElement('text', {
+        'class': 'pause-leaderboard-bar-label' + (isTop ? ' is-top' : ''),
+        x: margin.left + 7,
+        y: barY + barHeight / 2 + 3.5,
+        'text-anchor': 'start'
       });
-      if (!valueInside) requiredSvgWidth = Math.max(requiredSvgWidth, valueX + valueWidth + 6);
+      nameLabel.textContent = labelText;
+      nameLabel.setAttribute('xml:space', 'preserve');
+      var nameTitle = createPauseLeaderboardSvgElement('title');
+      nameTitle.textContent = fullLabelText;
+      nameLabel.appendChild(nameTitle);
+      bindPauseLeaderboardLabelMotion(nameLabel, fullLabelText, labelText, !!row.marquee, maxMapNameWidth);
+      svg.appendChild(nameLabel);
+      requiredSvgWidth = Math.max(requiredSvgWidth, margin.left + 7 + pauseLeaderboardEstimatedTextWidth(labelText) + 8);
     });
 
     if (requiredSvgWidth > width) {
@@ -16198,6 +16303,7 @@
     }
 
     var names = pauseLeaderboardUsers();
+    var mapScoreRows = isDesktopRuntime() ? buildPauseMapScoreRows() : [];
     var experienceRows = buildPauseRanking(names, totalExperienceForUser);
     var valueRows = buildPauseRanking(names, accountValueForUser);
     var commentRows = buildPauseRanking(names, hotspotCharacterCountForUser);
@@ -16205,19 +16311,22 @@
     leaderboardSlots.forEach(function (slot) {
       var type = slot.getAttribute('data-leaderboard');
       if (type === 'experience') {
-        renderPauseLeaderboardSlot(slot, '老登等级榜', experienceRows, function (value) {
-          var metrics = userLevelMetrics(value);
-          return metrics.label + ' 级 ' + formatExperienceNumber(value) + ' 经验';
-        }, function (value) {
-          return ['Lv' + userLevelMetrics(value).label, pauseLeaderboardFullNumber(value)];
-        });
+        if (isDesktopRuntime()) {
+          renderPauseLeaderboardSlot(slot, i18nT('pause.lb.mapScore.name', '地图跑分榜'), mapScoreRows, function (value) {
+            return pauseLeaderboardFullNumber(value);
+          });
+        } else {
+          renderPauseLeaderboardSlot(slot, '老登等级榜', experienceRows, function (value) {
+            return userLevelMetrics(value).label + ' ' + pauseLeaderboardFullNumber(value);
+          });
+        }
       } else if (type === 'value') {
         renderPauseLeaderboardSlot(slot, '全勤价值榜', valueRows, function (value) {
-          return Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' 猪元';
+          return pauseLeaderboardFullNumber(value);
         });
       } else if (type === 'comments') {
         renderPauseLeaderboardSlot(slot, '水军发言榜', commentRows, function (value) {
-          return formatExperienceNumber(value) + ' 字符';
+          return pauseLeaderboardFullNumber(value);
         });
       }
     });
@@ -17940,6 +18049,7 @@
       window.FgexpigMapStats.subscribe(refreshMapSummaryCards);
       window.FgexpigMapStats.subscribe(updatePauseStatBar);
       window.FgexpigMapStats.subscribe(updatePauseCacheProgress);
+      window.FgexpigMapStats.subscribe(schedulePauseLeaderboardRender);
     }
     updatePauseStatBar();
     updatePauseCacheProgress();

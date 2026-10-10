@@ -78,11 +78,7 @@
     var file = parts.pop() || '';
     var dot = file.lastIndexOf('.');
     var base = dot > 0 ? file.slice(0, dot) : file;
-    if (parts.length && /^[1-5]$/.test(parts[parts.length - 1])) {
-      parts[parts.length - 1] = String(currentImageQuality());
-    } else {
-      parts.push(String(currentImageQuality()));
-    }
+    if (parts.length && /^[1-5]$/.test(parts[parts.length - 1])) parts.pop();
     parts.push(base + '.webp');
     return encodeURI(parts.join('/'));
   }

@@ -1248,3 +1248,4 @@ map.metric.likeRate,详情页-地图数据卡片-第四个数字,点赞率,い�
 map.metric.likeRatio,详情页-地图数据卡片-第五个数字,赞踩比,いいね比,Like ratio,Ratio j'aime,Rapporto like,Like-Verhältnis,Ratio me gusta,نسبة الإعجاب/الرفض,좋아요 비율,Razão curtidas,Лайки/дизлайки,讚踩比,Stosunek polubień,地图数据卡片；点赞÷点踩
 map.metric.scope,暂停菜单-顶部全地图统计前缀,全地图,全マップ,All maps,Toutes les cartes,Tutte le mappe,Alle Karten,Todos los mapas,كل الخرائط,전체 맵,Todos os mapas,Все карты,全地圖,Wszystkie mapy,
 pause.menu.backToMenu,暂停菜单-EXE模式下的退出至菜单,退出至菜单,メニューに戻る,Exit to Menu,Quitter vers le menu,Esci al menu,Zum Menü zurückkehren,Salir al menú,الخروج إلى القائمة,메뉴로 나가기,Sair para o menu,Выйти в меню,退出至選單,Wyjdź do menu,
+pause.lb.mapScore.name,暂停菜单-EXE模式地图跑分榜-标题,地图跑分榜,マップスコアランキング,Map Score Ranking,Classement des scores des cartes,Classifica punteggi mappe,Karten-Score-Ranking,Clasificación de puntuación de mapas,ترتيب نقاط الخرائط,맵 점수 순위,Ranking de pontuação dos mapas,Рейтинг карт по очкам,地圖跑分榜,Ranking wyników map,

@@ -2841,6 +2841,21 @@ html.has-card-blur .pause-menu .settings-page .font-item {
   font-variant-numeric: tabular-nums;
   white-space: pre;
 }
+.pause-leaderboard-bar-label.is-marquee {
+  pointer-events: all;
+  cursor: help;
+  will-change: transform;
+}
+
+.pause-leaderboard-bar-label.is-marquee.is-scrolling {
+  animation: pause-leaderboard-label-scroll 2.2s ease-in-out infinite alternate;
+}
+
+@keyframes pause-leaderboard-label-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(var(--pause-leaderboard-scroll, 0px)); }
+}
+
 .pause-leaderboard-bar-label.is-top,
 .pause-leaderboard-bar-value.is-top {
   fill: var(--accent-pink);

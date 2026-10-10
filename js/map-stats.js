@@ -359,10 +359,13 @@
     var total = 0;
     var refreshed = 0;
     var today = dayKey();
+    var seen = {};
     Object.keys(activities).forEach(function (id) {
       var activity = activities[id];
       if (!activity || !activity.codes) return;
       activity.codes.forEach(function (code) {
+        if (seen[code]) return;
+        seen[code] = true;
         total += 1;
         if (store.days[code] === today) refreshed += 1;
         var rec = store.codes[code];
@@ -383,6 +386,31 @@
       complete: total > 0 && covered === total,
       fresh: total > 0 && refreshed === total
     };
+  }
+
+  // 逐地图记录：排行榜按单个地图计算，而不是按活动汇总。
+  function entries() {
+    var out = [];
+    var seen = {};
+    Object.keys(activities).forEach(function (id) {
+      var activity = activities[id];
+      if (!activity || !activity.codes) return;
+      activity.codes.forEach(function (code) {
+        if (seen[code]) return;
+        seen[code] = true;
+        var rec = store.codes[code];
+        if (!rec) return;
+        out.push({
+          id: id,
+          code: code,
+          plays: toCount(rec.plays),
+          likes: toCount(rec.likes),
+          dislikes: toCount(rec.dislikes),
+          at: Number(rec.at) || 0
+        });
+      });
+    });
+    return out;
   }
 
   function subscribe(fn) {
@@ -422,6 +450,7 @@
   global.FgexpigMapStats = {
     register: register,
     get: get,
+    entries: entries,
     all: all,
     subscribe: subscribe,
     isPaused: isPaused,

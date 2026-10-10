@@ -170,7 +170,7 @@
     var files = manifest && Array.isArray(manifest.files) ? manifest.files : [];
     files.forEach(function (entry) {
       var path = String((entry && entry.path) || '').replace(/\\/g, '/');
-      if (!/^wallpaper\/5\/[^/]+\.(?:webp|jpe?g|png|gif|avif)$/i.test(path)) return;
+      if (!/^wallpaper\/5\/(?:JFES\d+|JZP\d+)\.(?:webp|jpe?g|png|gif|avif)$/i.test(path)) return;
       out.push(path);
     });
     return uniqueList(out);

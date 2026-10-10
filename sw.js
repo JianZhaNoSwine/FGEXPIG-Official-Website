@@ -89,7 +89,9 @@ async function pruneCache() {
   const requests = await cache.keys();
   await Promise.all(requests.map(async request => {
     const path = new URL(request.url).pathname;
-    if (!keepable(path)) await cache.delete(request);
+    // 其他资源的旧 1~5 画质目录已废弃；壁纸仍在 /wallpaper/5/，必须保留。
+    const legacyQualityPath = /\/[1-5]\//.test(path) && !/^\/wallpaper\/5\//.test(path);
+    if (legacyQualityPath || !keepable(path)) await cache.delete(request);
   }));
 }
 
