@@ -9689,12 +9689,12 @@
 
   var GLOW_THEMES = {
     0: { a: '#eef1f7', b: '#ffffff', c: '#aeb6c5', d: '#dce1ea', duration: '7s', border: 'rgba(255,255,255,0.82)', shadow: 'rgba(220,225,234,0.48)', inset: 'rgba(255,255,255,0.1)' },
-    1: { a: '#7a421d', b: '#e5a166', c: '#4b240f', d: '#c8753a', duration: '6s', border: 'rgba(208,138,74,0.9)', shadow: 'rgba(184,115,51,0.5)', inset: 'rgba(184,115,51,0.12)' },
-    2: { a: '#8b929d', b: '#f2f4f7', c: '#5f6672', d: '#c9ced6', duration: '6s', border: 'rgba(225,230,238,0.9)', shadow: 'rgba(201,206,214,0.5)', inset: 'rgba(201,206,214,0.12)' },
-    3: { a: '#8a5a00', b: '#ffe596', c: '#c18c00', d: '#fff1a8', duration: '5s', border: 'rgba(240,200,75,0.92)', shadow: 'rgba(227,180,35,0.52)', inset: 'rgba(227,180,35,0.13)' },
-    4: { a: '#4f7fa3', b: '#e8f8ff', c: '#7db7dc', d: '#bdeaff', duration: '6s', border: 'rgba(215,243,255,0.92)', shadow: 'rgba(180,224,255,0.56)', inset: 'rgba(180,224,255,0.14)' },
-    5: { a: '#b15cff', b: '#e6c7ff', c: '#8b3dff', d: '#c77dff', duration: '6s', border: 'rgba(199,125,255,0.95)', shadow: 'rgba(177,92,255,0.58)', inset: 'rgba(199,125,255,0.15)' },
-    6: { a: '#ff91c8', b: '#78b4ff', c: '#78e6dc', d: '#ffde8c', duration: '6s', border: 'rgba(185,150,255,0.95)', shadow: 'rgba(120,180,255,0.58)', inset: 'rgba(185,150,255,0.15)' }
+    1: { a: '#753322', b: '#df8b6c', c: '#481b12', d: '#c05e42', duration: '6s', border: 'rgba(201,116,81,0.9)', shadow: 'rgba(196,111,76,0.5)', inset: 'rgba(196,111,76,0.12)' },
+    2: { a: '#808ea8', b: '#f1f4f8', c: '#54627d', d: '#c4ccdb', duration: '6s', border: 'rgba(223,229,240,0.9)', shadow: 'rgba(191,200,216,0.5)', inset: 'rgba(191,200,216,0.12)' },
+    3: { a: '#8a5a00', b: '#ffe596', c: '#c18d00', d: '#fff1a8', duration: '5s', border: 'rgba(255,208,60,0.92)', shadow: 'rgba(254,201,35,0.52)', inset: 'rgba(254,201,35,0.13)' },
+    4: { a: '#627e90', b: '#eaf8fd', c: '#8ab6cf', d: '#c2eafa', duration: '6s', border: 'rgba(218,243,252,0.92)', shadow: 'rgba(148,208,246,0.56)', inset: 'rgba(148,208,246,0.14)' },
+    5: { a: '#5f20d5', b: '#ccb3f9', c: '#471b98', d: '#966ae7', duration: '6s', border: 'rgba(150,106,231,0.95)', shadow: 'rgba(120,70,220,0.58)', inset: 'rgba(150,106,231,0.15)' },
+    6: { a: '#f09dfb', b: '#93cefb', c: '#93f4fb', d: '#fbe89d', duration: '6s', border: 'rgba(206,168,255,0.95)', shadow: 'rgba(130,190,250,0.58)', inset: 'rgba(206,168,255,0.15)' }
   };
 
   function applyCursorGlowTheme(t) {
@@ -10698,7 +10698,7 @@
     audio: { title: '音频', text: '调整网页主音量和小游戏音量。音量设置会自动保存到本机。' },
     font: { title: '字体', text: '选择网页使用的字体。切换后会立即应用，并自动保存到本机。' },
     language: { title: '语言', text: '选择网页界面语言。切换后会立即应用，并自动保存到本机。' },
-    sponsor: { title: '赞助', text: '选择微信、支付宝或贝宝向网页开发者捐赠，注意此捐赠仅面向网页开发工作，不接收对于第三方引用资源的付款。' },
+    sponsor: { title: '赞助', text: '选择微信、支付宝或贝宝向网页开发者捐赠，注意此捐赠仅面向网页开发工作，不接收对于第三方引用资源的付款。第三方引用资源包括但不限于：Resident Evil Requiem的主菜单设计，Assassin\'s Creed Shadows的UI设计，FallGuysDB地图数据接口等。' },
     interface: {
       title: '界面',
       text: '调整亮度、模糊和沉浸光效。性能模式开启时，沉浸光效会暂时禁用。',
@@ -14569,6 +14569,13 @@
     return 'resources/' + id + '/icons/' + encodeURIComponent(name) + '.png';
   }
 
+  // 成就图标位是正方形，按素材可见边界拉伸到 1:1 撑满（见 js/achv-icon-fit.js）
+  function fitAchvIconToSquare(el, originalUrl) {
+    var api = window.FgexpigAchvIconFit;
+    if (!api || typeof api.enhance !== 'function') return;
+    api.enhance(el, responsiveImageUrl(originalUrl));
+  }
+
   function exportAchv(id) {
     var rows = achvsOf(id);
     var data = {};
@@ -16517,13 +16524,26 @@
     document.fonts.ready.then(function () { initLineMarquees(document); });
   }
 
-  var ACHV_TROPHY_PATH = 'M7 3h10v2h3v2c0 3.2-2.1 5.7-5 6.4V17h3v3H6v-3h3v-3.6C6.1 12.7 4 10.2 4 7V5h3V3zm2 2v2c0 2.7 1.4 4.8 3 4.8s3-2.1 3-4.8V5H9zM6 7H5c0 1.7.7 3.1 2 4V8.4C6.3 8.1 6 7.6 6 7zm12 0c0 .6-.3 1.1-1 1.4V11c1.3-.9 2-2.3 2-4h-1z';
-  var ACHV_TROPHY_MARKUP =
-    '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="' + ACHV_TROPHY_PATH + '"/></svg>';
-  function makeAchvTrophyIcon() {
-    var icon = document.createElement('span');
-    icon.innerHTML = ACHV_TROPHY_MARKUP;
-    return icon.firstChild;
+  // 右侧等级图标：青铜 / 白银 / 黄金 / 铂金 / 紫金 / 幻彩 → button/level/lv1~lv6
+  var ACHV_LEVEL_ICON_URLS = [
+    'button/level/lv1.webp',
+    'button/level/lv2.webp',
+    'button/level/lv3.webp',
+    'button/level/lv4.webp',
+    'button/level/lv5.webp',
+    'button/level/lv6.webp'
+  ];
+  var ACHV_LEVEL_ICON_INDEX = {
+    'r-bronze': 0,
+    'r-silver': 1,
+    'r-gold': 2,
+    'r-platinum': 3,
+    'r-purplegold': 4,
+    'r-iridescent': 5
+  };
+  function achvLevelIconUrl(rarity) {
+    var index = ACHV_LEVEL_ICON_INDEX[achvRankClass(rarity)];
+    return ACHV_LEVEL_ICON_URLS[index == null ? 0 : index];
   }
 
 
@@ -16877,7 +16897,9 @@
     row.className = 'home-achv ' + achvRankClass(item.rarity);
     var icon = document.createElement('div');
     icon.className = 'home-achv-icon';
-    bindResponsiveAsset(icon, achvIconOriginalUrl(id, item.name));
+    var achvIconUrl = achvIconOriginalUrl(id, item.name);
+    bindResponsiveAsset(icon, achvIconUrl);
+    fitAchvIconToSquare(icon, achvIconUrl);
     row.appendChild(icon);
 
     var info = document.createElement('div');
@@ -16896,7 +16918,7 @@
 
     var rank = document.createElement('span');
     rank.className = 'home-achv-rank';
-    rank.appendChild(makeAchvTrophyIcon());
+    bindResponsiveAsset(rank, achvLevelIconUrl(item.rarity));
     row.appendChild(rank);
     return row;
   }

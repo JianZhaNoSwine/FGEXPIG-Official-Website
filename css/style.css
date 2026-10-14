@@ -1072,11 +1072,11 @@ html.performance-mode .map-summary .map-metric-face.is-cycle-b { display: none; 
 .achv-detail-back svg { width: 20px; height: 20px; }
 .achv-detail-title { min-width: 0; font-size: var(--text-large); line-height: 1.4; color: var(--text-primary); }
 
-/* 成就项：按六档奖杯等级使用细描边和同色染色 */
+/* 成就项：按六档奖杯等级使用细描边和同色染色
+   六档取色直接来自 button/level/lv1~6.webp 的杯身主色（lv6 为彩虹渐变均值） */
 .home-achv {
   position: relative;
-  --achv-rgb: 184, 115, 51;
-  --achv-color: #df9a67;
+  --achv-rgb: 196, 111, 76;
   content-visibility: auto;
   contain-intrinsic-size: auto var(--achv-item-h);
   min-height: var(--achv-item-h);
@@ -1089,20 +1089,18 @@ html.performance-mode .map-summary .map-metric-face.is-cycle-b { display: none; 
   background-color: rgba(var(--achv-rgb), 0.075);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045), inset 0 0 16px rgba(var(--achv-rgb), 0.055);
 }
-.home-achv.r-bronze { --achv-rgb: 224, 143, 82; --achv-color: #f0ad78; }
-.home-achv.r-silver { --achv-rgb: 201, 206, 214; --achv-color: #e5e9ef; }
-.home-achv.r-gold { --achv-rgb: 227, 180, 35; --achv-color: #f0d169; }
-.home-achv.r-platinum { --achv-rgb: 180, 224, 255; --achv-color: #d7f3ff; }
+.home-achv.r-bronze { --achv-rgb: 196, 111, 76; }
+.home-achv.r-silver { --achv-rgb: 191, 200, 216; }
+.home-achv.r-gold { --achv-rgb: 254, 201, 35; }
+.home-achv.r-platinum { --achv-rgb: 148, 208, 246; }
 .home-achv.r-purplegold {
-  --achv-rgb: 205, 175, 255;
-  --achv-color: #f1e3ff;
-  border-color: rgba(205, 175, 255, 0.78);
-  background-color: rgba(178, 142, 255, 0.11);
-  box-shadow: inset 0 1px 0 rgba(245, 236, 255, 0.09), inset 0 0 16px rgba(184, 142, 255, 0.1);
+  --achv-rgb: 144, 92, 233;
+  border-color: rgba(144, 92, 233, 0.78);
+  background-color: rgba(144, 92, 233, 0.11);
+  box-shadow: inset 0 1px 0 rgba(245, 236, 255, 0.09), inset 0 0 16px rgba(144, 92, 233, 0.1);
 }
 .home-achv.r-iridescent {
-  --achv-rgb: 218, 246, 255;
-  --achv-color: #e9fbff;
+  --achv-rgb: 185, 173, 217;
   isolation: isolate;
   overflow: hidden;
   overflow: clip;
@@ -1137,7 +1135,7 @@ html.performance-mode .map-summary .map-metric-face.is-cycle-b { display: none; 
 .home-achv-icon {
   width: var(--icon-size);
   height: var(--icon-size);
-  border-radius: 8px;
+  border-radius: 0;
   flex-shrink: 0;
   background-size: cover;
   background-position: center;
@@ -1147,19 +1145,17 @@ html.performance-mode .map-summary .map-metric-face.is-cycle-b { display: none; 
 .home-achv-desc { margin-top: 2px; color: var(--text-secondary); font-size: var(--text-small); line-height: 1.3; }
 .home-achv-rank {
   flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   width: 20px;
   height: 20px;
   padding: 0;
   border: 0;
   border-radius: 0;
-  background: none;
-  color: var(--achv-color);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
   filter: drop-shadow(0 0 4px rgba(var(--achv-rgb), 0.24));
 }
-.home-achv-rank svg { display: block; width: 100%; height: 100%; }
 
 /* ===== 顶部区域：左(用户) / 中(导航) / 右(音乐) 三区 ===== */
 .topbar {
@@ -1277,29 +1273,29 @@ html.performance-mode .map-summary .map-metric-face.is-cycle-b { display: none; 
 
 /* 称号等级配色：顶栏与侧栏预览共用同一套文字效果 */
 /* 等级顺序统一：1 青铜 / 2 白银 / 3 黄金 / 4 铂金 / 5 紫金 / 6 幻彩 */
-.tb-ribbon.t-lv-1, .title-badge.t-lv-1 { color: #f0ad78; }
+.tb-ribbon.t-lv-1, .title-badge.t-lv-1 { color: #eb997d; }
 
-.tb-ribbon.t-lv-2, .title-badge.t-lv-2 { color: #e5e9ef; }
+.tb-ribbon.t-lv-2, .title-badge.t-lv-2 { color: #e3e8f1; }
 
-.tb-ribbon.t-lv-3, .title-badge.t-lv-3 { color: #f0d169; }
+.tb-ribbon.t-lv-3, .title-badge.t-lv-3 { color: #ffda5a; }
 
-.tb-ribbon.t-lv-4, .title-badge.t-lv-4 { color: #d7f3ff; }
+.tb-ribbon.t-lv-4, .title-badge.t-lv-4 { color: #daf3fc; }
 
 /* 5 紫金（紫黑）：深紫与纯黑循环流光 */
 .tb-ribbon.t-lv-5, .title-badge.t-lv-5 {
-  color: #4c1d95;
+  color: #4d2c8c;
   background-image: linear-gradient(105deg,
-    #6d28d9 0%,
+    #8654e3 0%,
     #000000 10%,
-    #4c1d95 20%,
-    #13051f 30%,
-    #5b21b6 40%,
-    #6d28d9 50%,
+    #4d2c8c 20%,
+    #130925 30%,
+    #703ad4 40%,
+    #8654e3 50%,
     #000000 60%,
-    #4c1d95 70%,
-    #13051f 80%,
-    #5b21b6 90%,
-    #6d28d9 100%);
+    #4d2c8c 70%,
+    #130925 80%,
+    #703ad4 90%,
+    #8654e3 100%);
   background-size: 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -1309,19 +1305,19 @@ html.performance-mode .map-summary .map-metric-face.is-cycle-b { display: none; 
 
 /* 6 幻彩：多色循环流光 */
 .tb-ribbon.t-lv-6, .title-badge.t-lv-6 {
-  color: #78b4ff;
+  color: #93cefb;
   background-image: linear-gradient(100deg,
-    #ff91c8 0%,
-    #78b4ff 10%,
-    #78e6dc 20%,
-    #ffde8c 30%,
-    #b996ff 40%,
-    #ff91c8 50%,
-    #78b4ff 60%,
-    #78e6dc 70%,
-    #ffde8c 80%,
-    #b996ff 90%,
-    #ff91c8 100%);
+    #93f4fb 0%,
+    #93cefb 10%,
+    #ee93fb 20%,
+    #fb93aa 30%,
+    #fbe693 40%,
+    #93f4fb 50%,
+    #93cefb 60%,
+    #ee93fb 70%,
+    #fb93aa 80%,
+    #fbe693 90%,
+    #93f4fb 100%);
   background-size: 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -2067,7 +2063,18 @@ html:not(.desktop-runtime) .pause-stat-bar { display: none; }
   justify-content: center;
 }
 .account-page-center {
+  flex-direction: column;
   padding: 44px 0;
+}
+/* 登录卡片下方的小字登记说明（仅社群成员可登录，不开放注册）
+   单行不换行、与卡片留出间距，入场动画与卡片一致（见下方 pause-control-in-bottom） */
+.account-login-note {
+  margin-top: 18px;
+  color: var(--text-secondary);
+  font-size: var(--text-small);
+  line-height: 1.4;
+  text-align: center;
+  white-space: nowrap;
 }
 .pause-menu .settings-page {
   position: relative;
@@ -2938,7 +2945,8 @@ html.has-card-blur .pause-menu .settings-page .font-item {
 .pause-menu.open .settings-description {
   animation: pause-control-in-right 0.5s var(--ease-out) 0.08s backwards;
 }
-.pause-menu.open .account-page:not([hidden]) .account-login-card {
+.pause-menu.open .account-page:not([hidden]) .account-login-card,
+.pause-menu.open .account-page:not([hidden]) .account-login-note {
   animation: pause-control-in-bottom 0.5s var(--ease-out) 0.04s backwards;
 }
 .pause-menu.open .pause-menu-inner > .sidebar-panel.title-page:not([hidden]) .title-list > * {
@@ -3249,9 +3257,9 @@ html.pause-settings-open .tb-left {
   background: transparent;
 }
 .title-item.title-item-lv-5 .title-badge {
-  color: #c77dff;
+  color: #b191ed;
   background-image: none;
-  -webkit-text-fill-color: #c77dff;
+  -webkit-text-fill-color: #b191ed;
   animation: none;
 }
 /* 称号预览：与顶栏一样只显示文字颜色或流光，不使用矩形底色 */
