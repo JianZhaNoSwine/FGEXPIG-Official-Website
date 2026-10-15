@@ -1900,6 +1900,23 @@ html:lang(ja) .pause-stat-scope { margin-right: 0; }
 .pause-site-value-item { white-space: nowrap; }
 .pause-site-value-item.is-visits { color: #fff; }
 .pause-site-value-item.is-value { color: var(--accent-pink); }
+/* 网页价值（Tokens）：上面 .pause-site-value 的原有规则（含入场动画）完全不动，
+   这里只在它内部加一层横向排列的行，让「Tokens」显示在数字左侧同一行。 */
+.pause-site-value-row {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  white-space: nowrap;
+}
+/* 网页价值标签（Tokens）：白色、与数字同字号、不加粗、不加描边。
+   0.34em 间距与「全地图」前缀保持一致。 */
+.pause-site-value-label {
+  color: #fff;
+  font-size: var(--text-large);
+  line-height: 1.15;
+  white-space: nowrap;
+  margin-right: 0.34em;
+}
 .pause-menu.is-subpage-open .pause-stat-bar { display: none; }
 /* 网页版没有地图数据：整条统计条不显示（网页价值是独立块） */
 html:not(.desktop-runtime) .pause-stat-bar { display: none; }
@@ -2929,10 +2946,15 @@ html.has-card-blur .pause-menu .settings-page .font-item {
 .pause-menu.open .pause-ad-slot:nth-child(1) { animation-delay: 0.08s; }
 .pause-menu.open .pause-ad-slot:nth-child(2) { animation-delay: 0.15s; }
 .pause-menu.open .pause-ad-slot:nth-child(3) { animation-delay: 0.22s; }
-/* 暂停菜单顶部：网页价值 + 5 个全地图数据视为一个整体，自上而下一起入场（与底部自下而上对称） */
-.pause-menu.open .pause-stat-bar,
-.pause-menu.open .pause-site-value {
+/* 暂停菜单顶部：5 个全地图数据自上而下入场（与底部自下而上对称） */
+.pause-menu.open .pause-stat-bar {
   animation: pause-control-in-top 0.5s var(--ease-out) 0.04s backwards;
+}
+/* 网页价值（Tokens）在右下角，跟底栏（左下版本提示 / 底部经验条）用同一套入场动画：自下而上、24px、
+   0.58s、延迟 0.08s。用的是已有的 pause-version-hint-enter（不新增动画），
+   它相当于 pause-exp-enter 去掉 translateX(-50%)，因为它靠右边距定位而不是水平居中。 */
+.pause-menu.open .pause-site-value {
+  animation: pause-version-hint-enter 0.58s var(--ease-out) 0.08s both;
 }
 .pause-menu.open .settings-topnav {
   animation: pause-control-in-top 0.42s var(--ease-out) backwards;

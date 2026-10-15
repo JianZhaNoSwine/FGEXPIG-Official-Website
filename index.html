@@ -128,9 +128,12 @@
 
 <!-- 全屏暂停菜单 -->
 <section class="pause-menu" id="pauseMenu" aria-hidden="true">
-  <!-- 网页价值：网页版在右上角，exe 在左上角 -->
-  <div class="pause-site-value" role="img" aria-label="8,264,807,129">
-    <span class="pause-stat-value pause-site-value-item is-visits" aria-hidden="true">8,264,807,129</span>
+  <!-- 网页价值（Tokens）= 固定基数 5,877,718,906 + 截图里的数值，填两数之和；改完同步 app.html，再运行 build\tools\rebuild-desktop-manifest.bat -->
+  <div class="pause-site-value" role="img" aria-label="Tokens 8,683,619,996">
+    <span class="pause-site-value-row">
+      <span class="pause-site-value-label" aria-hidden="true">Tokens</span>
+      <span class="pause-stat-value pause-site-value-item is-visits" aria-hidden="true">8,683,619,996</span>
+    </span>
   </div>
   <!-- 暂停菜单顶部：全地图统计（exe 独占，5 项，中间 4 条分割线） -->
   <div class="pause-stat-bar" id="pauseStatBar">
@@ -578,6 +581,7 @@
 <script src="js/emoji-trim-data.js"></script>
 <script src="js/emoji-trim.js"></script>
 <script src="js/achv-icon-fit.js"></script>
+<script src="js/map-score-wasm.js"></script>
 <script src="js/map-stats.js?v=20260924gz342"></script>
 <script src="js/sync-manifest.js?v=20260924gz342"></script>
 <script src="i18n/index.js?v=20260924gz342"></script>

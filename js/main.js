@@ -9708,6 +9708,11 @@
     root.style.setProperty('--glow-border', theme.border);
     root.style.setProperty('--glow-shadow', theme.shadow);
     root.style.setProperty('--glow-inset', theme.inset);
+    // 桌面端：把同一个等级色交给壳，用于网页外框描边（与沉浸光效光标同色）
+    var desktopBridge = window.FGEXPIG_DESKTOP;
+    if (desktopBridge && typeof desktopBridge.setWindowBorderColor === 'function') {
+      desktopBridge.setWindowBorderColor(theme.border);
+    }
   }
 
   function clearCursorNearTargets() {
@@ -13392,7 +13397,7 @@
   });
 
   /* ---------- 管理员密码：只存加盐 SHA-256，不存明文 ----------
-     换密码：node tools/make-password-hash.js 新密码，把 hash 填到下面。
+     换密码：运行 build\tools\make-password-hash.bat 新密码，把输出的 hash 填到下面。
      注意：前端校验只能防"明文直接被看到"，不能防有心人离线爆破。 */
   var ADMIN_SALT = 'fgexpig::admin::v1';
   var ADMIN_PASS_HASH = 'dcd9e8f2928e98a61204b7f888b032c5a2e9b461cb37a2171fba3bf603678b26';
@@ -15920,7 +15925,13 @@
       var H = 0.7 * plays / (plays + 1000) + 0.3 * likes / (likes + 800);
       var Q = 0.45 * R + 0.45 * S + 0.10 * DPrime;
       var C = plays / (plays + 1000);
-      var score = Math.round(999983 * (0.30 * H + 0.70 * Q * C));
+      // 优先用 WASM 版公式（build/rust/fgexpig-wasm），未就绪时回退到这里的 JS 实现
+      var wasmScore = window.FgexpigMapScore
+        ? window.FgexpigMapScore.score(plays, likes, dislikes, rBar, qBar, dBar, rMin, rMax)
+        : null;
+      var score = (wasmScore === null || wasmScore === undefined)
+        ? Math.round(999983 * (0.30 * H + 0.70 * Q * C))
+        : wasmScore;
       var mapName = pauseMapContentName(entry.id, entry.code);
       rows.push({
         name: mapName,

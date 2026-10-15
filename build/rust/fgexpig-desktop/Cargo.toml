@@ -1,0 +1,10 @@
+[package]
+name = "fgexpig-desktop"
+version = "0.1.0"
+edition = "2021"
+description = "FGEXPIG 桌面端 sidecar（阶段 1）：本地静态服务 + 增量更新，供 Electron/Tauri 壳调用"
+
+[dependencies]
+fgexpig-core = { path = "../fgexpig-core" }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }

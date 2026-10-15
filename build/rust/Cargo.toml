@@ -1,0 +1,8 @@
+[workspace]
+members = ["fgexpig-tools", "fgexpig-core", "fgexpig-desktop", "src-tauri", "fgexpig-wasm"]
+# wasm crate 是 no_std，只在 --target wasm32-unknown-unknown 下构建
+default-members = ["fgexpig-tools", "fgexpig-core", "fgexpig-desktop", "src-tauri"]
+resolver = "2"
+
+[profile.release]
+opt-level = 2

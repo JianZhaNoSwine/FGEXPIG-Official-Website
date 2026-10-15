@@ -1,28 +1,31 @@
+# Cloudflare 静态资源上传排除表（.gitignore 语法，路径相对项目根）
+# 部署 = 上传整个项目目录时，下面这些不会进 CDN。
+# 站点运行需要的文件（*.html / css / js / i18n/index.js / i18n/lang/*.js / 各资源目录 /
+# desktop-manifest.json / favicon.ico / robots.txt / sitemap.xml / sw.js / _headers / _redirects）
+# 一律不要写进来。
+
 .git
 .git/*
 .gitignore
 .gitattributes
 .wrangler
-node_modules
+README.md
 
+# 工程件与构建产物：网站不需要（源码全在 build/ 下）
+build
+build/*
+node_modules
+node_modules/*
+.pnpm-store
+.pnpm-store/*
+
+# 翻译工作流源文件（只在本地用，线上读 i18n/index.js + i18n/lang/*.js）
 i18n/ui-strings.csv
 i18n/shop-strings.csv
 i18n/resources-strings.csv
 i18n/hotspot-strings.csv
 i18n/title-strings.csv
-tools/check-untranslated.js
-tools/check-untranslated.bat
-node_modules
-node_modules/*
+
 package.json
 pnpm-lock.yaml
-electron
-electron/*
-desktop-dist
-desktop-dist/*
 pnpm-workspace.yaml
-tools/build-desktop-manifest.js
-tools/map-lookup-probe.html
-tools/map-lookup-probe.js
-tools/map-lookup-probe.ps1
-tools/rebuild-desktop-manifest.bat

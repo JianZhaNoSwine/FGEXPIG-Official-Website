@@ -1,0 +1,10 @@
+[package]
+name = "fgexpig-tools"
+version = "0.1.0"
+edition = "2021"
+description = "FGEXPIG 构建工具（Rust 版）：i18n 语言包、desktop-manifest、翻译检查、密码哈希"
+
+[dependencies]
+serde_json = { version = "1", features = ["preserve_order"] }
+sha1 = "0.10"
+sha2 = "0.10"

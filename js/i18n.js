@@ -1,5 +1,5 @@
 ﻿/* FGEXPIG i18n 运行时
-   - 语言数据由 tools/build-i18n-pack.js 在开发阶段生成：
+   - 语言数据由 build\tools\update-i18n-pack.bat（内部调用 Rust 版 fgexpig-tools.exe i18n-pack）在开发阶段生成：
        i18n/index.js         语言表 + key↔中文原文索引 + 复数模板（静态加载）
        i18n/lang/<id>.js     每种语言的 key→文案（按需加载）
    - 网页不读取 CSV，也不做任何 CSV 解析；file:// 与联网走同一条路径。
@@ -553,7 +553,7 @@
       notify();
       return target;
     }).catch(function (err) {
-      warn('语言包加载失败，回退简体中文：', err, '（检查 i18n/lang/' + target + '.js 是否存在，或运行 tools/update-i18n-pack.bat 重新生成）');
+      warn('语言包加载失败，回退简体中文：', err, '（检查 i18n/lang/' + target + '.js 是否存在，或运行 build/tools/update-i18n-pack.bat 重新生成）');
       useSourceLanguage();
       return SOURCE_ID;
     });
