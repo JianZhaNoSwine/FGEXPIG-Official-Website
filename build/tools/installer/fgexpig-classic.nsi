@@ -3,7 +3,7 @@
 
 ; 中文字符串统一用 UTF-8（配合首行 Unicode true）
 !define APP_NAME "FGEXPIG"
-!define APP_VERSION "1.0.7-r"
+!define APP_VERSION "1.0.8-r"
 !define APP_PUBLISHER "JianZha"
 
 Name "${APP_NAME}"
@@ -16,7 +16,7 @@ ShowInstDetails nevershow
 ShowUninstDetails nevershow
 BrandingText " "
 
-VIProductVersion "1.0.7.0"
+VIProductVersion "1.0.8.0"
 VIAddVersionKey "ProductName" "${APP_NAME}"
 VIAddVersionKey "FileVersion" "${APP_VERSION}"
 VIAddVersionKey "CompanyName" "${APP_PUBLISHER}"

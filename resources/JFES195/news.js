@@ -19,7 +19,13 @@
               {
                 "name": "掉线",
                 "text": "也没有关注企鹅的话",
-                "replies": []
+                "replies": [
+                  {
+                    "name": "企鹅",
+                    "text": "已成绝唱",
+                    "replies": []
+                  }
+                ]
               }
             ]
           },
@@ -60,6 +66,11 @@
                     "name": "炸鸡",
                     "text": "细思鼻孔😱😱😱",
                     "replies": []
+                  },
+                  {
+                    "name": "企鹅",
+                    "text": "因爱生恨其实是",
+                    "replies": []
                   }
                 ]
               }
@@ -99,6 +110,16 @@
                 "name": "炸鸡",
                 "text": "必须有State of JianZha＃1 State of JianZha＃2 State of JianZha＃3 …… State of JianZha＃100",
                 "replies": []
+              },
+              {
+                "name": "企鹅",
+                "text": "0表属性",
+                "replies": []
+              },
+              {
+                "name": "企鹅",
+                "text": "\\辣椒挑眉",
+                "replies": []
               }
             ]
           },
@@ -120,7 +141,18 @@
           {
             "name": "掉线",
             "text": "“专为‘友尽’量身定制”🤔",
-            "replies": []
+            "replies": [
+              {
+                "name": "企鹅",
+                "text": "友尽了所以猪活也跟着去了",
+                "replies": []
+              },
+              {
+                "name": "企鹅",
+                "text": "\\奶龙哭",
+                "replies": []
+              }
+            ]
           },
           {
             "name": "掉线",
@@ -145,7 +177,13 @@
           {
             "name": "掉线",
             "text": "但是没有猪参加的游戏要怎么直播😱😱😱",
-            "replies": []
+            "replies": [
+              {
+                "name": "企鹅",
+                "text": "为何还没有猪",
+                "replies": []
+              }
+            ]
           },
           {
             "name": "掉线",

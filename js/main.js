@@ -14261,9 +14261,12 @@
     if (!isDesktopRuntime() || isGuestUser()) return;
     var api = window.FgexpigMapStats;
     if (!api || typeof api.register !== 'function') return;
+    // 本函数在脚本早期（updateUserUI）就会被调一次，此时 dataStore / shopStore /
+    // FUTURE_MAP_CODES 都还没赋值；全部做未初始化兜底，避免抛错中断整个 init。
     var core = (typeof dataStore !== 'undefined' && dataStore && dataStore.core) || [];
+    var shops = (typeof shopStore !== 'undefined' && shopStore && shopStore.shops) || {};
     var list = [];
-    Object.keys(shopStore.shops || {}).forEach(function (id) {
+    Object.keys(shops).forEach(function (id) {
       var codes = activityMapCodes(id);
       if (!codes.length) return;
       var row = null;
@@ -14273,7 +14276,8 @@
       var order = coreReleaseTimestamp(row && row.releaseDate);
       list.push({ id: id, codes: codes, order: isFinite(order) ? order : 0 });
     });
-    var futureCodes = Object.keys(FUTURE_MAP_CODES);
+    var futureCodes = (typeof FUTURE_MAP_CODES !== 'undefined' && FUTURE_MAP_CODES)
+      ? Object.keys(FUTURE_MAP_CODES) : [];
     if (futureCodes.length) {
       // 临时后续活动地图：按最新处理，优先进入抓取队列。
       list.push({ id: '__future__', codes: futureCodes, order: Number.MAX_SAFE_INTEGER });

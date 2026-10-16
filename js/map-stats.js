@@ -111,6 +111,7 @@
   function register(list) {
     if (!desktopOnly()) return;
     if (blocked) return;
+    if (!list || !list.length) return;
     var changed = false;
     for (var i = 0; i < list.length; i++) {
       var row = list[i];
@@ -172,6 +173,7 @@
   }
 
   function schedulePump(delay) {
+    if (pumpTimer) return;
     if (blocked) return;
     pumpTimer = global.setTimeout(function () {
       pumpTimer = 0;

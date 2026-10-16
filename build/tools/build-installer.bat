@@ -36,7 +36,7 @@ if errorlevel 1 (
 )
 echo.
 echo [DONE] build\desktop-dist\
-echo        FGEXPIG Setup 1.0.7-r.exe          (原版界面)
-echo        FGEXPIG Setup 1.0.7-r Custom.exe   (自绘黑色极简界面)
+echo        FGEXPIG Setup 1.0.8-r.exe          (原版界面)
+echo        FGEXPIG Setup 1.0.8-r Custom.exe   (自绘黑色极简界面)
 echo.
 pause

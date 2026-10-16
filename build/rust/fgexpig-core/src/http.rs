@@ -247,6 +247,9 @@ fn parse_url(raw: &str) -> Result<Url, String> {
     })
 }
 
+/// 注意：`?` 必须原样保留。以前 '?' 会被编码成 %3F，
+/// 导致本地服务回源 /css/style.css?v=xxx 这类带查询串的 URL 时线上 404，
+/// 表现为「缓存没命中时进站黑屏（CSS/JS 全 404）」。
 pub fn encode_url_path(path: &str) -> String {
     let mut out = String::new();
     for byte in path.as_bytes() {
@@ -254,7 +257,7 @@ pub fn encode_url_path(path: &str) -> String {
         let keep = c.is_ascii_alphanumeric()
             || matches!(
                 c,
-                '/' | '-' | '_' | '.' | '~' | '%' | '!' | '$' | '&' | '\'' | '(' | ')' | '*' | '+' | ',' | ';' | '=' | ':' | '@'
+                '/' | '-' | '_' | '.' | '~' | '%' | '!' | '$' | '&' | '\'' | '(' | ')' | '*' | '+' | ',' | ';' | '=' | ':' | '@' | '?'
             );
         if keep {
             out.push(c);
