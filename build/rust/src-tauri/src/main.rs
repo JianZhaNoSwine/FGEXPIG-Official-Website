@@ -411,6 +411,9 @@ struct AppState {
     settings: Mutex<DesktopSettings>,
     display: Mutex<DisplayMetrics>,
     site_url: String,
+    // 启动时推给启动器的壁纸列表（local URL）。resume 回主菜单时补发一次，
+    // 否则重新加载的启动器页面错过了那次事件，主菜单会挂在纯黑背景上。
+    slides: Mutex<Option<serde_json::Value>>,
 }
 
 impl AppState {
@@ -738,10 +741,12 @@ fn launcher_enter(app: tauri::AppHandle) {
 }
 
 /// 站点里点「退出至菜单」→ 回到启动器主菜单（resume）
+///
+/// 不在这里 emit ready：navigate 是异步的，此时启动器页面还没注册事件监听，事件必丢；
+/// 主菜单由页面自己按 `?resume=1` 直接显示（见 dist/launcher.html）。
 #[tauri::command]
 fn back_to_menu(app: tauri::AppHandle) {
     navigate_main(&app, Some("launcher.html?resume=1"));
-    let _ = app.emit("fgexpig://launcher", serde_json::json!({ "type": "ready" }));
 }
 
 #[tauri::command]
@@ -755,8 +760,20 @@ fn bridge_failed(href: String, reason: String) {
 }
 
 #[tauri::command]
-fn launcher_listener_ready() {
+fn launcher_listener_ready(app: tauri::AppHandle) {
     eprintln!("[shell] launcher event listener ready");
+    // 启动器页面每次加载都会重新注册监听。从站点点「退出至菜单」回来时是二次加载，
+    // 那一次壁纸列表事件早就发过了；这里把壳里记住的列表补发一次，
+    // 让 resume 进主菜单时背景仍是壁纸幻灯片，而不是黑屏。
+    let list = app
+        .try_state::<AppState>()
+        .and_then(|state| state.slides.lock().unwrap().clone());
+    if let Some(list) = list {
+        if list.as_array().map(|items| !items.is_empty()).unwrap_or(false) {
+            eprintln!("[shell] replay slides = {}", list.as_array().map(|i| i.len()).unwrap_or(0));
+            let _ = app.emit("fgexpig://launcher", serde_json::json!({ "type": "slides", "wallpapers": list }));
+        }
+    }
 }
 
 #[tauri::command]
@@ -779,6 +796,23 @@ fn launcher_github() {
     open_external("https://github.com/JianZhaNoSwine/FGEXPIG-Official-Website");
 }
 
+/// Tauri 内嵌资源（`WebviewUrl::App`）真实的 origin。
+///
+/// tauri 的规则（`tauri::protocol::origin`）：Windows / Android 上自定义协议走
+/// `http(s)://{scheme}.localhost`，其它平台才是 `{scheme}://localhost`。
+/// 这里以前写成了 `tauri://localhost`，WebView2 不认识这个协议，`navigate` 会静默失败，
+/// 表现就是「退出至菜单」点了没反应。
+fn app_protocol_base() -> &'static str {
+    #[cfg(any(windows, target_os = "android"))]
+    {
+        "http://tauri.localhost/"
+    }
+    #[cfg(not(any(windows, target_os = "android")))]
+    {
+        "tauri://localhost/"
+    }
+}
+
 /// page = None 表示跳到站点首页；Some(path) 表示跳回应用内页面（启动器）
 fn navigate_main(app: &tauri::AppHandle, page: Option<&str>) {
     let window = match app.get_webview_window("main") {
@@ -787,7 +821,7 @@ fn navigate_main(app: &tauri::AppHandle, page: Option<&str>) {
     };
     match page {
         Some(path) => {
-            if let Ok(url) = format!("tauri://localhost/{}", path).parse::<tauri::Url>() {
+            if let Ok(url) = format!("{}{}", app_protocol_base(), path).parse::<tauri::Url>() {
                 let _ = window.navigate(url);
             }
         }
@@ -839,6 +873,7 @@ fn main() {
             settings: Mutex::new(settings),
             display: Mutex::new(DisplayMetrics { scale: 1.0, max_width: 1920, max_height: 1080 }),
             site_url: site_url.clone(),
+            slides: Mutex::new(None),
         })
         .invoke_handler(tauri::generate_handler![
             resolution_get,
@@ -963,6 +998,8 @@ fn main() {
             let window = WebviewWindowBuilder::new(&handle, "main", initial_url)
                 .title("FGEXPIG")
                 .inner_size(logical_width, logical_height)
+                // 首次打开时在「当前显示器的工作区」里居中（不居中会落在系统默认位置，看起来偏左上）
+                .center()
                 .resizable(false)
                 .maximizable(false)
                 // 无边框：去掉 Windows 原生标题栏（那条白条），让启动器/壁纸图铺到窗口最顶端。

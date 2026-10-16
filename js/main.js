@@ -9988,6 +9988,9 @@
       } else if (pauseMenu && pauseMenu.classList.contains('open')) {
         if (pauseMenu.classList.contains('is-subpage-open')) resetSidebarPanel();
         else closeSidebars();
+      } else if (guestMenuEnabled()) {
+        // 访客没有暂停菜单；Esc / 手柄暂停键只负责收起已经弹出的访客菜单，不主动打开（只能点头像打开）
+        closeGuestMenu();
       } else {
         openSidebar('left');
       }
@@ -10146,9 +10149,15 @@
   function applyGuestPrivacyState() {
     var guest = isGuestUser();
     document.documentElement.classList.toggle('guest-user', guest);
+    // 访客的头像按钮是弹菜单（不是开侧边栏），无障碍语义跟着换
+    if (userMenuBtn) {
+      if (guest) userMenuBtn.setAttribute('aria-haspopup', 'menu');
+      else userMenuBtn.removeAttribute('aria-haspopup');
+    }
     if (guest && currentSidebarPanel === 'titles') {
       resetSidebarPanelCore();
     }
+    if (!guest) closeGuestMenu();
     var hotspotSections = document.querySelectorAll('.hotspot-section');
     for (var i = 0; i < hotspotSections.length; i++) {
       var section = hotspotSections[i];
@@ -10253,13 +10262,147 @@
     sidebarPanelOrigin = 'menu';
     var replayHomeAnimation = !!(pauseMenu && pauseMenu.classList.contains('open'));
     if (replayHomeAnimation) playInterfaceAnimation(true);
+    // 当前停在二级页（活动中心等）而直接关回首页：面板内容要留到淡出结束再复位。
+    // 复位会立刻把面板切回暂停菜单列表，淡出的 0.32s 内就会看到暂停菜单露出来。
+    var closingSubpage = currentSidebarPanel !== 'menu';
     setPauseMenuOpen(false);
     sidebarRight.classList.remove('open');
     if (sidebarLeft) sidebarLeft.classList.remove('open');
     sidebarMask.classList.remove('show');
-    resetSidebarPanelCore();
+    if (sidebarPanelResetTimer) { window.clearTimeout(sidebarPanelResetTimer); sidebarPanelResetTimer = 0; }
+    if (closingSubpage) {
+      sidebarPanelResetTimer = window.setTimeout(function () {
+        sidebarPanelResetTimer = 0;
+        // 期间若又打开了暂停菜单，交给 openSidebar 自己去复位，别在这里插一脚
+        if (pauseMenu && pauseMenu.classList.contains('open')) return;
+        resetSidebarPanelCore();
+      }, 360);
+    } else {
+      resetSidebarPanelCore();
+    }
   }
 
+  /* ---------- 访客用户：头像下拉菜单（登录 / 设置 / 退出至菜单） ----------
+     访客没有账号数据，暂停菜单（用户切换 / 称号 / 排行榜…）对他没有意义，
+     所以访客点头像不再打开暂停菜单，而是在头像下方弹出这个小菜单。
+     「退出至菜单」是 exe 独有的（网页版没有启动器主菜单），网页版不显示这一项。
+     外屏模式（outer-screen-layout）有自己的一套页面，这里完全不插手。 */
+  var guestMenuEl = document.getElementById('guestMenu');
+  var guestMenuLoginBtn = document.getElementById('guestMenuLogin');
+  var guestMenuSettingsBtn = document.getElementById('guestMenuSettings');
+  var guestMenuExitBtn = document.getElementById('guestMenuExit');
+  var winMinimizeBtn = document.getElementById('winMinimizeBtn');
+  var winCloseBtn = document.getElementById('winCloseBtn');
+  var guestMenuOpen = false;
+  var guestMenuIndex = 0;
+
+  if (guestMenuExitBtn && !isDesktopRuntime()) guestMenuExitBtn.hidden = true;
+
+  function guestMenuEnabled() {
+    return isGuestUser() && !document.documentElement.classList.contains('outer-screen-layout');
+  }
+
+  function guestMenuItems() {
+    if (!guestMenuEl) return [];
+    return Array.prototype.slice.call(guestMenuEl.querySelectorAll('.guest-menu-item')).filter(function (el) {
+      return el.getClientRects().length > 0;
+    });
+  }
+
+  // 菜单贴着头像下方显示；下方空间不够就翻到头像上方
+  function positionGuestMenu() {
+    if (!guestMenuEl || !userMenuBtn) return;
+    var rect = userMenuBtn.getBoundingClientRect();
+    var width = guestMenuEl.offsetWidth || 172;
+    var height = guestMenuEl.offsetHeight || 132;
+    var left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8));
+    var top = rect.bottom + 10;
+    if (top + height > window.innerHeight - 8) top = Math.max(8, rect.top - height - 10);
+    guestMenuEl.style.left = Math.round(left) + 'px';
+    guestMenuEl.style.top = Math.round(top) + 'px';
+  }
+
+  function updateGuestMenuSelection() {
+    var items = guestMenuItems();
+    for (var i = 0; i < items.length; i++) {
+      items[i].classList.toggle('is-selected', inputMode === 'gamepad' && i === guestMenuIndex);
+    }
+  }
+
+  function moveGuestMenuSelection(delta) {
+    var items = guestMenuItems();
+    if (!items.length) return;
+    guestMenuIndex = Math.max(0, Math.min(items.length - 1, guestMenuIndex + delta));
+    updateGuestMenuSelection();
+  }
+
+  function activateGuestMenuSelection() {
+    var items = guestMenuItems();
+    if (items[guestMenuIndex]) items[guestMenuIndex].click();
+  }
+
+  function openGuestMenu() {
+    if (!guestMenuEl || !guestMenuEnabled()) return;
+    guestMenuEl.classList.add('open');
+    guestMenuEl.setAttribute('aria-hidden', 'false');
+    if (userMenuBtn) userMenuBtn.setAttribute('aria-expanded', 'true');
+    guestMenuOpen = true;
+    guestMenuIndex = 0;
+    positionGuestMenu();
+    updateGuestMenuSelection();
+  }
+
+  function closeGuestMenu() {
+    if (!guestMenuEl || !guestMenuOpen) return;
+    guestMenuOpen = false;
+    guestMenuEl.classList.remove('open');
+    guestMenuEl.setAttribute('aria-hidden', 'true');
+    if (userMenuBtn) userMenuBtn.setAttribute('aria-expanded', 'false');
+    updateGuestMenuSelection();
+  }
+
+  function toggleGuestMenu() {
+    if (guestMenuOpen) closeGuestMenu();
+    else openGuestMenu();
+  }
+
+  if (guestMenuEl) {
+    if (guestMenuLoginBtn) guestMenuLoginBtn.addEventListener('click', function () {
+      closeGuestMenu();
+      openGuestLoginPage();
+    });
+    if (guestMenuSettingsBtn) guestMenuSettingsBtn.addEventListener('click', function () {
+      closeGuestMenu();
+      openSidebar('left');
+      sidebarPanelOrigin = 'home';
+      openSettingsPanel('interface');
+    });
+    if (guestMenuExitBtn) guestMenuExitBtn.addEventListener('click', function () {
+      closeGuestMenu();
+      if (window.FGEXPIG_DESKTOP && typeof window.FGEXPIG_DESKTOP.backToMenu === 'function') {
+        window.FGEXPIG_DESKTOP.backToMenu();
+      }
+    });
+    // 点菜单外面关掉（捕获阶段，先于按钮自身的点击判断）
+    document.addEventListener('mousedown', function (event) {
+      if (!guestMenuOpen) return;
+      var target = event.target;
+      if (guestMenuEl.contains(target)) return;
+      if (userMenuBtn && userMenuBtn.contains(target)) return;
+      closeGuestMenu();
+    }, true);
+    window.addEventListener('resize', function () { if (guestMenuOpen) positionGuestMenu(); });
+    window.addEventListener('blur', function () { if (guestMenuOpen) closeGuestMenu(); });
+    // exe + 访客：右上角的最小化 / 关闭按钮（访客禁用了双击最小化、中键关闭手势）
+    if (winMinimizeBtn) winMinimizeBtn.addEventListener('click', function () {
+      closeGuestMenu();
+      if (window.FGEXPIG_DESKTOP && typeof window.FGEXPIG_DESKTOP.minimizeWindow === 'function') window.FGEXPIG_DESKTOP.minimizeWindow();
+    });
+    if (winCloseBtn) winCloseBtn.addEventListener('click', function () {
+      closeGuestMenu();
+      if (window.FGEXPIG_DESKTOP && typeof window.FGEXPIG_DESKTOP.closeWindow === 'function') window.FGEXPIG_DESKTOP.closeWindow();
+    });
+  }
   var HOTSPOT_CONSOLE_EMOJI_NAMES = (function () {
     var names = [];
     var seen = {};
@@ -10614,6 +10757,9 @@
   // 二级页的来源：'menu' = 从暂停菜单进的，'home' = 从首页顶栏快捷入口进的
   // 返回时按来源回到对应位置
   var sidebarPanelOrigin = 'menu';
+  // 关闭子页面（活动中心 / 设置 / 称号 / 用户切换）时，把面板复位推迟到暂停菜单淡出之后，
+  // 否则淡出的 0.32s 里会露出暂停菜单的列表 —— 看起来就是"闪了一下暂停菜单"。
+  var sidebarPanelResetTimer = 0;
 
   var THEME_KEY = 'fgexpig_theme_v1';
   var FONT_KEY = 'fgexpig_font_v1';
@@ -12450,6 +12596,8 @@
 
   userMenuBtn.addEventListener('click', function () {
     if (document.documentElement.classList.contains('outer-screen-layout')) return;
+    // 访客：点头像弹下拉菜单（登录 / 设置 / 退出至菜单），不进入暂停菜单
+    if (guestMenuEnabled()) { toggleGuestMenu(); return; }
     openSidebar('left');
   });
 
@@ -12607,6 +12755,27 @@
         return;
       }
     }
+    if (guestMenuOpen && !(pauseMenu && pauseMenu.classList.contains('open'))) {
+      if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+        event.preventDefault();
+        event.stopPropagation();
+        setInputMode('gamepad');
+        moveGuestMenuSelection(event.key === 'ArrowDown' ? 1 : -1);
+        return;
+      }
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        event.stopPropagation();
+        activateGuestMenuSelection();
+        return;
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        closeGuestMenu();
+        return;
+      }
+    }
     if (pauseMenu && pauseMenu.classList.contains('is-settings-open')) {
       var settingsKey = normalizeKeyName(event.key);
       if (!event.repeat && settingsKey === 'r') {
@@ -12716,6 +12885,7 @@
     updatePauseMenuSelection();
     updateSettingsSelection();
     updateFilterSelection();
+    updateGuestMenuSelection();
     if (mode === 'gamepad' && cursorGlowEl && pauseMenu && !pauseMenu.classList.contains('open') &&
         !root.classList.contains('ui-hidden')) {
       cursorGlowEl.classList.add('is-visible');
@@ -13242,6 +13412,11 @@
           moveTitleSelectionWithStick(axisY, now);
         } else if (titlePanelOpen) {
           resetTitleStickNavigation();
+        } else if (guestMenuOpen && Math.abs(axisY) > 0.55) {
+          if (now - gamepadNavLastTime > 160) {
+            gamepadNavLastTime = now;
+            moveGuestMenuSelection(axisY > 0 ? 1 : -1);
+          }
         } else if (pauseMenu && pauseMenu.classList.contains('open') && panelMenu && !panelMenu.hidden && Math.abs(axisY) > 0.55) {
           if (now - gamepadNavLastTime > 160) {
             gamepadNavLastTime = now;
@@ -13320,6 +13495,11 @@
           else if (b === 12 || b === 13) moveAccountInputFocus(b === 12 ? -1 : 1);
           else if (b === 0) submitAccountLoginFromGamepad();
           else if (b === 1) gamepadBackAction();
+        }
+        else if (guestMenuOpen) {
+          if (b === 12 || b === 13) moveGuestMenuSelection(b === 13 ? 1 : -1);
+          else if (b === 0) activateGuestMenuSelection();
+          else if (b === 1 || b === 8) closeGuestMenu();
         }
         else if (b === 0 && pauseMenu && currentSidebarPanel === 'titles') quickEquipDefaultTitle();
         else if (b === 0) gamepadPrimaryAction();

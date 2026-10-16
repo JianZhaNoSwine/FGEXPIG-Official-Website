@@ -440,6 +440,9 @@
   document.getElementById('btnQuit').addEventListener('click', function () { if (api && api.quit) api.quit(); });
 
   startMusic();
+  // resume（从站点点「退出至菜单」回来）：不走开屏/下载/校验，直接显示主菜单。
+  // 不能等壳 emit 的 ready：navigate 是异步的，那条事件在页面注册监听前就发出来了，必丢。
+  if (resumeMenu) showMenu();
   if (!resumeMenu) window.setTimeout(endSplash, SPLASH_MS);
 })();
 </script>

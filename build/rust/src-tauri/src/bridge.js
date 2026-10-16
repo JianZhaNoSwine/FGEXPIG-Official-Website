@@ -236,6 +236,9 @@
       return resState;
     },
     backToMenu: function () { call('back_to_menu'); },
+    // exe + 访客：顶栏右上角的最小化 / 关闭按钮（访客禁用双击/中键手势，改用按钮）
+    minimizeWindow: function () { windowAction('minimize'); },
+    closeWindow: function () { windowAction('close'); },
     fetchMapStats: function (code) { return call('mapstats_fetch', { code: String(code || '') }); },
     getMapStatsStore: function () {
       var value = null;
@@ -258,10 +261,13 @@
     var WINDOW_BORDER_PX = 4;
     var WINDOW_BORDER_COLOR = '#fff';
     var WINDOW_BORDER_RADIUS_PX = 8; // 与 Win11 默认圆角（8 逻辑 px）对齐
+    // 最近一次真正写到 DOM 上的颜色（用来判断是否需要更新，避免每轮都写样式）
+    var appliedBorderColor = WINDOW_BORDER_COLOR;
     // 描边颜色由网页决定（跟账户最高/已选称号的等级色走，与沉浸光效光标同色）
     var setWindowBorderColor = function (color) {
       if (typeof color !== 'string' || !color) return;
       WINDOW_BORDER_COLOR = color;
+      appliedBorderColor = color;
       var element = document.getElementById('fgexpig-window-border');
       if (element) element.style.borderColor = color;
     };
@@ -296,6 +302,27 @@
       if (document.getElementById('fgexpig-window-border') || borderRetries > 40) clearInterval(borderTimer);
     }, 1500);
     try { mountWindowBorder(); } catch (err) {}
+    /* 兜底：把外框颜色对齐页面正在用的称号等级色。
+       main.js 的 applyCursorGlowTheme() 会把当前称号的等级色写进 :root 的 --glow-border
+       （沉浸光效光标用的就是它）。新版站点会额外直接调 setWindowBorderColor，
+       但站点文件是走缓存同步的，可能是旧版；读 --glow-border 保证不管站点新旧都能上色。 */
+    // 已经上色后降频（切换称号时 --glow-border 会变，仍会被下一次轮询读到）
+    var borderColorDelay = 400;
+    var pollBorderColor = function () {
+      var element = document.getElementById('fgexpig-window-border');
+      if (element) {
+        var color = '';
+        try { color = getComputedStyle(document.documentElement).getPropertyValue('--glow-border') || ''; } catch (err) {}
+        color = color.replace(/^\s+|\s+$/g, '');
+        if (color && color !== appliedBorderColor) {
+          appliedBorderColor = color;
+          element.style.borderColor = color;
+          borderColorDelay = 2000;
+        }
+      }
+      setTimeout(pollBorderColor, borderColorDelay);
+    };
+    setTimeout(pollBorderColor, borderColorDelay);
   } catch (err) {}
 
   /* ---------- 无边框窗口：顶部空白区的窗口手势 ----------
@@ -309,6 +336,11 @@
     var DRAG_TOP_PX = 32;
     var MULTI_CLICK_MS = 400;
     var DRAG_SKIP_SEL = 'a,button,input,select,textarea,label,[role="button"],[data-no-drag],[contenteditable="true"]';
+    // 访客态：禁用「双击最小化」「中键关闭」两个手势（改由顶栏右上角的窗口按钮提供），
+    // 拖动窗口仍然保留。站点在 <html> 上打 guest-user 类，这里直接读。
+    function guestGestureDisabled() {
+      try { return document.documentElement.classList.contains('guest-user'); } catch (err) { return false; }
+    }
     var DRAG_MOVE_PX = 4;
     var lastDownAt = 0;
     var downCount = 0;
@@ -353,11 +385,11 @@
       var target = event.target;
       if (target && target.closest && target.closest(DRAG_SKIP_SEL)) return;
 
-      // 中键：立即关闭窗口
+      // 中键：立即关闭窗口（访客禁用，改由右上角关闭按钮提供）
       if (event.button === 1) {
         if (event.preventDefault) event.preventDefault();
         resetGesture();
-        windowAction('close');
+        if (!guestGestureDisabled()) windowAction('close');
         return;
       }
       if (event.button !== 0) return;
@@ -369,7 +401,8 @@
       // 双击：立即最小化（不再等第三击）
       if (downCount >= 2) {
         resetGesture();
-        windowAction('minimize');
+        // 访客禁用双击最小化（改由右上角最小化按钮提供）
+        if (!guestGestureDisabled()) windowAction('minimize');
         return;
       }
 

@@ -14,7 +14,20 @@ if not exist "rust\target\release\fgexpig-shell.exe" (
   pause
   exit /b 1
 )
+echo [1/2] generating installer UI assets...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0make-installer-ui.ps1"
+if errorlevel 1 (
+  echo [FAILED] UI asset generation failed.
+  pause
+  exit /b 1
+)
 if not exist "desktop-dist" mkdir "desktop-dist"
+"%MAKENSIS%" /V2 "tools\installer\fgexpig-classic.nsi"
+if errorlevel 1 (
+  echo [FAILED] classic installer build failed.
+  pause
+  exit /b 1
+)
 "%MAKENSIS%" /V2 "tools\installer\fgexpig.nsi"
 if errorlevel 1 (
   echo [FAILED] installer build failed.
@@ -22,6 +35,8 @@ if errorlevel 1 (
   exit /b 1
 )
 echo.
-echo [DONE] build\desktop-dist\FGEXPIG Setup 1.0.5-r.exe
+echo [DONE] build\desktop-dist\
+echo        FGEXPIG Setup 1.0.7-r.exe          (原版界面)
+echo        FGEXPIG Setup 1.0.7-r Custom.exe   (自绘黑色极简界面)
 echo.
 pause

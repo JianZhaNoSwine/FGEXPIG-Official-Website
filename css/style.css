@@ -7128,6 +7128,7 @@ html.guest-user .tb-avatar-level,
 html.guest-user #navTitleSwitch,
 html.guest-user .pause-menu-ads,
 html.guest-user .bottom-exp-hud,
+html.guest-user .tb-inline-key-back,
 html.guest-user .files-featured-toggle {
   display: none !important;
 }
@@ -7146,10 +7147,135 @@ html.guest-user .shop-owned-bar {
 html.guest-user .shop-owned-bar.is-guest {
   opacity: 1;
 }
+
+/* 访客：顶栏不显示「访」头像与「访客用户」昵称，只留一个白色三横图标按钮，
+   点它弹出访客下拉菜单（登录 / 设置 / 退出至菜单）。 */
+.tb-avatar-menu { display: none; }
+html.guest-user #userPillAvatar { display: none; }
+/* 访客不显示「访客用户」昵称：登录入口改走下拉菜单（昵称的点击入口已无意义） */
+html.guest-user #userPillName { display: none; }
+/* 访客只用白色三横图标，不加圆形底色 */
+html.guest-user .tb-avatar-menu {
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--avatar-circle-size);
+  height: var(--avatar-circle-size);
+  transform: translate(-50%, -50%);
+  box-sizing: border-box;
+  padding: 8px;
+  color: #fff;
+  opacity: 0.84;
+  pointer-events: none;
+  transition: opacity 0.16s var(--ease-out);
+}
+html.guest-user #userMenuBtn:hover .tb-avatar-menu,
+html.guest-user #userMenuBtn:focus-visible .tb-avatar-menu,
+html.guest-user #userMenuBtn[aria-expanded="true"] .tb-avatar-menu {
+  opacity: 1;
+}
+
+/* exe + 访客：顶栏左右两块对调 —— 音乐（曲名/封面）移到左上角，
+   右上角只留 ≡（访客菜单）、最小化、关闭三个按钮。 */
+html.desktop-runtime.guest-user .tb-left {
+  left: auto;
+  right: var(--topbar-right-edge, 16px);
+  transform: translate(var(--topbar-right-shift, 0px), -50%);
+  justify-content: flex-end;
+}
+html.desktop-runtime.guest-user .tb-right {
+  right: auto;
+  left: var(--topbar-left-edge, 16px);
+  transform: translate(var(--topbar-left-shift, 0px), -50%);
+  justify-content: flex-start;
+}
+/* 左上的顺序：封面 → 曲名（音乐紧贴左上角，封面在左、曲名在右），其余提示排到后面 */
+html.desktop-runtime.guest-user .tb-right .tb-cover { order: 1; }
+html.desktop-runtime.guest-user .tb-right #playerName { order: 2; }
+html.desktop-runtime.guest-user .tb-right .tb-inline-key-settings { order: 3; }
+html.desktop-runtime.guest-user .tb-right #innerActivityButton { order: 4; }
+/* 窗口按钮：默认不显示，只有 exe + 访客显示（访客禁用了双击/中键手势） */
+.tb-window-btn {
+  display: none;
+  flex: none;
+  box-sizing: border-box;
+  width: 36px;
+  height: 36px;
+  padding: 9px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #fff;
+  opacity: 0.84;
+  cursor: pointer;
+  transition: opacity 0.16s var(--ease-out);
+}
+html.desktop-runtime.guest-user .tb-window-btn { display: block; }
+.tb-window-btn:hover,
+.tb-window-btn:focus-visible,
+.tb-window-btn:active { opacity: 1; }
+.tb-window-btn:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.82); outline-offset: 0; }
 /* 访客：购买相关按钮无实际意义，统一改粉色（游玩 / 查看） */
 .shop-owned-bar.is-guest,
 .shop-status-button.is-guest,
 .shop-status-button.is-guest:hover { background: var(--accent-pink); }
+
+/* 访客用户：点头像弹出的下拉菜单（登录 / 设置 / 退出至菜单），替代暂停菜单入口。
+   位置由 JS 按头像位置计算（position:fixed），所以这里只负责外观与显隐。 */
+.guest-menu {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 172px;
+  padding: 6px;
+  border-radius: 12px;
+  background: rgba(16, 14, 20, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.48);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-6px) scale(0.98);
+  transform-origin: top left;
+  transition: opacity 0.16s var(--ease-out), transform 0.16s var(--ease-out), visibility 0.16s;
+}
+.guest-menu.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+}
+.guest-menu-item {
+  display: flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: var(--text-large);
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.14s var(--ease-out), color 0.14s var(--ease-out);
+}
+.guest-menu-item[hidden] { display: none !important; }
+.guest-menu-item:hover,
+.guest-menu-item:focus-visible,
+.guest-menu-item.is-selected {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0));
+  color: var(--accent-pink);
+}
+.guest-menu-item:focus-visible { outline: none; }
 
 
 .hotspot-comments-card.is-guest-protected > .section-card-body {

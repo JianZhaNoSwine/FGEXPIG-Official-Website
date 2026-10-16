@@ -42,6 +42,8 @@ topbar.music.hint,顶栏-音乐封面 title 提示,播放/暂停；点边缘圆�
 topbar.sidebar,顶栏-头像按钮 aria-label,打开侧边栏,サイドバーを開く,Open sidebar,Ouvrir le panneau,Apri barra laterale,Seitenleiste öffnen,Abrir panel lateral,فتح الشريط الجانبي,사이드바 열기,Abrir barra lateral,Открыть боковую панель,開啟側邊欄,Otwórz panel boczny,
 topbar.activityLogo,顶栏-活动标志 alt,活动 Logo,イベントロゴ,Event logo,Logo de l'activité,Logo evento,Event-Logo,Logo del evento,شعار الفعالية,이벤트 로고,Logo do evento,Логотип события,活動標誌,Logo wydarzenia,
 topbar.pagination,顶栏-分页区域 aria-label,页面分页,ページ送り,Pagination,Pagination,Paginazione,Seitennavigation,Paginación,ترقيم الصفحات,페이지 넘김,Paginação,Постраничная навигация,頁面分頁,Stronicowanie,
+topbar.window.minimize,顶栏-exe窗口按钮 aria-label,最小化,最小化,Minimize,Réduire,Riduci a icona,Minimieren,Minimizar,تصغير,최소화,Minimizar,Свернуть,最小化,Minimalizuj,
+topbar.window.close,顶栏-exe窗口按钮 aria-label,关闭窗口,ウィンドウを閉じる,Close window,Fermer la fenêtre,Chiudi finestra,Fenster schließen,Cerrar ventana,إغلاق النافذة,창 닫기,Fechar janela,Закрыть окно,關閉視窗,Zamknij okno,
 startup.playVideo,开屏-Landing 点击播放提示,点击播放视频,クリックで動画を再生,Click to play video,Cliquez pour lire la vidéo,Clicca per riprodurre il video,"Klicken, um das Video abzuspielen",Haz clic para reproducir el vídeo,انقر لتشغيل الفيديو,클릭하여 영상 재생,Clique para reproduzir o vídeo,"Нажмите, чтобы воспроизвести видео",點擊播放影片,"Kliknij, aby odtworzyć wideo",
 login.title,登录弹窗-标题,账号登录,アカウントログイン,Account Login,Connexion au compte,Accesso account,Konto-Anmeldung,Inicio de sesión,تسجيل الدخول إلى الحساب,계정 로그인,Login da conta,Вход в аккаунт,帳號登入,Logowanie konta,
 login.account,登录弹窗-账号输入框 placeholder,账号,アカウント,Account,Compte,Account,Konto,Cuenta,الحساب,계정,Conta,Аккаунт,帳號,Konto,

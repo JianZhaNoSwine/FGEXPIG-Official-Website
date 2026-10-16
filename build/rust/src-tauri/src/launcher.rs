@@ -7,7 +7,7 @@ use std::sync::{Arc, Condvar, Mutex, OnceLock};
 use std::time::Duration;
 
 use serde_json::Value;
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
 
 type Waiter = Arc<(Mutex<bool>, Condvar)>;
 
@@ -124,6 +124,10 @@ pub fn handle_line(app: &AppHandle, line: &str, local_base: &str) {
                 })
                 .unwrap_or_default();
             eprintln!("[shell] wallpapers = {} (local)", list.len());
+            // 记下来：resume 回主菜单时要补发（见 main.rs 的 launcher_listener_ready）
+            if let Some(state) = app.try_state::<crate::AppState>() {
+                *state.slides.lock().unwrap() = Some(Value::Array(list.clone()));
+            }
             let _ = app.emit("fgexpig://launcher", serde_json::json!({ "type": "slides", "wallpapers": list }));
             signal("wallpapers");
         }

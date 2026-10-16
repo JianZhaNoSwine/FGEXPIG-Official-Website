@@ -52,11 +52,20 @@
   <div class="tb-left">
     <button class="tb-avatar-wrap" id="userMenuBtn" type="button" aria-label="打开侧边栏">
       <div class="tb-avatar" id="userPillAvatar"></div>
+      <!-- 访客：不显示「访」头像，改成一个白色三横图标按钮（无底色） -->
+      <svg class="tb-avatar-menu" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/></svg>
       <svg class="tb-avatar-ring" viewBox="0 0 40 40" aria-hidden="true">
         <path class="ring-track" d="M 7.2 32.8 A 18.1 18.1 0 1 1 32.8 32.8"></path>
         <path class="ring-fill" id="userExpRing" d="M 7.2 32.8 A 18.1 18.1 0 1 1 32.8 32.8"></path>
       </svg>
       <span class="tb-avatar-level" id="userPillLevel">Lv1</span>
+    </button>
+    <!-- exe + 访客：窗口按钮（访客禁用双击最小化 / 中键关闭手势，改由这两个按钮提供） -->
+    <button class="tb-window-btn" id="winMinimizeBtn" type="button" aria-label="最小化">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M5 12h14"/></svg>
+    </button>
+    <button class="tb-window-btn" id="winCloseBtn" type="button" aria-label="关闭窗口">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>
     </button>
     <img class="tb-inline-key tb-inline-key-back key-icon" data-key-icon-action="pauseBack" alt="" aria-hidden="true" draggable="false">
     <span class="tb-nick" id="userPillName">访客用户</span>
@@ -98,6 +107,13 @@
     </div>
   </div>
 </header>
+
+<!-- 访客用户：点头像弹出的下拉菜单（登录 / 设置 / 退出至菜单），访客不进入暂停菜单 -->
+<div class="guest-menu" id="guestMenu" role="menu" aria-hidden="true">
+  <button class="guest-menu-item" id="guestMenuLogin" type="button" role="menuitem"><span>登录</span></button>
+  <button class="guest-menu-item" id="guestMenuSettings" type="button" role="menuitem"><span>设置</span></button>
+  <button class="guest-menu-item" id="guestMenuExit" type="button" role="menuitem"><span>退出至菜单</span></button>
+</div>
 
 
 <!-- 底部 logo 刻度槽 -->
