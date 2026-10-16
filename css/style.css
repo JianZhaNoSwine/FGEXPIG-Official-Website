@@ -2088,7 +2088,7 @@ html:not(.desktop-runtime) .pause-stat-bar { display: none; }
 .account-login-note {
   margin-top: 18px;
   color: var(--text-secondary);
-  font-size: var(--text-small);
+  font-size: 16px;
   line-height: 1.4;
   text-align: center;
   white-space: nowrap;
@@ -7681,4 +7681,12 @@ html.has-card-blur .pause-menu .filter-page .filter-option-card {
 /* 底栏缩短：两侧各让出一个头像圆尺寸，左右图标占用释放出的空间 */
 .dock {
   width: calc(var(--slot) * 6 + 180px - 2 * var(--dock-side-inset));
+}
+
+/* 访客：不显示任何地图数据（详情页地图卡片 / 刷新标记 / 暂停菜单地图统计与 UPDATING） */
+html.guest-user .map-summary,
+html.guest-user .map-refresh-badge,
+html.guest-user #pauseStatBar,
+html.guest-user .pause-cache-line.is-updating {
+  display: none !important;
 }

@@ -42,6 +42,7 @@
   var listeners = [];
   var running = false;
   var pumpTimer = 0;
+  var blocked = false;      // 访客模式：完全停用（不注册、不请求）
 
   // 地图数据卡片由 exe（桌面端）独占：网页版连一次请求都不发
   function desktopOnly() {
@@ -109,7 +110,7 @@
   /* ---------- 对外：注册活动 ---------- */
   function register(list) {
     if (!desktopOnly()) return;
-    if (!list || !list.length) return;
+    if (blocked) return;
     var changed = false;
     for (var i = 0; i < list.length; i++) {
       var row = list[i];
@@ -171,7 +172,7 @@
   }
 
   function schedulePump(delay) {
-    if (pumpTimer) return;
+    if (blocked) return;
     pumpTimer = global.setTimeout(function () {
       pumpTimer = 0;
       pump();
@@ -186,7 +187,7 @@
 
   function pump() {
     if (!desktopOnly()) return;
-    if (running) return;
+    if (blocked) return;
     // 处于风控暂停期：等到恢复时间再继续（恢复时间已持久化，关掉页面也有效）
     var wait = Number(store.resumeAt || 0) - Date.now();
     if (wait > 0) {
@@ -453,12 +454,30 @@
     };
   }
 
+  /* ---------- 对外：访客模式开关 ---------- */
+  // 访客不允许使用第三方接口：立刻停掉队列与定时器，并清空待请求列表
+  function setEnabled(flag) {
+    var next = !!flag;
+    var wasBlocked = blocked;
+    blocked = !next;
+    if (blocked && !wasBlocked) {
+      queueNew = [];
+      queueStale = [];
+      if (pumpTimer) {
+        global.clearTimeout(pumpTimer);
+        pumpTimer = 0;
+      }
+      notify();
+    }
+  }
+
   global.FgexpigMapStats = {
     register: register,
     get: get,
     entries: entries,
     all: all,
     subscribe: subscribe,
+    setEnabled: setEnabled,
     isPaused: isPaused,
     state: state,
     api: API

@@ -1,6 +1,21 @@
 (window.FGEXPIG_DATA_FILES = window.FGEXPIG_DATA_FILES || {})["resources/update.js"] = {
   "updates": [
     {
+      "version": "V2.302.000-R Release",
+      "content": [
+        "更新内容",
+        "- 修复了部分已知问题"
+      ]
+    },
+    {
+      "version": "V2.301.000-R Release",
+      "content": [
+        "更新内容",
+        "- 使用rust现代化语言重构exe框架，暂未迁移或改动网页布局",
+        "- 修复了部分已知问题"
+      ]
+    },
+    {
       "version": "V2.201.000 Release",
       "content": [
         "更新内容",

@@ -10149,6 +10149,12 @@
   function applyGuestPrivacyState() {
     var guest = isGuestUser();
     document.documentElement.classList.toggle('guest-user', guest);
+    // 访客不允许使用第三方地图数据接口：立即停用抓取队列，并隐藏所有地图数据卡片
+    if (window.FgexpigMapStats && typeof window.FgexpigMapStats.setEnabled === 'function') {
+      window.FgexpigMapStats.setEnabled(!guest);
+      // 非访客：立即补注册一次，登录后无需刷新页面就能开始抓取
+      if (!guest) registerMapStatsTargets();
+    }
     // 访客的头像按钮是弹菜单（不是开侧边栏），无障碍语义跟着换
     if (userMenuBtn) {
       if (guest) userMenuBtn.setAttribute('aria-haspopup', 'menu');
@@ -14251,7 +14257,8 @@
   // 把每个活动的分享码交给地图数据模块；order 用发行日期，模块按从新到旧排队抓取
   function registerMapStatsTargets() {
     // 地图数据卡片由 exe 独占：网页版不注册目标、也不会请求地图接口
-    if (!isDesktopRuntime()) return;
+    // 访客同样不注册：一次第三方接口请求都不发
+    if (!isDesktopRuntime() || isGuestUser()) return;
     var api = window.FgexpigMapStats;
     if (!api || typeof api.register !== 'function') return;
     var core = (typeof dataStore !== 'undefined' && dataStore && dataStore.core) || [];
@@ -16493,7 +16500,7 @@
     }
 
     var names = pauseLeaderboardUsers();
-    var mapScoreRows = isDesktopRuntime() ? buildPauseMapScoreRows() : [];
+    var mapScoreRows = (isDesktopRuntime() && !isGuestUser()) ? buildPauseMapScoreRows() : [];
     var experienceRows = buildPauseRanking(names, totalExperienceForUser);
     var valueRows = buildPauseRanking(names, accountValueForUser);
     var commentRows = buildPauseRanking(names, hotspotCharacterCountForUser);
@@ -16501,7 +16508,7 @@
     leaderboardSlots.forEach(function (slot) {
       var type = slot.getAttribute('data-leaderboard');
       if (type === 'experience') {
-        if (isDesktopRuntime()) {
+        if (isDesktopRuntime() && !isGuestUser()) {
           renderPauseLeaderboardSlot(slot, i18nT('pause.lb.mapScore.name', '地图跑分榜'), mapScoreRows, function (value) {
             return pauseLeaderboardFullNumber(value);
           });
@@ -17021,9 +17028,42 @@
     if (badge.hidden !== !needed) badge.hidden = !needed;
   }
 
+  // 地图代码 tooltip：B 状态（已登录且该地图有数据）显示五维数据，其余状态返回空串（保持原文案）
+  function mapCodeStatTitle(codeValue) {
+    if (!isDesktopRuntime() || isGuestUser()) return '';
+    var api = window.FgexpigMapStats;
+    if (!api || typeof api.entries !== 'function') return '';
+    var target = String(codeValue == null ? '' : codeValue).trim().toUpperCase();
+    if (!target) return '';
+    var list = [];
+    try { list = api.entries() || []; } catch (err) { return ''; }
+    for (var i = 0; i < list.length; i++) {
+      if (String(list[i].code || '').toUpperCase() !== target) continue;
+      var rec = list[i];
+      var plays = Number(rec.plays) || 0;
+      var likes = Number(rec.likes) || 0;
+      var dislikes = Number(rec.dislikes) || 0;
+      var rate = plays > 0 ? formatMapRate((likes / plays) * 100) : 'N/A';
+      var ratio = null;
+      if (dislikes > 0) ratio = likes / dislikes;
+      else if (likes > 0) ratio = Infinity;
+      return '游玩数：' + plays.toLocaleString('en-US')
+        + '，点赞数：' + likes.toLocaleString('en-US')
+        + '，点踩数：' + dislikes.toLocaleString('en-US')
+        + '，点赞率：' + rate
+        + '，赞踩比：' + formatMapRatio(ratio);
+    }
+    return '';
+  }
+
   function refreshMapSummaryCards() {
     var cards = document.querySelectorAll('.map-summary[data-activity-id]');
     for (var i = 0; i < cards.length; i++) renderMapSummary(cards[i], cards[i].dataset.activityId);
+    // 商店内容里的地图代码 tooltip 跟着数据一起更新
+    var codeEls = document.querySelectorAll('.shop-content-code.is-copyable[data-map-code]');
+    for (var j = 0; j < codeEls.length; j++) {
+      codeEls[j].title = mapCodeStatTitle(codeEls[j].dataset.mapCode) || '点击复制代码';
+    }
   }
 
   function makeAchvSummary(rows) {
@@ -17866,7 +17906,8 @@
             code.tabIndex = 0;
             code.setAttribute('role', 'button');
             code.setAttribute('aria-label', '复制代码 ' + codeValue);
-            code.title = '点击复制代码';
+            code.dataset.mapCode = codeValue;
+            code.title = mapCodeStatTitle(codeValue) || '点击复制代码';
             var resetTimer = 0;
             var copyCode = function () {
               copyPlainText(codeValue).then(function (copied) {
