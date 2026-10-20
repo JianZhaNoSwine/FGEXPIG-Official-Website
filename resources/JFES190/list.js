@@ -2,6 +2,11 @@
   "lists": {
     "JFES190": [
       {
+        "file": "生日快乐说明.png",
+        "title": "生日快乐说明",
+        "category": "宣传文件"
+      },
+      {
         "file": "3地图.png",
         "title": "地图",
         "category": "资源文件"
