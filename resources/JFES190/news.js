@@ -1028,6 +1028,763 @@
           }
         ],
         "commentCount": 0
+      },
+      {
+        "id": "hotspot-5",
+        "title": "DLC生日快乐今日上线",
+        "time": "2026/10/23/17:22",
+        "content": "已预订，高难/猪毒/屎，《生日快乐》即将开始！流程变更：生日快乐简单版>生日快乐>生日快乐绝命危机。以生日快乐(15min)为标准，简单版(22min)去除所有特殊操作，绝命危机(30min)去除一半存档点且每关加难。",
+        "comments": [
+          {
+            "name": "炸鸡",
+            "text": "还有三个名额",
+            "replies": []
+          },
+          {
+            "name": "炸鸡",
+            "text": "\\给你一个心照不宣的眼神",
+            "replies": []
+          },
+          {
+            "name": "炸鸡",
+            "text": "\\猫抓狂",
+            "replies": []
+          },
+          {
+            "name": "炸鸡",
+            "text": "今天你迟到了，罚猪元",
+            "replies": []
+          },
+          {
+            "name": "炸鸡",
+            "text": "怎么不是5点准时报道",
+            "replies": [
+              {
+                "name": "企鹅",
+                "text": "22分 我猜猪是11月22号生日",
+                "replies": [
+                  {
+                    "name": "掉线",
+                    "text": "好像连着几天都是22分了",
+                    "replies": []
+                  },
+                  {
+                    "name": "掉线",
+                    "text": "都是22分",
+                    "replies": []
+                  },
+                  {
+                    "name": "掉线",
+                    "text": "你怎么还没有得到发言人称号",
+                    "replies": [
+                      {
+                        "name": "企鹅",
+                        "text": "以猪管的傲娇程度 是没有这回事的🙏",
+                        "replies": [
+                          {
+                            "name": "掉线",
+                            "text": "你们的傲娇程度也是不相上下啊",
+                            "replies": [
+                              {
+                                "name": "企鹅",
+                                "text": "纳尼",
+                                "replies": []
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "企鹅",
+                "text": "\\辣椒小人笑",
+                "replies": []
+              }
+            ]
+          },
+          {
+            "name": "炸鸡",
+            "text": "到底是谁又预定了",
+            "replies": [
+              {
+                "name": "掉线",
+                "text": "擅自预订",
+                "replies": []
+              }
+            ]
+          },
+          {
+            "name": "桃夭",
+            "text": "\\肉肉是个迷糊蛋思考",
+            "replies": []
+          },
+          {
+            "name": "桃夭",
+            "text": "先报上",
+            "replies": [
+              {
+                "name": "炸鸡",
+                "text": "\\企鹅快乐",
+                "replies": []
+              }
+            ]
+          },
+          {
+            "name": "炸鸡",
+            "text": "蜜薯和myth呢",
+            "replies": []
+          },
+          {
+            "name": "炸鸡",
+            "text": "\\薯条豆暗中观察",
+            "replies": [
+              {
+                "name": "miss",
+                "text": "偶可能没空",
+                "replies": [
+                  {
+                    "name": "企鹅",
+                    "text": "纳尼",
+                    "replies": []
+                  }
+                ]
+              },
+              {
+                "name": "miss",
+                "text": "\\牛哞哞哭",
+                "replies": []
+              },
+              {
+                "name": "miss",
+                "text": "好想玩",
+                "replies": []
+              },
+              {
+                "name": "miss",
+                "text": "\\牛哞哞哭",
+                "replies": [
+                  {
+                    "name": "咖啡豆",
+                    "text": "啊米斯啊",
+                    "replies": []
+                  },
+                  {
+                    "name": "咖啡豆",
+                    "text": "好久不见了",
+                    "replies": [
+                      {
+                        "name": "企鹅",
+                        "text": "就是说",
+                        "replies": [
+                          {
+                            "name": "咖啡豆",
+                            "text": "啊企鹅啊",
+                            "replies": []
+                          },
+                          {
+                            "name": "咖啡豆",
+                            "text": "几天没发言了",
+                            "replies": [
+                              {
+                                "name": "企鹅",
+                                "text": "\\辣椒小人笑",
+                                "replies": []
+                              },
+                              {
+                                "name": "企鹅",
+                                "text": "咖啡真是掰着手指头在数啊",
+                                "replies": []
+                              },
+                              {
+                                "name": "企鹅",
+                                "text": "想死我了吧",
+                                "replies": [
+                                  {
+                                    "name": "咖啡豆",
+                                    "text": "屏幕后也跟着睡着了",
+                                    "replies": [
+                                      {
+                                        "name": "企鹅",
+                                        "text": "我有点事啊",
+                                        "replies": [
+                                          {
+                                            "name": "咖啡豆",
+                                            "text": "\\企鹅豆每天飞过一次防止被人忘记",
+                                            "replies": []
+                                          },
+                                          {
+                                            "name": "咖啡豆",
+                                            "text": "我以为你装高冷",
+                                            "replies": [
+                                              {
+                                                "name": "企鹅",
+                                                "text": "装高冷有木有工资",
+                                                "replies": []
+                                              },
+                                              {
+                                                "name": "企鹅",
+                                                "text": "\\辣椒小人笑",
+                                                "replies": [
+                                                  {
+                                                    "name": "咖啡豆",
+                                                    "text": "还以为你克制自己发言频率不当水军榜第一名了",
+                                                    "replies": [
+                                                      {
+                                                        "name": "企鹅",
+                                                        "text": "你是不是想要 给偶5000星耀币直接转给你",
+                                                        "replies": [
+                                                          {
+                                                            "name": "咖啡豆",
+                                                            "text": "\\美叽和大鼠不要",
+                                                            "replies": []
+                                                          },
+                                                          {
+                                                            "name": "咖啡豆",
+                                                            "text": "倒贴我800星耀币我可以考虑接手",
+                                                            "replies": [
+                                                              {
+                                                                "name": "企鹅",
+                                                                "text": "哼你会后悔的",
+                                                                "replies": []
+                                                              }
+                                                            ]
+                                                          },
+                                                          {
+                                                            "name": "咖啡豆",
+                                                            "text": "\\兔子狗尾草",
+                                                            "replies": [
+                                                              {
+                                                                "name": "企鹅",
+                                                                "text": "我痒🥵🥵🥵",
+                                                                "replies": [
+                                                                  {
+                                                                    "name": "掉线",
+                                                                    "text": "🤔",
+                                                                    "replies": []
+                                                                  }
+                                                                ]
+                                                              }
+                                                            ]
+                                                          },
+                                                          {
+                                                            "name": "掉线",
+                                                            "text": "真是企鹅大开口啊",
+                                                            "replies": []
+                                                          }
+                                                        ]
+                                                      },
+                                                      {
+                                                        "name": "企鹅",
+                                                        "text": "\\辣椒小人笑",
+                                                        "replies": []
+                                                      },
+                                                      {
+                                                        "name": "掉线",
+                                                        "text": "断层了一万 很难不当第一",
+                                                        "replies": [
+                                                          {
+                                                            "name": "企鹅",
+                                                            "text": "唉 都是曾经打下的江山🙏",
+                                                            "replies": []
+                                                          }
+                                                        ]
+                                                      }
+                                                    ]
+                                                  },
+                                                  {
+                                                    "name": "咖啡豆",
+                                                    "text": "\\企鹅嘻嘻嘻嘻",
+                                                    "replies": []
+                                                  }
+                                                ]
+                                              },
+                                              {
+                                                "name": "掉线",
+                                                "text": "你去私信骚扰她 不回就是装高冷 回了就是可以骚扰",
+                                                "replies": [
+                                                  {
+                                                    "name": "企鹅",
+                                                    "text": "纳尼",
+                                                    "replies": []
+                                                  }
+                                                ]
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "name": "miss",
+                                            "text": "大忙鹅",
+                                            "replies": [
+                                              {
+                                                "name": "企鹅",
+                                                "text": "大米星",
+                                                "replies": []
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "name": "企鹅",
+                                        "text": "\\辣椒小人笑",
+                                        "replies": []
+                                      },
+                                      {
+                                        "name": "企鹅",
+                                        "text": "\\晚安我已经安排好了蚊子替我亲你",
+                                        "replies": [
+                                          {
+                                            "name": "咖啡豆",
+                                            "text": "\\好挂住你",
+                                            "replies": [
+                                              {
+                                                "name": "企鹅",
+                                                "text": "😳",
+                                                "replies": []
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "name": "咖啡豆",
+                                            "text": "\\绿猪我掐鼠你企鹅豆",
+                                            "replies": [
+                                              {
+                                                "name": "企鹅",
+                                                "text": "\\老鼠我要亲亲你",
+                                                "replies": [
+                                                  {
+                                                    "name": "掉线",
+                                                    "text": "不管你是谁 马上从企鹅身上下来",
+                                                    "replies": [
+                                                      {
+                                                        "name": "企鹅",
+                                                        "text": "？",
+                                                        "replies": []
+                                                      }
+                                                    ]
+                                                  }
+                                                ]
+                                              },
+                                              {
+                                                "name": "企鹅",
+                                                "text": "今晚见",
+                                                "replies": []
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "name": "miss",
+                        "text": "想鼠你了小咖啡",
+                        "replies": [
+                          {
+                            "name": "咖啡豆",
+                            "text": "\\好挂住你",
+                            "replies": []
+                          },
+                          {
+                            "name": "企鹅",
+                            "text": "米🤎咖",
+                            "replies": []
+                          }
+                        ]
+                      },
+                      {
+                        "name": "miss",
+                        "text": "\\狗喝奶茶",
+                        "replies": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "企鹅",
+            "text": "杜绝逃课说是",
+            "replies": []
+          },
+          {
+            "name": "咖啡豆",
+            "text": "\\自嘲熊健身",
+            "replies": []
+          },
+          {
+            "name": "企鹅",
+            "text": "\\后荡后荡",
+            "replies": []
+          },
+          {
+            "name": "咖啡豆",
+            "text": "绝命危机过不去咋整",
+            "replies": [
+              {
+                "name": "掉线",
+                "text": "发一下背背看看有没有好心人",
+                "replies": [
+                  {
+                    "name": "企鹅",
+                    "text": "大家全程都在起点 随便背🙏",
+                    "replies": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "咖啡豆",
+            "text": "带个睡觉的动作",
+            "replies": [
+              {
+                "name": "企鹅",
+                "text": "睡够30分钟",
+                "replies": []
+              }
+            ]
+          },
+          {
+            "name": "咖啡豆",
+            "text": "\\我只想躺着",
+            "replies": []
+          },
+          {
+            "name": "miss",
+            "text": "今晚背背能过吗",
+            "replies": [
+              {
+                "name": "咖啡豆",
+                "text": "今晚的已经满了喔",
+                "replies": [
+                  {
+                    "name": "掉线",
+                    "text": "今晚的是生日快乐 报名的是猪诞狂欢",
+                    "replies": [
+                      {
+                        "name": "咖啡豆",
+                        "text": "王德发",
+                        "replies": []
+                      },
+                      {
+                        "name": "咖啡豆",
+                        "text": "\\小鸡震惊",
+                        "replies": []
+                      },
+                      {
+                        "name": "咖啡豆",
+                        "text": "是我没认真看了",
+                        "replies": [
+                          {
+                            "name": "企鹅",
+                            "text": "\\催眠师忘了你是猪",
+                            "replies": []
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "掉线",
+                    "text": "糊涂咖啡",
+                    "replies": [
+                      {
+                        "name": "miss",
+                        "text": "依旧笨笨",
+                        "replies": [
+                          {
+                            "name": "掉线",
+                            "text": "和你差不多",
+                            "replies": [
+                              {
+                                "name": "miss",
+                                "text": "依旧毒舌",
+                                "replies": [
+                                  {
+                                    "name": "掉线",
+                                    "text": "只是爱说实话",
+                                    "replies": []
+                                  }
+                                ]
+                              },
+                              {
+                                "name": "miss",
+                                "text": "\\猫打架",
+                                "replies": []
+                              }
+                            ]
+                          },
+                          {
+                            "name": "企鹅",
+                            "text": "\\辣椒挑眉",
+                            "replies": []
+                          }
+                        ]
+                      },
+                      {
+                        "name": "miss",
+                        "text": "\\miss豆吾肚肚",
+                        "replies": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "企鹅",
+                    "text": "我不行了 感觉大家脑子都不太好了",
+                    "replies": []
+                  },
+                  {
+                    "name": "企鹅",
+                    "text": "\\神志不清",
+                    "replies": []
+                  }
+                ]
+              },
+              {
+                "name": "咖啡豆",
+                "text": "米斯只能报名第二轮的",
+                "replies": [
+                  {
+                    "name": "miss",
+                    "text": "纳尼",
+                    "replies": []
+                  },
+                  {
+                    "name": "miss",
+                    "text": "报名不是报11月6和13吗",
+                    "replies": []
+                  },
+                  {
+                    "name": "miss",
+                    "text": "\\牛干嘛",
+                    "replies": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "miss",
+            "text": "偶不在家没带鼠标",
+            "replies": [
+              {
+                "name": "企鹅",
+                "text": "用触控板 相信你",
+                "replies": [
+                  {
+                    "name": "miss",
+                    "text": "那我也要睡到底",
+                    "replies": [
+                      {
+                        "name": "企鹅",
+                        "text": "第一张图就可以开始酝酿睡意了🙏",
+                        "replies": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "企鹅",
+                "text": "\\黄豆狂笑",
+                "replies": []
+              },
+              {
+                "name": "掉线",
+                "text": "天天不在家 到底去哪了👁️",
+                "replies": []
+              }
+            ]
+          },
+          {
+            "name": "miss",
+            "text": "也没带安卓机",
+            "replies": []
+          },
+          {
+            "name": "miss",
+            "text": "\\鱼烧哥打工烧心篇烧心",
+            "replies": []
+          },
+          {
+            "name": "掉线",
+            "text": "感觉难度不够大紧急再加一版更难的 何意啊",
+            "replies": []
+          },
+          {
+            "name": "掉线",
+            "text": "过不去只能祈祷掉线了",
+            "replies": [
+              {
+                "name": "miss",
+                "text": "祈祷🙏🏻",
+                "replies": [
+                  {
+                    "name": "掉线",
+                    "text": "也可以把wifi断了😁手动掉线",
+                    "replies": []
+                  },
+                  {
+                    "name": "掉线",
+                    "text": "之前的猪屎都是一个存档点都动不了的程度",
+                    "replies": [
+                      {
+                        "name": "企鹅",
+                        "text": "可以的😁🙏",
+                        "replies": [
+                          {
+                            "name": "掉线",
+                            "text": "那你背所有人到终点",
+                            "replies": [
+                              {
+                                "name": "企鹅",
+                                "text": "\\狗一瞥",
+                                "replies": []
+                              },
+                              {
+                                "name": "企鹅",
+                                "text": "我在起点😁🙏",
+                                "replies": [
+                                  {
+                                    "name": "白玉汤",
+                                    "text": "全通了",
+                                    "replies": []
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "掉线",
+            "text": "不然就是一直坐牢",
+            "replies": []
+          },
+          {
+            "name": "咖啡豆",
+            "text": "\\青蛙小人啊",
+            "replies": []
+          },
+          {
+            "name": "白玉汤",
+            "text": "生日是今天嘛？",
+            "replies": []
+          },
+          {
+            "name": "白玉汤",
+            "text": "时间太多混乱了🫨",
+            "replies": []
+          },
+          {
+            "name": "白玉汤",
+            "text": "猪诞究竟何时",
+            "replies": [
+              {
+                "name": "企鹅",
+                "text": "为期一个月的猪蛋",
+                "replies": []
+              },
+              {
+                "name": "企鹅",
+                "text": "你就猜吧",
+                "replies": []
+              },
+              {
+                "name": "掉线",
+                "text": "按照目前的信息 是天蝎座的可能性比较大",
+                "replies": [
+                  {
+                    "name": "白玉汤",
+                    "text": "毕竟阴暗是天蝎的外壳🥹",
+                    "replies": [
+                      {
+                        "name": "掉线",
+                        "text": "原来是这样吗😱😱",
+                        "replies": []
+                      },
+                      {
+                        "name": "企鹅",
+                        "text": "我去",
+                        "replies": []
+                      },
+                      {
+                        "name": "企鹅",
+                        "text": "所以猪真的是珍猪",
+                        "replies": []
+                      },
+                      {
+                        "name": "企鹅",
+                        "text": "\\辣椒小人笑",
+                        "replies": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "白玉汤",
+            "text": "\\珍猪",
+            "replies": [
+              {
+                "name": "miss",
+                "text": "哈哈哈哈哈哈哈哈哈",
+                "replies": []
+              },
+              {
+                "name": "miss",
+                "text": "今晚诞生的是珍🐷",
+                "replies": []
+              },
+              {
+                "name": "miss",
+                "text": "\\猪鼻靠近",
+                "replies": []
+              },
+              {
+                "name": "咖啡豆",
+                "text": "哈哈哈哈哈哈啊哈哈哈哈",
+                "replies": []
+              }
+            ]
+          },
+          {
+            "name": "Tori",
+            "text": "是不是要办活动了",
+            "replies": [
+              {
+                "name": "咖啡豆",
+                "text": "煮蛋要开始了",
+                "replies": []
+              },
+              {
+                "name": "咖啡豆",
+                "text": "猪诞",
+                "replies": []
+              }
+            ]
+          }
+        ],
+        "commentCount": 0
       }
     ]
   }
