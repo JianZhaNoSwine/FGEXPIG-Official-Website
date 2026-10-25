@@ -16079,13 +16079,14 @@
       var dislikes = Math.max(0, Number(entry.dislikes) || 0);
       var ratio = dislikes > 0 ? likes / dislikes : (likes > 0 ? 10 : 0);
       if (ratio > 10) ratio = 10;
-      // 优先用 WASM 版公式（build/rust/fgexpig-wasm），未就绪时回退到这里的 JS 实现
+      var jsScore = Math.round(plays * ratio * 10.24 * likeRateTier(likes / plays));
+      // 优先用 WASM 版公式（build/rust/fgexpig-wasm），旧版 WASM 缓存可能返回 0，此时回退到 JS
       var wasmScore = window.FgexpigMapScore
         ? window.FgexpigMapScore.score(plays, likes, dislikes)
         : null;
-      var score = (wasmScore === null || wasmScore === undefined)
-        ? Math.round(plays * ratio * 10.24 * likeRateTier(likes / plays))
-        : wasmScore;
+      var score = (typeof wasmScore === 'number' && isFinite(wasmScore) && wasmScore > 0)
+        ? wasmScore
+        : jsScore;
       var mapName = pauseMapContentName(entry.id, entry.code);
       rows.push({
         name: mapName,

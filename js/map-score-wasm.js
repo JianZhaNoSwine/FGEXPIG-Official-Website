@@ -13,7 +13,7 @@
       pending = Promise.resolve(null);
       return pending;
     }
-    pending = fetch('js/map-score.wasm', { cache: 'force-cache' })
+    pending = fetch('js/map-score.wasm?v=cv3', { cache: 'force-cache' })
       .then(function (response) {
         if (!response.ok) throw new Error('wasm HTTP ' + response.status);
         return response.arrayBuffer();
