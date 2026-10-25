@@ -2,7 +2,7 @@
 name = "fgexpig-wasm"
 version = "0.1.0"
 edition = "2021"
-description = "FGEXPIG 前端复用逻辑（WASM）：地图跑分公式（方案 D）"
+description = "FGEXPIG 前端复用逻辑（WASM）：地图跑分公式（C+V3）"
 
 [lib]
 crate-type = ["cdylib"]

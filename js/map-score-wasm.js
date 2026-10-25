@@ -1,6 +1,6 @@
-/* 地图跑分（方案 D）的 WASM 版加载器
+/* 地图跑分（C+V3）的 WASM 版加载器
    与 build/rust/fgexpig-wasm 同源；加载失败时调用方回退到 js/main.js 里的 JS 实现。
-   用法：window.FgexpigMapScore.score(plays, likes, dislikes, rBar, qBar, dBar, rMin, rMax) */
+   用法：window.FgexpigMapScore.score(plays, likes, dislikes) */
 (function () {
   'use strict';
 
@@ -39,9 +39,9 @@
       return !!module;
     },
     /** 返回 null 表示未就绪（调用方应回退到 JS 实现） */
-    score: function (plays, likes, dislikes, rBar, qBar, dBar, rMin, rMax) {
+    score: function (plays, likes, dislikes) {
       if (!module || typeof module.map_score !== 'function') return null;
-      return module.map_score(plays, likes, dislikes, rBar, qBar, dBar, rMin, rMax);
+      return module.map_score(plays, likes, dislikes);
     }
   };
 

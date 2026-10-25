@@ -1,11 +1,7 @@
 @echo off
 setlocal
 cd /d "%~dp0.."
-echo Building FGEXPIG Rust binaries (release) ...
-
-rem 编译需要 Rust(GNU) + MSYS2 mingw64（as/ar/windres/gcc 供 cc-rs 与 tauri-winres 使用）
-set "MINGW=%USERPROFILE%\.fgexpig-toolchain\msys64\msys64\mingw64\bin"
-if exist "%MINGW%\gcc.exe" set "PATH=%MINGW%;%PATH%"
+echo Building FGEXPIG website tools (release) ...
 
 set "CARGO="
 if exist "%USERPROFILE%\.cargo\bin\cargo.exe" set "CARGO=%USERPROFILE%\.cargo\bin\cargo.exe"
@@ -17,32 +13,27 @@ if not defined CARGO (
 )
 
 pushd rust
-"%CARGO%" build --release
+"%CARGO%" build --release -p fgexpig-tools
 if errorlevel 1 (
   popd
   echo.
-  echo [FAILED] cargo build failed.
-  echo   case 1: "failed to remove ..." / permission error while writing fgexpig-shell.exe / fgexpig-desktop.exe
-  echo   case 2: windres/gcc error - check MSYS2 mingw-w64 toolchain at %MINGW%
+  echo [FAILED] fgexpig-tools build failed.
   pause
   exit /b 1
 )
 echo Building wasm (map score) ...
 "%CARGO%" build --release --target wasm32-unknown-unknown -p fgexpig-wasm
 if errorlevel 1 (
-  echo [WARN] wasm build failed - exe unaffected, JS fallback stays in use
+  echo [WARN] wasm build failed - JS fallback stays in use
 ) else (
-  copy /y "target\wasm32-unknown-unknown\release\fgexpig_wasm.wasm" "..\..\js\map-score.wasm" >nul
+  copy /y "target\wasm32-unknown-unknown\release\fgexpig_wasm.wasm" "..\..\js\map-score.wasm" >/dev/null
 )
 popd
 
 if not exist "tools\bin" mkdir "tools\bin"
-copy /y "rust\target\release\fgexpig-tools.exe" "tools\bin\fgexpig-tools.exe" >nul
-copy /y "rust\target\release\fgexpig-desktop.exe" "tools\bin\fgexpig-desktop.exe" >nul
-copy /y "rust\target\release\fgexpig-shell.exe" "tools\bin\fgexpig-shell.exe" >nul
-copy /y "rust\target\release\WebView2Loader.dll" "tools\bin\WebView2Loader.dll" >nul
+copy /y "rust\target\release\fgexpig-tools.exe" "tools\bin\fgexpig-tools.exe" >/dev/null
 echo.
-echo [DONE] build\tools\bin\ : fgexpig-tools / fgexpig-desktop / fgexpig-shell / WebView2Loader.dll
-echo Next: build\tools\build-installer.bat
+echo [DONE] build\tools\bin\fgexpig-tools.exe
+echo Tools: manifest / i18n-pack / check-i18n / password-hash / csv / datafile
 echo.
 pause

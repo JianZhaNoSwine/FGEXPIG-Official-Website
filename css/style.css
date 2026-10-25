@@ -1235,19 +1235,14 @@ html.performance-mode .map-summary .map-metric-face.is-cycle-b { display: none; 
 .tb-avatar.is-letter { font-size: 15px; }
 
 /* 所有顶栏文字统一 15px 白色 */
-.tb-nick, .tb-ribbon, .tb-songname {
+.tb-ribbon, .tb-songname {
   font-size: var(--text-large);
   font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
 }
-.tb-nick {
-  flex: none;
-}
-.tb-nick.is-collision-hidden { display: none; }
 
-
-/* 称号：显示在名称之后，等级色只作用于文字 */
+/* 称号：显示在头像之后，等级色只作用于文字 */
 .tb-ribbon {
   flex: none;
   padding: 0;
@@ -1259,13 +1254,11 @@ html.performance-mode .map-summary .map-metric-face.is-cycle-b { display: none; 
 /* 无称号时隐藏顶栏称号 */
 .tb-ribbon.is-hidden { display: none; }
 
-/* 顶栏可点文字：用户名（切换账号） / 称号（切换称号） / 音乐名（音频设置） */
-#userPillName,
+/* 顶栏可点文字：称号（切换称号） / 音乐名（音频设置） */
 #userTitle,
 #playerName {
   cursor: pointer;
 }
-#userPillName:hover,
 #playerName:hover {
   color: #fff;
 }
@@ -5698,7 +5691,6 @@ html.outer-screen-layout .topbar > .tb-left,
 html.outer-screen-layout .topbar > .tb-right {
   z-index: 1;
 }
-html.outer-screen-layout .tb-nick,
 html.outer-screen-layout .tb-ribbon,
 html.outer-screen-layout .tb-songname,
 html.outer-screen-layout .inner-activity-button {
@@ -7148,12 +7140,10 @@ html.guest-user .shop-owned-bar.is-guest {
   opacity: 1;
 }
 
-/* 访客：顶栏不显示「访」头像与「访客用户」昵称，只留一个白色三横图标按钮，
+/* 访客：顶栏不显示「访」头像，只留一个白色三横图标按钮，
    点它弹出访客下拉菜单（登录 / 设置 / 退出至菜单）。 */
 .tb-avatar-menu { display: none; }
 html.guest-user #userPillAvatar { display: none; }
-/* 访客不显示「访客用户」昵称：登录入口改走下拉菜单（昵称的点击入口已无意义） */
-html.guest-user #userPillName { display: none; }
 /* 访客只用白色三横图标，不加圆形底色 */
 html.guest-user .tb-avatar-menu {
   display: block;
@@ -7338,7 +7328,7 @@ html.desktop-runtime.guest-user .tb-window-btn { display: block; }
   filter: url(#key-icon-outline);
 }
 
-/* 顶栏内嵌按键提示：名字左侧（返回/暂停）与曲名右侧（设置），随平台图标切换 */
+/* 顶栏内嵌按键提示：称号左侧（返回/暂停）与曲名右侧（设置），随平台图标切换 */
 .tb-inline-key {
   display: none;
   flex: none;

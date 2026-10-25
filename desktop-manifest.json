@@ -1,7 +1,7 @@
 {
-  "version": "8a961d01ecaf4af4",
-  "generatedAt": "2026-10-23T18:04:41.091Z",
-  "releaseSalt": "2026-10-23T18:04:39.994Z",
+  "version": "3661692d615ec967",
+  "generatedAt": "2026-10-25T14:32:36.661Z",
+  "releaseSalt": "2026-10-25T14:32:36.056Z",
   "counts": {
     "1": 351,
     "2": 1123,
@@ -52,7 +52,7 @@
     },
     {
       "path": "button/manifest.json",
-      "hash": "0deb035b95957c32e9a9daf52853e2b47af002a0e93a664764fa6f011d664ada",
+      "hash": "2ba95847201a5a85d0bfb372bbb282a296ea592c4a16b636e766611b26979688",
       "size": 2960,
       "level": 1,
       "quality": 0
@@ -766,8 +766,8 @@
     },
     {
       "path": "css/style.css",
-      "hash": "071be1b51c8efc0f334c5abc14e5e6d1df409d18866103d0b2d768e7822300ce",
-      "size": 256834,
+      "hash": "a10ddab3f8b3e7f4959fc5dc68500acf35b26bbfe05b0e43b90f1da564007d5e",
+      "size": 256453,
       "level": 1,
       "quality": 0
     },
@@ -5449,182 +5449,182 @@
     },
     {
       "path": "i18n/index.js",
-      "hash": "74a8d97a151a9e3b948304d857ea82b64470093ec7b6d0b0bf5c8d60be68db22",
+      "hash": "73e37c1ce32f2ffeeef3f341f7beaa9795a3b44f0b837dfcc500bf6a9f4943ec",
       "size": 150002,
       "level": 1,
       "quality": 0
     },
     {
       "path": "i18n/lang/ar.js",
-      "hash": "5e95a4bb09f63a06220928697e44b1254d9b3139999f058b775f0c3ad4901aa6",
+      "hash": "ea06c3479109f84d684d45962e756eb2428c97e8f4b8be8613e69f8c87d0a92a",
       "size": 97043,
       "level": 1,
       "quality": 0
     },
     {
       "path": "i18n/lang/de.js",
-      "hash": "4ab0248623557201dcdaf565491a1a08fc29f5144442d51c65e399489dfb4527",
+      "hash": "ba0840b3d7f4487ba0f8bbff296a1fd7ed2e7cdc9d87162965aa077c30c5733e",
       "size": 73473,
       "level": 1,
       "quality": 0
     },
     {
       "path": "i18n/lang/en.js",
-      "hash": "4191ca19e5d1fa495e7b7ebe37d6013d95d540b46aa8a4c94a2538227881136e",
+      "hash": "72fecad92cc4b5c2c607d5dc20701d275abae3419603b710e6e0b479ec134610",
       "size": 68934,
       "level": 1,
       "quality": 0
     },
     {
       "path": "i18n/lang/es-ES.js",
-      "hash": "617af17ca649c182a7a6b755d8c61c85aee074ac222233e7820f82e9cf4ba8d4",
+      "hash": "bd4978776fd787a333f5f0428735eaab0032afd6e3c4c5372ef227ddd231bd9d",
       "size": 75971,
       "level": 1,
       "quality": 0
     },
     {
       "path": "i18n/lang/fr.js",
-      "hash": "f7374c0550b622d88ec32a7f8b9139e15b3ed202c0beedf24b7b86b978c65651",
+      "hash": "8ca0c4156e60b85131499eb84f464eebf3f0a052c6b87cdde6eaba224092b666",
       "size": 76986,
       "level": 1,
       "quality": 0
     },
     {
       "path": "i18n/lang/it.js",
-      "hash": "c85a2f44baae8867232699f983935eaa0e99e8d175d229d147c6eda4f9a86506",
+      "hash": "c61659f96bf800aac83a2a12e8e8f5d1decfc1ea73161729fc37ce64606bc6ea",
       "size": 75551,
       "level": 1,
       "quality": 0
     },
     {
       "path": "i18n/lang/ja.js",
-      "hash": "8e6a17fcaaf427f96d1e84bfbb22b52ddde0395945e611c7dc8e9179c7eaedae",
+      "hash": "29a3e3f371b93d8e64c1b99f44516ee986b801ba7e22d7ff25272997ea785ecc",
       "size": 79803,
       "level": 1,
       "quality": 0
     },
     {
       "path": "i18n/lang/ko.js",
-      "hash": "0176e235b2a82fd1e3da6ca516f548eeb4a4b16a58970becbf900d05125f69fb",
+      "hash": "17170d919f7edd939fc40c2e9fecaf2ce802e9acadd5b95651559e860692acc0",
       "size": 71704,
       "level": 1,
       "quality": 0
     },
     {
       "path": "i18n/lang/pl.js",
-      "hash": "75e8a7dc57ff195813847995d07919fce6bb80ebb9cdde16ac4cb2d215f34613",
+      "hash": "35dc526a35082375408b02a4c77eec4f9799c9d0e84c7e618c3ae25ce079ccc9",
       "size": 76630,
       "level": 1,
       "quality": 0
     },
     {
       "path": "i18n/lang/pt-BR.js",
-      "hash": "24ec1bad488fab3bdc748c3565d47d6aa0c37879928c69637315d7644aa23254",
+      "hash": "20e426f0c24fdf1cf3b70e246b07dc23fdafa69dc119762550538ca0bfa2ff35",
       "size": 75077,
       "level": 1,
       "quality": 0
     },
     {
       "path": "i18n/lang/ru.js",
-      "hash": "ab27c6452e7ddf5ae45451c44eb8d3cde6c5ebdfa42c6e5ad51745daedba2001",
+      "hash": "fcbc8d2127d0d27374cdd2ea031ef841579573406f667e6304bf3030dc762e5f",
       "size": 104920,
       "level": 1,
       "quality": 0
     },
     {
       "path": "i18n/lang/zh-Hant.js",
-      "hash": "195b24c02712657944a8d645dcee11acf53dea3c199b5d470fc3535894e2243e",
+      "hash": "7217d7e58a04c0afc0cf418eeeacb6f122ef988873658bc804db8d6e5dbebae2",
       "size": 63897,
       "level": 1,
       "quality": 0
     },
     {
       "path": "index.html",
-      "hash": "3199dc352678b4965b77eba82b8e479595914e6b01f95f43490068f1f82b4241",
-      "size": 35586,
+      "hash": "c1b839b93c18b19a88886250df1fe37cee400af08a006260173a2c3abe77d9a8",
+      "size": 35518,
       "level": 1,
       "quality": 0
     },
     {
       "path": "js/achv-icon-fit.js",
-      "hash": "a24a5a5bf68413d75a9089903655b25ac403235e8b7cf1377a156c8a7cd8d403",
+      "hash": "1d23f7ad1e131d405f7499e8c50cdeb0e43f83393bc8ef0653836bf4366c06dc",
       "size": 4955,
       "level": 1,
       "quality": 0
     },
     {
       "path": "js/emoji-manifest.js",
-      "hash": "7c12afbf35762836423cd95223d05dd84b585671445ae28bda921a1f3e1562ff",
+      "hash": "27fd761f49a56a5d5285dd34a97bfd017d718be62b05acbb3929bd1ef83fb586",
       "size": 15073,
       "level": 1,
       "quality": 0
     },
     {
       "path": "js/emoji-trim-data.js",
-      "hash": "18e0989e84d141fd6ba23ba01701a6c211cb7128685684baa5a7700f72823570",
+      "hash": "404843fe426cdd25f7edc273a13b8270bac540a7ac9dea6796acdd8fad5d8459",
       "size": 31556,
       "level": 1,
       "quality": 0
     },
     {
       "path": "js/emoji-trim.js",
-      "hash": "a9e88d2d6eb246e3c4f7cf2671931a8c523670bbbd31ed8bbb8095582ebf34ce",
+      "hash": "d47d7d00084f2bde507586291a4d3269c05926d59c6581f77d8e46f2809ee60d",
       "size": 7765,
       "level": 1,
       "quality": 0
     },
     {
       "path": "js/i18n.js",
-      "hash": "c78d087d5bdad3ec14e9f350ebb0bba3a67104a14fb22cdcb1a01718050f6e62",
+      "hash": "08fa292beb7470fee6a7a06cd234773d15ef2ff2198aede4371c95c513a2b91f",
       "size": 22002,
       "level": 1,
       "quality": 0
     },
     {
       "path": "js/main.js",
-      "hash": "09e1d135f35342317ab75666e9eb8cfad451c7df099614fda91c3e0f80296f75",
-      "size": 775247,
+      "hash": "3df8d31eeb06c81412b16204a97531412840f0e617bb5e51e80a43cf31e0e8da",
+      "size": 773383,
       "level": 1,
       "quality": 0
     },
     {
       "path": "js/map-score-wasm.js",
-      "hash": "8284b00b12b89074c7d1c5bb670e5aabeb1defe6f2b5dd599b2b58887e679bfd",
-      "size": 1589,
+      "hash": "b52be9030a69e11d9d741be6fabf00b3b4449738236593b0483b30172a8baa0d",
+      "size": 1495,
       "level": 1,
       "quality": 0
     },
     {
       "path": "js/map-score.wasm",
-      "hash": "175ee386f90fb74300dafff882f9f6edfdfafb7b253ebfa77a651d04830ebe18",
-      "size": 753,
+      "hash": "4b367e80153ad74d5aad3c26698e748b3f480d1c53bd1650f69a319771dda3c0",
+      "size": 740,
       "level": 1,
       "quality": 0
     },
     {
       "path": "js/map-stats.js",
-      "hash": "3e83381d08406f5fd2913bfa123d84933f7685002730179f24dc8f33cacdcf02",
+      "hash": "8b9be26176b0f84d70e506de7af0f7c8f872e39257622091812aff7c35d51bd0",
       "size": 16696,
       "level": 1,
       "quality": 0
     },
     {
       "path": "js/minigames.js",
-      "hash": "1d79ac752d6673d618611beec1e1cd86b8b22e904dacd1b2475167872339587f",
+      "hash": "2a6d64a49e6ff1ff89f4180abb6a663c40fa90ea6cacfea7f520dda362f46d80",
       "size": 18817,
       "level": 1,
       "quality": 0
     },
     {
       "path": "js/outer-settings-pages.js",
-      "hash": "e68eb057725f35ae0666e90d04cc1ce0c0c990b6c6efd852d73a244763e8f96b",
+      "hash": "a8be1c307a48d0c32f45f6868f2333c792f25c162d60060c68e11071cd51098e",
       "size": 7753,
       "level": 1,
       "quality": 0
     },
     {
       "path": "js/sync-manifest.js",
-      "hash": "fac19f4597e9bb62e447f5069dbb00e92e6801b961f06f3c1b61c9dd3aa86ce3",
+      "hash": "cdf0a5ea48c1682291ab8ecf5cf3578fee1748f24395e1cc6bb538ab4b841d90",
       "size": 84172,
       "level": 1,
       "quality": 0
@@ -6233,14 +6233,14 @@
     },
     {
       "path": "resources/JFES110/achievements.js",
-      "hash": "f846d63a7d59b5a045fdbb35a39def2e0fc0a5204b8dea736594a54224c8865c",
+      "hash": "a34579b87a29c8e3d22c76ec15ef625c57d1bbc8c416651bf5a65e648e7d0479",
       "size": 4052,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES110/date.js",
-      "hash": "87c89a7e5c829e1a45134638df2988c73fb8256f9deb47cb309b9f6642a98a9b",
+      "hash": "e727b435d8c3618523e0da0c397606b7b9765601d36b9352d7834cb34fc765b6",
       "size": 300,
       "level": 1,
       "quality": 0
@@ -6464,14 +6464,14 @@
     },
     {
       "path": "resources/JFES110/list.js",
-      "hash": "85b90b741396393143c1a28396b70e62200b969292e781474b3824de24b357de",
+      "hash": "75572e5caa97daa2b9670b401448b3889154b2eb25667cf73e7ffd01c742a66b",
       "size": 848,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES110/news.js",
-      "hash": "0b99a48d97c1ada8f296006fbf9eb8314e246cb374c509422a0d3b3efd45e867",
+      "hash": "62177b681bc19a3b4dc2767c0efc3f2912ff1d5067dfbf61a05af6ea71608af1",
       "size": 80360,
       "level": 1,
       "quality": 0
@@ -6520,28 +6520,28 @@
     },
     {
       "path": "resources/JFES110/points.js",
-      "hash": "453a19c660ac8cd7d990f5ba9f8f3787f75162430b7dce4f47b36fba0425dc4a",
+      "hash": "077e81c5f8724a3b28be36ba75951b59a8ec67411c9eb62edee45f47580f7e73",
       "size": 268,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES110/review.js",
-      "hash": "edf4fdc396290d1d4ffb07d57c66a061f1d36c4e78137902fc38e43496441db8",
+      "hash": "f5dc98d700e65ce3c2de55b3dd5f3e92c2acd6fbdb4df41bf9b09146a8ceded7",
       "size": 9878,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES115/achievements.js",
-      "hash": "1c95ba53b473e4ec48d159ef103dd1c0c9f4c7dd729c613e540b995fa535af70",
+      "hash": "10c463cdd9f753f75201d10c8217f02246c31ba5488042b55dd99f5a19d6414c",
       "size": 1206,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES115/date.js",
-      "hash": "8c6f5e94dcf35a343d0f0493e52178d30969f448139ba08ccd6170488ac8cf60",
+      "hash": "4a3143a370cdeeafa83ca29e3936d592cbb747e7dd29a11690cd6ff9608706c4",
       "size": 300,
       "level": 1,
       "quality": 0
@@ -6737,14 +6737,14 @@
     },
     {
       "path": "resources/JFES115/list.js",
-      "hash": "5966a1127d290381994ffe7cce4071785bb1efb632735af05c8110c890cbc7f6",
+      "hash": "a45c9e4def66709394b8671b1322d6538e2ed48b58d55c2391ddb681841a1ae8",
       "size": 581,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES115/news.js",
-      "hash": "1bd72d57f05fe9aa7e8c8291161635c7d51ef0e39612cb90d2747f9ad8ac1e11",
+      "hash": "ac89c62a13f9c47d54aa13a06c2036e3811162e4504abbc641ad05028194dc26",
       "size": 55665,
       "level": 1,
       "quality": 0
@@ -6779,35 +6779,35 @@
     },
     {
       "path": "resources/JFES115/points.js",
-      "hash": "697d92d1d67f568c50833e24746d344316ec202b4bfa2dc9978d42362a38d746",
+      "hash": "63c10999e6bb1aab8bf5e52cd5dc1bc147411e3f1441cf9a5586bf8efa975be1",
       "size": 255,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES115/review.js",
-      "hash": "858b3231c4cae1949ad424c496ac5b5b3a3a8bcfc62c3a6251915cfb0d7694d2",
+      "hash": "e0f556b32d21e0393db73a61778de151b5a44eb5ab51723ff53b05b9c68d709b",
       "size": 11544,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES120/date.js",
-      "hash": "fadb37ec391151d95bb88785eb051082be0fde0eb2a48ef99f46bd88173ffc97",
+      "hash": "38e87e556ffdcae54f9ab7ef8ae85bf01659d912625717efb9349009b502c8a5",
       "size": 213,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES120/list.js",
-      "hash": "bce26c12abef5f1b1cdc5e8973ed52ed6894b166878730f3d5535c4272a1e961",
+      "hash": "2cc06e9b430a98a6cef1d742651ad2aa718176450249e03a36d71994e80559f8",
       "size": 1835,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES120/news.js",
-      "hash": "7e2ba35bbda813e0441a763ca3a1c682fd7a6edaf28a4fed7f40e319b6d4ec67",
+      "hash": "ac7a1327bbb8a81209aa97bc95ec3d93d6c4bb95fd31a8c46f3613fc584e5b89",
       "size": 16514,
       "level": 1,
       "quality": 0
@@ -6912,35 +6912,35 @@
     },
     {
       "path": "resources/JFES120/points.js",
-      "hash": "f09c361f2a0b1fd502d99a80147680ce2dfce55e393bf0e18eed89487dd10bf9",
+      "hash": "7de56b3a978ede103d2c5a232c0bea0a2b62db0b7ab17c1fc538dcf7a4fc921d",
       "size": 220,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES120/review.js",
-      "hash": "f2b7d83f4d78ad3ef83832f924290a874d0e7bf872f1d3b4edf80862a18f609f",
+      "hash": "a0b473e4ad2aa665fb56b574cfceefc57dff6e636a2f0b6d9eb474c0aecac62b",
       "size": 1304,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES130/date.js",
-      "hash": "d7a035549ceaf5532c42bcf484604505fa09b389060c0ba116f67b198f7a959f",
+      "hash": "04003260a4605f3354e79f3aea8aaef0f665f2d275163b0720a22ae8ab8b0002",
       "size": 649,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES130/list.js",
-      "hash": "816db37313fd4f067ee638550d1f56bc6c85210c9c5117f626e2b1a67f3382a7",
+      "hash": "0c6129d1f129fdda1e8fd2731046942172cdfca1f790ab43ae939184569d2f8f",
       "size": 10413,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES130/news.js",
-      "hash": "4ac6b671c92cabfa860564c465ac84a7ea1a38e7f2fd398478b41d67447508b8",
+      "hash": "bac42f0542aab84dfda34ab816099520560334b92725103ba3ba8520efd8c454",
       "size": 218035,
       "level": 1,
       "quality": 0
@@ -7493,35 +7493,35 @@
     },
     {
       "path": "resources/JFES130/points.js",
-      "hash": "e2a02675c7eaefdedf9f8cb9300943fe1079a5b3c333d2d080637b5e70a936ac",
+      "hash": "197bb850d04bf6867ad988459b77cbb6ac59cfc9b191fc28feb07b429336ef24",
       "size": 281,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES130/review.js",
-      "hash": "bd642d997ee884220e5cf24103b0f1c86567e26c6b5265cdc9613d711799aaba",
+      "hash": "e6c51effab6c2bde18eb9d101d67792fe1b5ca2b5db5e9164a663ba2311d69f3",
       "size": 1388,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES140/date.js",
-      "hash": "10562340676104a5105c704830f6fbca003ffe2c603ab80c10906bcfbe61145d",
+      "hash": "10eef2061670c0fc678ef9470c8bc01e3ed07faf35e07ca0b7d02db154cc3c66",
       "size": 405,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES140/list.js",
-      "hash": "446a68acef44cd7d8810cf02f2bb35ac33ae1c6113be66e9ef95beca3f9e83c6",
+      "hash": "d83dbf46be88cc1e91d143acac0b326298b370a5e7cdaa593aaba0d7b7ba5beb",
       "size": 882,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES140/news.js",
-      "hash": "c14280e30d5089aae4629cb218eedda0e1d8f5560cafec21c9c8a85098c87664",
+      "hash": "ecb0c9eedc61f0dfc9b54f8661a88db9b08f33ebec0c7dc651b717ada17650b3",
       "size": 24056,
       "level": 1,
       "quality": 0
@@ -7570,28 +7570,28 @@
     },
     {
       "path": "resources/JFES140/points.js",
-      "hash": "13ca6fd30fd49342aad0c10468a8127c2e2266e9aaef1b263923920eed302281",
+      "hash": "7c429912bc582d11b16add4a000fe6cdcfba11c213a963198eb845fef628074b",
       "size": 204,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES140/review.js",
-      "hash": "5c80660bea962fe52a8c30a0b6f3f582dfe9145a252a1e4b17b919a070963fbd",
+      "hash": "c58adb5de939d808f12aa9e62c978a9f39eb1eeeacd0227318d307ecc7df4594",
       "size": 1635,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES150/achievements.js",
-      "hash": "9711249b50ba672547c2ddb94ac8cc6ab875e8a4046bd9ffed5bd366c9e9e368",
+      "hash": "86f733cb4be0d076643b92574e0a1b5503e08a8a5f75c5868702451814994cfc",
       "size": 5762,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES150/date.js",
-      "hash": "31d5b26bba7b170d2b69b864aa5bc5a157779e9232fabb449994cf899b816167",
+      "hash": "f8c009cb71f6ffe45a8d9da0721007568c93faa83ed9ac3ea4cedf701f90a1a6",
       "size": 213,
       "level": 1,
       "quality": 0
@@ -7794,14 +7794,14 @@
     },
     {
       "path": "resources/JFES150/list.js",
-      "hash": "89950f962e1368af932315d29a0bff823ae4d79fb2edc09d2c1ea1185fc32b46",
+      "hash": "07e862860528acf1132b3f752fc186ac460e13ccd0590ed425c1839c7ba29101",
       "size": 1224,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES150/news.js",
-      "hash": "57d8ebff4de69c04be45c9f8b1fd75fffd016033f5e161711d089dde64919d36",
+      "hash": "c6cda7d2297474e020e1e2a18c8b1c5520cad494807b45a60cac86eee08eaf01",
       "size": 72767,
       "level": 1,
       "quality": 0
@@ -7871,28 +7871,28 @@
     },
     {
       "path": "resources/JFES150/points.js",
-      "hash": "7e62cf1084d68b3b5f1591cb19eb25b03d40a6249a6c77c5b9daef5729fedd94",
+      "hash": "ccb125557c3b980700db4f51b6ca1e02508b236f48a3c0a550b5690c705c1a20",
       "size": 255,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES150/review.js",
-      "hash": "0b0c7b4cb69c774e7e99d21dce367dd315ee7c74f4aaabac57ef7888e2bb90df",
+      "hash": "829c372388772feb0fa708bd3b0e667413a60637ce8c54b5c9f0d7d09dbf2404",
       "size": 8437,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES160/achievements.js",
-      "hash": "97a72f5e0bdfa69f0e3a8187974fc9534f2377f4c837d325d83867edb4ccfdfe",
+      "hash": "1fecad4f44a04811c5a69fb5072007d2274b90e1e240f4196198c258c107dc20",
       "size": 4919,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES160/date.js",
-      "hash": "42b47e2a8cfa599d3561fcf6370dc1007096b893108367d7642bb3f04fb87a49",
+      "hash": "c714591fddaa6ec252e33a3b60796aa29d5691b0363ad67ed04860e0890a4050",
       "size": 384,
       "level": 1,
       "quality": 0
@@ -8067,14 +8067,14 @@
     },
     {
       "path": "resources/JFES160/list.js",
-      "hash": "33fdc4acc4143bf0d3640072d35143447f182e6c087177fb77317b8d83e3f6cc",
+      "hash": "b8f1a28bfa59e0331f56bde64802f58d96d039340f0d63e1b8db30867c56d912",
       "size": 759,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES160/news.js",
-      "hash": "24bb9b3bea0526bb8ff87edd6e70552e4eb2e9cad2f8fe8e83556ef903528680",
+      "hash": "cc4364084ecf5693f0d4541e5e84d9418b03fd8618623abe9553ef0bd4d74992",
       "size": 139382,
       "level": 1,
       "quality": 0
@@ -8116,28 +8116,28 @@
     },
     {
       "path": "resources/JFES160/points.js",
-      "hash": "efef7eaeda5761cff2b302b40fd823b0d1958852fafdafcdade014be9e26dc61",
+      "hash": "9f84c1289a7578a4713c8f423f0cc41aac2506cca144ed7df9f83633df08c260",
       "size": 284,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES160/review.js",
-      "hash": "fcacc7f8346902cd8184e44ba77b3ced0dc9c2d228fa7cae15cbb77ebeb6cb48",
+      "hash": "17d88ce8203dfbc68628ae6a2dced5321c019c8627df3d094e7ee0615ce769ee",
       "size": 17958,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES170/achievements.js",
-      "hash": "7a86d31a3feb2b1336327eb2a77e1420aa0bc3ad9b889c9529eaf459cbe130a5",
+      "hash": "b859b08257ff5c896d99afb49840057aade4c05614b65f8a4141447e63245ad8",
       "size": 19737,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES170/date.js",
-      "hash": "23ebbfc8f62296b0098ec5748ce94f6877b76a0f5f22b6ec7a6ee0c90b4b2088",
+      "hash": "21dec8c6b16f4022cd6a949d9be68a8ffa45774daa7d2d03d575a713457f9468",
       "size": 574,
       "level": 1,
       "quality": 0
@@ -8851,14 +8851,14 @@
     },
     {
       "path": "resources/JFES170/list.js",
-      "hash": "0e1ce8fd7d6698988f632f3e78fdc1f727323cba4263c643eb93ccdc998a7a42",
+      "hash": "35019ba067481e1b17d4e42cb5188aacd83c1fd7296f05fb5ac3f750d3909891",
       "size": 594,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES170/news.js",
-      "hash": "8c978f3ac57c59d37ca71ae3e24298f7d09c89740a495bb2cfdead662886c0fe",
+      "hash": "be16910d0c2dd2b6c0ee66d48ff87ccf80ab11d52cf7c8944ed5e06d2a52ad72",
       "size": 91275,
       "level": 1,
       "quality": 0
@@ -8893,21 +8893,21 @@
     },
     {
       "path": "resources/JFES170/points.js",
-      "hash": "19d0686fa9a393654ef23c09290423f801848766a31cee2596988bebed65df7c",
+      "hash": "6443d9fa47ffb8ff832a570345cb26891bb7f00b5a690ca79d62d849da7b4268",
       "size": 255,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES175/achievements.js",
-      "hash": "d730131fd1d67f190305ec7fd1a8e3d43762c299c473c30aef24061d8c6dc278",
+      "hash": "cef0ad15e24dc78f96b4214b2081e02e4ea06d3df0a26e9bbb790933f74459d8",
       "size": 2447,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES175/date.js",
-      "hash": "6689d28f4f880cc071cdbd9c54a8cba3e50e7baba38999a803ddde276a9c21b8",
+      "hash": "bd1c71ecdfcae9bc1cabfafb580a06003da7aa3cf731e5f334c2a47de7d35710",
       "size": 216,
       "level": 1,
       "quality": 0
@@ -9012,14 +9012,14 @@
     },
     {
       "path": "resources/JFES175/list.js",
-      "hash": "f1aa267384de750d56b57b37efbf341a684ef639f0afec10959ca666b14cf5df",
+      "hash": "b10f39175aa115c4c1a55222e6351a95c0dfb7dff1abd31d7e5f095ab544b8dd",
       "size": 997,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES175/news.js",
-      "hash": "50da9b5401fd9336a75be08f2362f2c7da99ac25a6c589f691a10d7eba41ed96",
+      "hash": "0236447c87bfc67f0342ae6b04da4f2a6f866c4715026aa99bb3998a8d18d608",
       "size": 43494,
       "level": 1,
       "quality": 0
@@ -9075,21 +9075,21 @@
     },
     {
       "path": "resources/JFES175/points.js",
-      "hash": "a1c1b801e28ed35b0f0084a7dc4ad2df1a4ba5fa5a7a10fe8452effdccbd65e8",
+      "hash": "c0a7744989c16d7bdfcb4fe2621b93ade43546d6b144fa198054078f772585e1",
       "size": 268,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES180/achievements.js",
-      "hash": "e1a062a7b8de7c6b11970adaab398ae4c04f8d834e7c5550d7358b67fd6495b1",
+      "hash": "908658c53540d55ba7efee4067468f4cdac96970923f5624a5cc753576a81f89",
       "size": 1811,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES180/date.js",
-      "hash": "b0dfdde6f78fbd91bd63293da52d8ac4c09f625d1c62d5b5465d8bbf11231e96",
+      "hash": "ef43462fff6fa98c178dce6e861792374e711576b1c2f22e205aca6d1a197f06",
       "size": 809,
       "level": 1,
       "quality": 0
@@ -9166,14 +9166,14 @@
     },
     {
       "path": "resources/JFES180/list.js",
-      "hash": "91f012533e6af0a1da37a30c4868f2ed2fb35f9e03247ee171327326a16929c1",
+      "hash": "c9f05081f8dc74ab2dd17deb9f0ae40f7a4363bbee413b2471b514e3ecffe2ac",
       "size": 10052,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES180/news.js",
-      "hash": "31e0bd2ccd387a335cad132bcf9ef6239e70c39e8d38dddc9cfde9e2c0ea3bfa",
+      "hash": "ac0cdcb1d75aac9c2efa9fbe7ef30df79afd326b5b8d5eb531415df0e5b87eae",
       "size": 225428,
       "level": 1,
       "quality": 0
@@ -9698,21 +9698,21 @@
     },
     {
       "path": "resources/JFES180/points.js",
-      "hash": "d96928b1eba229b3b618b849a31db800c309935441848ba8f98df34295d9f38c",
+      "hash": "041ae87c267c12534da3f30226e509f8466a27047584fb6fd62d0ff8ea221195",
       "size": 383,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES190/achievements.js",
-      "hash": "f85944448b51483b4c7e785d3e1d39734dc9f977f84c4af696dd0fb15bedff52",
+      "hash": "d412f0781d523f2010dea9263bd0cdca74b9bba0937a84a903368a7e3a949e32",
       "size": 3994,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES190/date.js",
-      "hash": "28b20651bf07ebb9b93321f9c4b2b2abdc5963a01f661bcbd5e70c5cebefad9e",
+      "hash": "488200e056bfac5a22e7ea103af912795f7c1bc6a36b9356d2d3a0e043b57f80",
       "size": 291,
       "level": 1,
       "quality": 0
@@ -9880,14 +9880,14 @@
     },
     {
       "path": "resources/JFES190/list.js",
-      "hash": "76480e67f89ce41e7c7085e135716ed3fd06bc033a75f83b9eba83f59e6b959e",
+      "hash": "546900bb1180f813d71bfcee2590403cc41ac5a6f513388e1d8d28854c66e195",
       "size": 644,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES190/news.js",
-      "hash": "5a095949649ac455dc2052a6531ae34002a590676277ddfd48fff9dec9560851",
+      "hash": "7425d9666995c00a2628d9afc9f109758a096f9eab6ab41c64e7470f756c89c2",
       "size": 64537,
       "level": 1,
       "quality": 0
@@ -9922,21 +9922,21 @@
     },
     {
       "path": "resources/JFES190/points.js",
-      "hash": "71fb50d1c63cb62b149654fb7f5d910e4c10173f710579475818acbb578d87c8",
+      "hash": "ce05e000e4ce648af60687e5d6ca0e4cfc00784385466935891516ae18dc7791",
       "size": 217,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES195/achievements.js",
-      "hash": "38959f057e23a58aec394b46d6c346b3542f5d1438af304e3b6664565b572eb1",
+      "hash": "4cbb8331a6449aecd7bc2e4e1bdc914d13b5c0d2bf2e1225c8171dfb1777a721",
       "size": 2623,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES195/date.js",
-      "hash": "60613c2ceff6404bd3d5de8f4d25f4ba53254f853017be1ac2c9d67507a6e5ef",
+      "hash": "b7eb9b4952f837621c8d34765bd9c0989a2cc4be660fa524e93ad25cc05ec167",
       "size": 309,
       "level": 1,
       "quality": 0
@@ -10048,14 +10048,14 @@
     },
     {
       "path": "resources/JFES195/list.js",
-      "hash": "562c7c19e07695e962f47c8940b421b146948a3076849078c1a059ba1e71ea0c",
+      "hash": "bfec1f0bd0d0e7f8dd85f7043c42cc15c8a516059fb5f1bf1b6b65e8212fdb4d",
       "size": 1433,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/JFES195/news.js",
-      "hash": "d490b8ec01883728a743c9d714b46b9fa22a4463a5f9de91a70674170bd5aa3d",
+      "hash": "1bd1c4ce8138b03d20492482464288775b91a792d1a7933e6a97ea6beab84993",
       "size": 16643,
       "level": 1,
       "quality": 0
@@ -10132,70 +10132,70 @@
     },
     {
       "path": "resources/JFES195/points.js",
-      "hash": "70bb31a2b46fa9a7d18bf7d7d2d4bee57f1c29c1aaefeb38d6a9587731cd2fa9",
+      "hash": "4f275e257b88bd3aebcca15581aace57966e7db91925361a21340725799505eb",
       "size": 204,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/account.js",
-      "hash": "43c3ae4b4268ea1662988f4e77b32888aadcb7c9670b3b7414ecc3829b703492",
+      "hash": "1aef9ff4a0f683dd6e9c6ee4ea01faf3800d224775dacea41417259310d337c7",
       "size": 2057,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/core.js",
-      "hash": "c1a90c14786113fcf186518c4391b8ca1f4513e3c73dd1e92b675cbbd9dcd53c",
+      "hash": "c8c58ec46221f1d9ba0373c219fb12d4bfb4bd2f37964056153c0baddd1037cc",
       "size": 11023,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/library.js",
-      "hash": "b8c23b1e46b3907230377088cc6e2b25ecde77438539428faf0b05ea5b07c48b",
+      "hash": "08bd06e475e111c4aef080e2d7d0132b4abb3db1ad96207eef7b76eedf4251fc",
       "size": 13589,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/shop.js",
-      "hash": "7dc6b3d86ff0b20e121a5e8646ac8ac79563ac0699b09674498bc6c497643d8d",
+      "hash": "d77e57fee37388484bc4a5c4a4692f01ba32dd03ace8bc827b7fb27121643455",
       "size": 20559,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/title.js",
-      "hash": "770306b7d0434e12387c968cc9211f66eaa2b1423a8bf994357412dbb20dd82b",
+      "hash": "e2a612b49d32bc718ef5fa327b79f6eee3ba15004be75cd9edc1503e921e58e3",
       "size": 11809,
       "level": 1,
       "quality": 0
     },
     {
       "path": "resources/update.js",
-      "hash": "6bfd83c2d0c41b2970572bf764a6fc02b6603ebe5873cec526efa425dde8ac24",
+      "hash": "6c07f90bfe49072b3e66073cb83c9f155c0a807f6eaa8ef41a4d3d20b8b0ed65",
       "size": 10974,
       "level": 1,
       "quality": 0
     },
     {
       "path": "robots.txt",
-      "hash": "b0a3fe82d2cf6f2a34e228064f84d01f770d70ad3e4d4d32df0307a37fca68cd",
+      "hash": "8563a151296f11bf0d81892fa21cff58f599e35c946e4be1102589adf723c172",
       "size": 212,
       "level": 1,
       "quality": 0
     },
     {
       "path": "sitemap.xml",
-      "hash": "b52fc433697cc4d0112c138a7b379250876832d4f06b455d6d9e738541fdef36",
+      "hash": "4e23501a38cdf556a043ea2d0aaacdcbf711bcbf53d1a09952f6a4a287010945",
       "size": 261,
       "level": 1,
       "quality": 0
     },
     {
       "path": "sw.js",
-      "hash": "7f8be9e8b0a861e60a4a160d67a8dc491e6af3b22fdcced897b93fe75a684ea8",
+      "hash": "65c4a48da87a2f5d118beb1ba7409dce0384c744380aefb6e8aaf48bacef5124",
       "size": 12980,
       "level": 1,
       "quality": 0

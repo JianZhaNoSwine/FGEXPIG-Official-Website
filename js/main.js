@@ -9598,7 +9598,6 @@
   }
 
   var userTitleEl = document.getElementById('userTitle');
-  var userPillNameEl = document.getElementById('userPillName');
   var cursorGlowEl = document.getElementById('cursorGlow');
   var cursorGlowFrame = 0;
   var cursorGlowTrackUntil = 0;
@@ -10062,7 +10061,7 @@
 
   function layoutTopbarIdentity() {
     layoutTopbarEdges();
-    if (!userTitleEl || !userPillNameEl || !navEl) return;
+    if (!userTitleEl || !navEl) return;
     var navRect = navEl.getBoundingClientRect();
     if (!navRect.width || navRect.width < 100) return;
     document.documentElement.style.setProperty('--topnav-half-width', (navRect.width / 2).toFixed(2) + 'px');
@@ -10076,13 +10075,6 @@
       leftIcon.style.right = (topbarRect.right - (navRect.left - iconGap)).toFixed(2) + 'px';
       rightIcon.style.right = 'auto';
       rightIcon.style.left = ((navRect.right + iconGap) - topbarRect.left).toFixed(2) + 'px';
-    }
-    userPillNameEl.classList.remove('is-collision-hidden');
-    var nameRect = userPillNameEl.getBoundingClientRect();
-    var titleRect = userTitleEl.classList.contains('is-hidden') ? null : userTitleEl.getBoundingClientRect();
-    var identityRight = titleRect && titleRect.width ? titleRect.right : nameRect.right;
-    if (identityRight > navRect.left - 14) {
-      userPillNameEl.classList.add('is-collision-hidden');
     }
   }
 
@@ -10098,7 +10090,7 @@
       return;
     }
     userTitleEl.classList.add('t-lv-' + t.lv);
-    userTitleEl.textContent = '⁓' + formatTitleText(i18nTitleText(t.text)) + '⁓';
+    userTitleEl.textContent = formatTitleText(i18nTitleText(t.text));
     layoutTopbarIdentity();
   }
 
@@ -10193,8 +10185,6 @@
   }
 
   function updateUserUI() {
-    var nameEl = document.getElementById('userPillName');
-    if (nameEl) nameEl.textContent = user.name;
     var sidebarNicknameEl = document.getElementById('sidebarNickname');
     if (sidebarNicknameEl) sidebarNicknameEl.textContent = user.name;
     setAvatar(document.getElementById('userPillAvatar'), user.name);
@@ -12614,9 +12604,6 @@
     sidebarPanelOrigin = 'home';
     openPanel();
   }
-  if (userPillNameEl) userPillNameEl.addEventListener('click', function () {
-    openTopbarShortcutPanel(openAccountPanel);
-  });
   if (userTitleEl) userTitleEl.addEventListener('click', function () {
     openTopbarShortcutPanel(openTitlePanel);
   });
@@ -16065,41 +16052,24 @@
     return name ? i18nTr(name) : target;
   }
 
-  // 方案 D：地图跑分 = 999983 × (0.30H + 0.70QC)
-  // exe 模式下用逐地图数据重算；Rmin/Rmax 根据本地点赞率分位数校准。
+  // C+V3：游玩数 × 赞踩比（10 封顶）× 10.24 × 点赞率 7 档
   function buildPauseMapScoreRows() {
     if (!isDesktopRuntime()) return [];
     var api = window.FgexpigMapStats;
     if (!api || typeof api.entries !== 'function') return [];
     var entries = api.entries().filter(function (entry) {
-      return Number(entry && entry.plays) > 0;
+      return Number(entry && entry.plays) > 100;
     });
     if (!entries.length) return [];
 
-    var totalP = 0;
-    var totalL = 0;
-    var totalD = 0;
-    entries.forEach(function (entry) {
-      totalP += Math.max(0, Number(entry.plays) || 0);
-      totalL += Math.max(0, Number(entry.likes) || 0);
-      totalD += Math.max(0, Number(entry.dislikes) || 0);
-    });
-    if (!totalP) return [];
-    var rBar = totalL / totalP;
-    var qBar = totalD ? totalL / totalD : 20;
-    var dBar = totalD / totalP || 0.05;
-    var rates = entries.map(function (entry) {
-      return (Number(entry.likes) || 0) / (Number(entry.plays) || 1);
-    }).sort(function (a, b) { return a - b; });
-    var rMin = 0.50;
-    var rMax = 0.95;
-    if (rates.length >= 5) {
-      var p10 = rates[Math.max(0, Math.floor((rates.length - 1) * 0.10))];
-      var p90 = rates[Math.min(rates.length - 1, Math.ceil((rates.length - 1) * 0.90))];
-      if (p90 - p10 > 0.01) {
-        rMin = p10;
-        rMax = p90;
-      }
+    function likeRateTier(rate) {
+      if (rate < 0.05) return 0.75;
+      if (rate < 0.10) return 1;
+      if (rate < 0.15) return 1.5;
+      if (rate < 0.20) return 2.25;
+      if (rate < 0.25) return 3.25;
+      if (rate < 0.30) return 4.5;
+      return 6;
     }
 
     var rows = [];
@@ -16107,21 +16077,14 @@
       var plays = Math.max(0, Number(entry.plays) || 0);
       var likes = Math.max(0, Number(entry.likes) || 0);
       var dislikes = Math.max(0, Number(entry.dislikes) || 0);
-      var rHat = (likes + 100 * rBar) / (plays + 100);
-      var R = Math.max(0, Math.min(1, (rHat - rMin) / (rMax - rMin)));
-      var qHat = (likes + 100 * qBar) / (dislikes + 100);
-      var S = qHat / (qHat + 10);
-      var dHat = (dislikes + 100 * dBar) / (plays + 100);
-      var DPrime = 1 - dHat / (dHat + dBar);
-      var H = 0.7 * plays / (plays + 1000) + 0.3 * likes / (likes + 800);
-      var Q = 0.45 * R + 0.45 * S + 0.10 * DPrime;
-      var C = plays / (plays + 1000);
+      var ratio = dislikes > 0 ? likes / dislikes : (likes > 0 ? 10 : 0);
+      if (ratio > 10) ratio = 10;
       // 优先用 WASM 版公式（build/rust/fgexpig-wasm），未就绪时回退到这里的 JS 实现
       var wasmScore = window.FgexpigMapScore
-        ? window.FgexpigMapScore.score(plays, likes, dislikes, rBar, qBar, dBar, rMin, rMax)
+        ? window.FgexpigMapScore.score(plays, likes, dislikes)
         : null;
       var score = (wasmScore === null || wasmScore === undefined)
-        ? Math.round(999983 * (0.30 * H + 0.70 * Q * C))
+        ? Math.round(plays * ratio * 10.24 * likeRateTier(likes / plays))
         : wasmScore;
       var mapName = pauseMapContentName(entry.id, entry.code);
       rows.push({

@@ -10,6 +10,7 @@
 .gitattributes
 .wrangler
 README.md
+fgexpig.md
 readme/
 
 # 工程件与构建产物：网站不需要（源码全在 build/ 下）
