@@ -46,7 +46,7 @@
       "nick": "Tori",
       "user": "fgexpig008",
       "pass": "tori",
-      "media": ""
+      "media": "TORI"
     },
     {
       "nick": "Myth",
@@ -58,7 +58,7 @@
       "nick": "火锅",
       "user": "fgexpig010",
       "pass": "huoguo",
-      "media": ""
+      "media": "HG"
     },
     {
       "nick": "miss",

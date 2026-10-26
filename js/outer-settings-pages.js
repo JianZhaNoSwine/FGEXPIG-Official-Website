@@ -109,13 +109,13 @@
   window.openOuterAccountPage = function () {
     var b = bridge(); if (b == null) return; buildAccountPage();
     var account = b.currentAccountRecord(); var currentUser = b.getUser();
-    var guestReturn = !!currentUser && !currentUser.isAdmin && String(currentUser.name || '').trim() === '访客用户';
+    var guestReturn = !!currentUser && String(currentUser.name || '').trim() === '访客用户';
     if (accountLogout) {
       accountLogout.textContent = guestReturn ? '返回' : '退出登录';
       accountLogout.setAttribute('data-guest-return', guestReturn ? '1' : '0');
     }
     accountError.textContent = ''; accountPass.value = '';
-    accountUser.value = account && account.user ? account.user : (currentUser && currentUser.isAdmin ? 'admin' : '');
+    accountUser.value = account && account.user ? account.user : '';
     accountPage.hidden = false;
     document.documentElement.classList.add('outer-account-page-open');
     var loginCard = accountPage.querySelector('.settings-outer-account-card');

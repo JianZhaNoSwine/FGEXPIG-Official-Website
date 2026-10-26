@@ -2,6 +2,11 @@
   "lists": {
     "JFES195": [
       {
+        "file": "规则.png",
+        "title": "规则",
+        "category": "宣传文件"
+      },
+      {
         "file": "叉车认证.png",
         "title": "叉车认证介绍",
         "category": "宣传文件"

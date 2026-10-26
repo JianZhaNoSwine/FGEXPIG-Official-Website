@@ -34,6 +34,6 @@ if not exist "tools\bin" mkdir "tools\bin"
 copy /y "rust\target\release\fgexpig-tools.exe" "tools\bin\fgexpig-tools.exe" >/dev/null
 echo.
 echo [DONE] build\tools\bin\fgexpig-tools.exe
-echo Tools: manifest / i18n-pack / check-i18n / password-hash / csv / datafile
+echo Tools: manifest / i18n-pack / check-i18n / csv / datafile
 echo.
 pause

@@ -453,10 +453,8 @@
       }
     }
     scheduleDockSideIconAlignment();
-    syncAdminCornerButtons();
     // 图标切换后浏览器可能还没完成新图布局，稍后再校准一次底栏两侧位置。
     setTimeout(scheduleDockSideIconAlignment, 120);
-    setTimeout(syncAdminCornerButtons, 120);
   }
 
   function showDockSelectedFrameForHomeEntry() {
@@ -1400,45 +1398,6 @@
     syncLiquidGlassRenderer(true);
     scheduleTopActionLiquidGlassSync(true);
     requestAnimationFrame(function () { syncLiquidGlassRenderer(true); });
-  }
-
-  // 管理员的两个角落按钮（控制台 / 数据管理）移到顶栏两侧按键图标的外侧，垂直居中
-  function syncAdminCornerButtons() {
-    if (typeof editBtn === 'undefined' || typeof consoleBtn === 'undefined') return;
-    if (!editBtn || !consoleBtn) return;
-    var topbar = document.getElementById('topbar');
-    var leftIcon = document.querySelector('.topbar-key-icon-left');
-    var rightIcon = document.querySelector('.topbar-key-icon-right');
-    var reset = function (btn) {
-      btn.style.top = '';
-      btn.style.left = '';
-      btn.style.right = '';
-      btn.style.bottom = '';
-    };
-    if (!topbar || !leftIcon || !rightIcon) {
-      reset(consoleBtn);
-      reset(editBtn);
-      return;
-    }
-    var topRect = topbar.getBoundingClientRect();
-    var leftRect = leftIcon.getBoundingClientRect();
-    var rightRect = rightIcon.getBoundingClientRect();
-    if (!topRect.height || !leftRect.width || !rightRect.width) {
-      // 内屏 / 外屏等不显示按键图标时，保持原来的角落位置
-      reset(consoleBtn);
-      reset(editBtn);
-      return;
-    }
-    var gap = 12;
-    var centerY = topRect.top + topRect.height / 2;
-    consoleBtn.style.bottom = 'auto';
-    consoleBtn.style.right = 'auto';
-    consoleBtn.style.top = (centerY - consoleBtn.offsetHeight / 2).toFixed(2) + 'px';
-    consoleBtn.style.left = (leftRect.left - gap - consoleBtn.offsetWidth).toFixed(2) + 'px';
-    editBtn.style.bottom = 'auto';
-    editBtn.style.right = 'auto';
-    editBtn.style.top = (centerY - editBtn.offsetHeight / 2).toFixed(2) + 'px';
-    editBtn.style.left = (rightRect.right + gap).toFixed(2) + 'px';
   }
 
   var dockSideIconAlignFrame = 0;
@@ -8176,20 +8135,10 @@
   dock.addEventListener('pointerup', endDrag);
   dock.addEventListener('pointercancel', endDrag);
 
-  /* ---------- 用户系统：暂停菜单 / 数据侧栏 / 登录 / admin ---------- */
+  /* ---------- 用户系统：暂停菜单 / 数据侧栏 / 登录 ---------- */
   var userMenuBtn = document.getElementById('userMenuBtn');
   var pauseMenu = document.getElementById('pauseMenu');
   var sidebarMask = document.getElementById('sidebarMask');
-  var sidebarRight = document.getElementById('sidebarRight');
-  var sidebarLeft = document.getElementById('sidebarLeft');
-  var editBtn = document.getElementById('editBtn');
-  var consoleBtn = document.getElementById('consoleBtn');
-  var consoleContent = document.getElementById('consoleContent');
-  var consoleMainPage = document.getElementById('consoleMainPage');
-  var consoleIgnoredPage = document.getElementById('consoleIgnoredPage');
-  var consoleIgnoredBtn = document.getElementById('consoleIgnoredBtn');
-  var consoleIgnoredBack = document.getElementById('consoleIgnoredBack');
-  var consoleIgnoredContent = document.getElementById('consoleIgnoredContent');
   var loginOverlay = document.getElementById('loginOverlay');
   var loginUser = document.getElementById('loginUser');
   var loginPass = document.getElementById('loginPass');
@@ -8199,10 +8148,10 @@
   var loginLogout = document.getElementById('loginLogout');
   var navAccountSwitch = document.getElementById('navAccountSwitch');
   var GUEST_NAME = '访客用户';
-  var user = { name: GUEST_NAME, isAdmin: false, media: '', lv: 1, exp: 0, expMax: 271 };
+  var user = { name: GUEST_NAME, media: '', lv: 1, exp: 0, expMax: 271 };
 
   function isGuestUser() {
-    return !user.isAdmin && String(user.name || '').trim() === GUEST_NAME;
+    return String(user.name || '').trim() === GUEST_NAME;
   }
 
   var sidebarLevelRow = document.getElementById('sidebarLevelRow');
@@ -9415,7 +9364,7 @@
   var SESSION_KEY = 'fgexpig_session_v1';
   function saveSession() {
     try {
-      localStorage.setItem(SESSION_KEY, JSON.stringify({ name: user.name, isAdmin: !!user.isAdmin, media: user.media || '' }));
+      localStorage.setItem(SESSION_KEY, JSON.stringify({ name: user.name, media: user.media || '' }));
     } catch (e) {}
   }
   function clearSession() {
@@ -9428,7 +9377,6 @@
       var s = JSON.parse(raw);
       if (s && s.name) {
         user.name = s.name;
-        user.isAdmin = !!s.isAdmin;
         user.media = s.media || '';
       }
     } catch (e) {}
@@ -10189,14 +10137,6 @@
     if (sidebarNicknameEl) sidebarNicknameEl.textContent = user.name;
     setAvatar(document.getElementById('userPillAvatar'), user.name);
     setAvatar(document.getElementById('sidebarAvatar'), user.name);
-    if (editBtn) {
-      editBtn.hidden = !user.isAdmin;
-      editBtn.setAttribute('aria-hidden', user.isAdmin ? 'false' : 'true');
-    }
-    if (consoleBtn) {
-      consoleBtn.hidden = !user.isAdmin;
-      consoleBtn.setAttribute('aria-hidden', user.isAdmin ? 'false' : 'true');
-    }
     applyUserTitle();
     refreshReviewPersonalScore();
     refreshHomeLibraryBar();
@@ -10230,24 +10170,6 @@
     }
   }
   function openSidebar(side) {
-    if (side === 'right') {
-      setPauseMenuOpen(false);
-      if (sidebarLeft) sidebarLeft.classList.remove('open');
-      sidebarRight.classList.add('open');
-      sidebarMask.classList.add('show');
-      return;
-    }
-    if (side === 'console') {
-      setPauseMenuOpen(false);
-      sidebarRight.classList.remove('open');
-      if (sidebarLeft) sidebarLeft.classList.add('open');
-      sidebarMask.classList.add('show');
-      showHotspotConsoleMainPage();
-      renderHotspotConsole();
-      return;
-    }
-    sidebarRight.classList.remove('open');
-    if (sidebarLeft) sidebarLeft.classList.remove('open');
     sidebarMask.classList.remove('show');
     sidebarPanelOrigin = 'menu';
     resetSidebarPanelCore();
@@ -10262,8 +10184,6 @@
     // 复位会立刻把面板切回暂停菜单列表，淡出的 0.32s 内就会看到暂停菜单露出来。
     var closingSubpage = currentSidebarPanel !== 'menu';
     setPauseMenuOpen(false);
-    sidebarRight.classList.remove('open');
-    if (sidebarLeft) sidebarLeft.classList.remove('open');
     sidebarMask.classList.remove('show');
     if (sidebarPanelResetTimer) { window.clearTimeout(sidebarPanelResetTimer); sidebarPanelResetTimer = 0; }
     if (closingSubpage) {
@@ -10397,289 +10317,6 @@
     if (winCloseBtn) winCloseBtn.addEventListener('click', function () {
       closeGuestMenu();
       if (window.FGEXPIG_DESKTOP && typeof window.FGEXPIG_DESKTOP.closeWindow === 'function') window.FGEXPIG_DESKTOP.closeWindow();
-    });
-  }
-  var HOTSPOT_CONSOLE_EMOJI_NAMES = (function () {
-    var names = [];
-    var seen = {};
-    function add(name) {
-      var value = String(name || '').trim();
-      var key = value.toLowerCase();
-      if (!value || seen[key]) return;
-      seen[key] = true;
-      names.push(value);
-    }
-    var manifest = Array.isArray(window.FGEXPIG_EMOJI_MANIFEST) ? window.FGEXPIG_EMOJI_MANIFEST : [];
-    manifest.forEach(add);
-    Object.keys(HOTSPOT_EMOJI_FILES || {}).forEach(add);
-    return names.sort(function (a, b) {
-      return b.length - a.length || a.localeCompare(b);
-    });
-  })();
-  var hotspotConsoleFileChecks = {};
-  var hotspotConsoleRenderToken = 0;
-  var HOTSPOT_CONSOLE_IGNORED_KEY = 'fgexpig_console_ignored_v1';
-  var hotspotConsoleIgnoredItems = (function () {
-    try {
-      var parsed = JSON.parse(localStorage.getItem(HOTSPOT_CONSOLE_IGNORED_KEY) || '[]');
-      if (!Array.isArray(parsed)) return [];
-      var seen = {};
-      return parsed.map(function (item) {
-        return { text: String(item && item.text || item || '') };
-      }).filter(function (item) {
-        if (!item.text || seen[item.text]) return false;
-        seen[item.text] = true;
-        return true;
-      });
-    } catch (err) {
-      return [];
-    }
-  })();
-  var hotspotConsoleIgnoredKeys = {};
-  hotspotConsoleIgnoredItems.forEach(function (item) {
-    hotspotConsoleIgnoredKeys[item.text] = true;
-  });
-
-  function ensureHotspotConsoleData(id) {
-    var state = hotspotMemory[id];
-    if (state && state.postsLoaded) return Promise.resolve(true);
-    if (state && state.postsPromise) return state.postsPromise;
-    return loadDataFragment('news', id);
-  }
-
-  function hotspotConsoleCommentEntries(id) {
-    var entries = [];
-    (hotspotPostsOf(id) || []).forEach(function (post) {
-      function walk(comments) {
-        (comments || []).forEach(function (comment) {
-          if (!comment) return;
-          var text = String(comment.text || '');
-          if (text) {
-            entries.push({
-              id: id,
-              post: post,
-              comment: comment,
-              name: comment.name || '匿名',
-              text: text
-            });
-          }
-          walk(comment.replies);
-        });
-      }
-      walk(post.comments);
-    });
-    return entries;
-  }
-
-  function hotspotConsoleEntryPrefix(entry) {
-    var parts = [entry.id];
-    if (entry.post && entry.post.title) parts.push(entry.post.title);
-    if (entry.name) parts.push(entry.name);
-    return '[' + parts.join(' / ') + '] ';
-  }
-
-  function hotspotConsoleYellowNames(text) {
-    var value = String(text == null ? '' : text);
-    if (!value) return [];
-    var lower = value.toLowerCase();
-    var occupied = [];
-    var found = [];
-    HOTSPOT_CONSOLE_EMOJI_NAMES.forEach(function (name) {
-      var needle = String(name || '').toLowerCase();
-      if (!needle) return;
-      var search = 0;
-      while (search < lower.length) {
-        var index = lower.indexOf(needle, search);
-        if (index < 0) break;
-        var end = index + needle.length;
-        var overlaps = occupied.some(function (range) { return index < range[1] && end > range[0]; });
-        if (!overlaps) {
-          occupied.push([index, end]);
-          var escaped = index > 0 && value.charAt(index - 1) === '\\';
-          var oneCharBoundary = needle.length > 1 || index === 0 || end === value.length ||
-            /[\s，。！？!?、；;：:、（）()【】\[\]《》]/.test(value.charAt(index - 1)) ||
-            /[\s，。！？!?、；;：:、（）()【】\[\]《》]/.test(value.charAt(end));
-          if (!escaped && oneCharBoundary && found.indexOf(name) < 0) found.push(name);
-        }
-        search = end;
-      }
-    });
-    return found;
-  }
-
-  function hotspotConsoleImageUrl(file, level) {
-    return qualityImageUrlAtLevel(file, 'emoji', level);
-  }
-
-  function hotspotConsoleMissingQualityLevels(file) {
-    var levels = [1, 2, 3, 4, 5];
-    return Promise.all(levels.map(function (level) {
-      var url = hotspotConsoleImageUrl(file, level);
-      if (!hotspotConsoleFileChecks[url]) hotspotConsoleFileChecks[url] = imgExists(url);
-      return hotspotConsoleFileChecks[url];
-    })).then(function (results) {
-      var missing = [];
-      results.forEach(function (exists, index) {
-        if (!exists) missing.push(levels[index]);
-      });
-      return missing;
-    });
-  }
-
-  function collectHotspotConsoleIssues(ids) {
-    var red = [];
-    var yellow = [];
-    var checks = [];
-    var usedEmoji = {};
-    ids.forEach(function (id) {
-      hotspotConsoleCommentEntries(id).forEach(function (entry) {
-        var text = entry.text;
-        var prefix = hotspotConsoleEntryPrefix(entry);
-        hotspotConsoleYellowNames(text).forEach(function (yellowName) {
-          yellow.push({ text: prefix + '疑似缺少转义：' + yellowName });
-        });
-        var candidate = hotspotStandaloneCandidate(text);
-        if (!candidate) return;
-        var emoji = hotspotEmojiAt(candidate, 0);
-        if (!emoji || emoji.length !== candidate.length) {
-          red.push({ text: prefix + '未找到表情包：' + candidate });
-          return;
-        }
-        usedEmoji[String(emoji.name || '').toLowerCase()] = true;
-        (function (token, emojiInfo, entryInfo) {
-          checks.push(hotspotConsoleMissingQualityLevels(emojiInfo.file).then(function (missingLevels) {
-            if (missingLevels.length) {
-              red.push({
-                text: hotspotConsoleEntryPrefix(entryInfo) + '未找到表情包：' + token + '（缺失画质：' + missingLevels.join('、') + '）'
-              });
-            }
-          }));
-        })(candidate, emoji, entry);
-      });
-    });
-    return Promise.all(checks).then(function () {
-      var unused = [];
-      HOTSPOT_CONSOLE_EMOJI_NAMES.forEach(function (name) {
-        var key = String(name || '').toLowerCase();
-        if (!key || usedEmoji[key]) return;
-        unused.push({ text: '未使用的表情包：' + name, name: name });
-      });
-      unused.sort(function (a, b) {
-        return a.name.localeCompare(b.name, 'zh-Hans-CN');
-      });
-      return { red: red, yellow: yellow.concat(unused) };
-    });
-  }
-
-  function hotspotConsoleIgnoreKey(item) {
-    return String(item && item.text || '');
-  }
-  function saveHotspotConsoleIgnored() {
-    try {
-      localStorage.setItem(HOTSPOT_CONSOLE_IGNORED_KEY, JSON.stringify(hotspotConsoleIgnoredItems.map(function (item) {
-        return item.text;
-      })));
-    } catch (err) {}
-  }
-  function showHotspotConsoleMainPage() {
-    if (consoleMainPage) consoleMainPage.hidden = false;
-    if (consoleIgnoredPage) consoleIgnoredPage.hidden = true;
-  }
-  function renderHotspotConsoleIgnoredPage() {
-    if (!consoleIgnoredContent) return;
-    consoleIgnoredContent.innerHTML = '';
-    if (!hotspotConsoleIgnoredItems.length) {
-      var empty = document.createElement('div');
-      empty.className = 'console-item is-muted';
-      empty.textContent = '暂无已忽略提示';
-      consoleIgnoredContent.appendChild(empty);
-      return;
-    }
-    hotspotConsoleIgnoredItems.forEach(function (item) {
-      var el = document.createElement('div');
-      el.className = 'console-item is-yellow';
-      el.textContent = item.text;
-      consoleIgnoredContent.appendChild(el);
-    });
-  }
-  function showHotspotConsoleIgnoredPage() {
-    if (consoleMainPage) consoleMainPage.hidden = true;
-    if (consoleIgnoredPage) consoleIgnoredPage.hidden = false;
-    renderHotspotConsoleIgnoredPage();
-  }
-  function ignoreHotspotConsoleItem(item, element) {
-    var key = hotspotConsoleIgnoreKey(item);
-    if (!key) return;
-    if (!hotspotConsoleIgnoredKeys[key]) {
-      hotspotConsoleIgnoredKeys[key] = true;
-      hotspotConsoleIgnoredItems.push({ text: key });
-      saveHotspotConsoleIgnored();
-    }
-    if (element && element.parentNode) element.parentNode.removeChild(element);
-    renderHotspotConsoleIgnoredPage();
-  }
-  function renderHotspotConsole() {
-    if (!consoleContent) return;
-    var renderToken = ++hotspotConsoleRenderToken;
-    consoleContent.innerHTML = '';
-    var loading = document.createElement('div');
-    loading.className = 'console-item is-muted';
-    loading.textContent = '正在检查热点表情包...';
-    consoleContent.appendChild(loading);
-    var ids = ((dataStore && dataStore.core) || []).map(function (row) {
-      return row && row.id ? String(row.id) : '';
-    }).filter(Boolean);
-    if (!ids.length) {
-      loading.textContent = '未发现热点表情包转义问题';
-      return;
-    }
-    Promise.all(ids.map(ensureHotspotConsoleData)).then(function () {
-      return collectHotspotConsoleIssues(ids);
-    }).then(function (result) {
-      if (renderToken !== hotspotConsoleRenderToken) return;
-      consoleContent.innerHTML = '';
-      function append(items, className, removable) {
-        items.forEach(function (item) {
-          var el = document.createElement('div');
-          el.className = 'console-item ' + className + (removable ? ' is-ignorable' : '');
-          if (removable) {
-            var text = document.createElement('span');
-            text.className = 'console-item-text';
-            text.textContent = item.text;
-            var remove = document.createElement('button');
-            remove.className = 'console-ignore-btn';
-            remove.type = 'button';
-            remove.textContent = '×';
-            remove.setAttribute('aria-label', '忽略此提示');
-            remove.onclick = (function (capturedItem, capturedEl) {
-              return function () { ignoreHotspotConsoleItem(capturedItem, capturedEl); };
-            })(item, el);
-            el.appendChild(text);
-            el.appendChild(remove);
-          } else {
-            el.textContent = item.text;
-          }
-          consoleContent.appendChild(el);
-        });
-      }
-      var visibleYellow = result.yellow.filter(function (item) {
-        return !hotspotConsoleIgnoredKeys[hotspotConsoleIgnoreKey(item)];
-      });
-      append(result.red, 'is-red', false);
-      append(visibleYellow, 'is-yellow', true);
-      if (!result.red.length && !visibleYellow.length) {
-        var empty = document.createElement('div');
-        empty.className = 'console-item is-muted';
-        empty.textContent = '未发现热点表情包转义问题';
-        consoleContent.appendChild(empty);
-      }
-    }).catch(function () {
-      if (renderToken !== hotspotConsoleRenderToken) return;
-      consoleContent.innerHTML = '';
-      var failed = document.createElement('div');
-      failed.className = 'console-item is-muted';
-      failed.textContent = '热点表情包检查失败';
-      consoleContent.appendChild(failed);
     });
   }
 
@@ -12373,7 +12010,7 @@
     var account = currentAccountRecord();
     if (accountLoginError) accountLoginError.textContent = '';
     if (accountLoginPass) accountLoginPass.value = '';
-    if (accountLoginUser) accountLoginUser.value = account && account.user ? account.user : (user.isAdmin ? 'admin' : '');
+    if (accountLoginUser) accountLoginUser.value = account && account.user ? account.user : '';
     if (accountLogoutTop) {
       var guestReturn = isGuestUser();
       var logoutLabel = accountLogoutTop.querySelector('.settings-back-label');
@@ -12610,17 +12247,6 @@
   if (playerName) playerName.addEventListener('click', function () {
     openTopbarShortcutPanel(function () { openSettingsPanel('audio'); });
   });
-  editBtn.addEventListener('click', function () {
-    dmActiveCat = 'all';
-    renderDmCats();
-    renderDmContent();
-    openSidebar('right');
-  });
-  if (consoleBtn) consoleBtn.addEventListener('click', function () {
-    openSidebar('console');
-  });
-  if (consoleIgnoredBtn) consoleIgnoredBtn.addEventListener('click', showHotspotConsoleIgnoredPage);
-  if (consoleIgnoredBack) consoleIgnoredBack.addEventListener('click', showHotspotConsoleMainPage);
   sidebarMask.addEventListener('click', closeSidebars);
 
   function focusInputEnd(input) {
@@ -13558,7 +13184,6 @@
   loginCancel.addEventListener('click', closeLogin);
   loginLogout.addEventListener('click', function () {
     user.name = GUEST_NAME;
-    user.isAdmin = false;
     user.media = '';
     clearSession();
     updateUserUI();
@@ -13569,55 +13194,6 @@
     if (e.target === loginOverlay) closeLogin();
   });
 
-  /* ---------- 管理员密码：只存加盐 SHA-256，不存明文 ----------
-     换密码：运行 build\tools\make-password-hash.bat 新密码，把输出的 hash 填到下面。
-     注意：前端校验只能防"明文直接被看到"，不能防有心人离线爆破。 */
-  var ADMIN_SALT = 'fgexpig::admin::v1';
-  var ADMIN_PASS_HASH = 'dcd9e8f2928e98a61204b7f888b032c5a2e9b461cb37a2171fba3bf603678b26';
-
-  function sha256Hex(input) {
-    function rr(v, a) { return (v >>> a) | (v << (32 - a)); }
-    var K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
-             0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
-             0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
-             0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
-             0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
-             0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
-             0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
-             0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
-    var H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
-    var str = unescape(encodeURIComponent(String(input)));
-    var bytes = [];
-    for (var i = 0; i < str.length; i++) bytes.push(str.charCodeAt(i) & 0xff);
-    var bitLen = bytes.length * 8;
-    bytes.push(0x80);
-    while (bytes.length % 64 !== 56) bytes.push(0);
-    for (var k = 7; k >= 0; k--) bytes.push(Math.floor(bitLen / Math.pow(2, k * 8)) & 0xff);
-    var w = new Array(64);
-    for (var off = 0; off < bytes.length; off += 64) {
-      for (var j = 0; j < 16; j++) {
-        w[j] = (bytes[off + j * 4] << 24) | (bytes[off + j * 4 + 1] << 16) | (bytes[off + j * 4 + 2] << 8) | bytes[off + j * 4 + 3];
-      }
-      for (j = 16; j < 64; j++) {
-        var s0 = rr(w[j - 15], 7) ^ rr(w[j - 15], 18) ^ (w[j - 15] >>> 3);
-        var s1 = rr(w[j - 2], 17) ^ rr(w[j - 2], 19) ^ (w[j - 2] >>> 10);
-        w[j] = (w[j - 16] + s0 + w[j - 7] + s1) | 0;
-      }
-      var a = H[0], b = H[1], c = H[2], d = H[3], e = H[4], f = H[5], g = H[6], h = H[7];
-      for (j = 0; j < 64; j++) {
-        var S1 = rr(e, 6) ^ rr(e, 11) ^ rr(e, 25);
-        var ch = (e & f) ^ (~e & g);
-        var t1 = (h + S1 + ch + K[j] + w[j]) | 0;
-        var S0 = rr(a, 2) ^ rr(a, 13) ^ rr(a, 22);
-        var maj = (a & b) ^ (a & c) ^ (b & c);
-        var t2 = (S0 + maj) | 0;
-        h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
-      }
-      H[0] = (H[0] + a) | 0; H[1] = (H[1] + b) | 0; H[2] = (H[2] + c) | 0; H[3] = (H[3] + d) | 0;
-      H[4] = (H[4] + e) | 0; H[5] = (H[5] + f) | 0; H[6] = (H[6] + g) | 0; H[7] = (H[7] + h) | 0;
-    }
-    return H.map(function (x) { return ('00000000' + (x >>> 0).toString(16)).slice(-8); }).join('');
-  }
 
   function performLogin(username, password, errorEl) {
     var u = String(username || '').trim();
@@ -13628,16 +13204,7 @@
     })[0];
     if (acc) {
       user.name = acc.nick;
-      user.isAdmin = false;
       user.media = acc.media || '';
-      saveSession();
-      updateUserUI();
-      return true;
-    }
-    if (u === 'admin' && sha256Hex(ADMIN_SALT + p) === ADMIN_PASS_HASH) {
-      user.name = 'admin';
-      user.isAdmin = true;
-      user.media = '';
       saveSession();
       updateUserUI();
       return true;
@@ -13673,7 +13240,6 @@
 
   function logoutInlineAccount() {
     user.name = GUEST_NAME;
-    user.isAdmin = false;
     user.media = '';
     clearSession();
     updateUserUI();
@@ -15061,62 +14627,6 @@
     reader.readAsText(file);
   }
 
-  /* ---------- 右侧边栏数据管理：动态渲染分类 + 数据卡片 ---------- */
-  var dmCatsEl = document.getElementById('dmCats');
-  var dmContentEl = document.getElementById('dmContent');
-  var dmActiveCat = 'all'; // 'all' 或活动ID
-  var reviewFileInput = document.getElementById('reviewFileInput');
-  var achvFileInput = document.getElementById('achvFileInput');
-  var scheduleFileInput = document.getElementById('scheduleFileInput');
-  var resourceListFileInput = document.getElementById('resourceListFileInput');
-  var shopFileInput = document.getElementById('shopFileInput');
-  var libraryFileInput = document.getElementById('libraryFileInput');
-  var hotspotFileInput = document.getElementById('hotspotFileInput');
-  var hotspotPointsFileInput = document.getElementById('hotspotPointsFileInput');
-
-  function dmSeasonList() {
-    var core = (dataStore && dataStore.core) || [];
-    return core.filter(function (r) { return r.held !== false; }).map(function (r) {
-      return { id: r.id, name: r.name };
-    });
-  }
-
-  function renderDmCats() {
-    if (!dmCatsEl) return;
-    dmCatsEl.innerHTML = '';
-    // 全部
-    var catAll = document.createElement('button');
-    catAll.className = 'dm-cat' + (dmActiveCat === 'all' ? ' active' : '');
-    catAll.textContent = '全部';
-    catAll.onclick = function () { dmActiveCat = 'all'; renderDmCats(); renderDmContent(); };
-    dmCatsEl.appendChild(catAll);
-    // 各赛季
-    dmSeasonList().forEach(function (s) {
-      var btn = document.createElement('button');
-      btn.className = 'dm-cat' + (dmActiveCat === s.id ? ' active' : '');
-      btn.textContent = s.name;
-      btn.onclick = function () { dmActiveCat = s.id; renderDmCats(); renderDmContent(); };
-      dmCatsEl.appendChild(btn);
-    });
-  }
-
-  function makeDataCard(title, desc, metaId, importFn, exportFn) {
-    var card = document.createElement('div');
-    card.className = 'data-card';
-    var h = document.createElement('div'); h.className = 'data-card-title'; h.textContent = title;
-    var d = document.createElement('div'); d.className = 'data-card-desc'; d.textContent = desc;
-    var m = document.createElement('div'); m.className = 'data-card-meta'; m.id = metaId; m.textContent = '未加载';
-    var a = document.createElement('div'); a.className = 'data-card-actions';
-    var bi = document.createElement('button'); bi.className = 'data-btn'; bi.type = 'button'; bi.textContent = '导入 TXT';
-    bi.onclick = importFn;
-    var be = document.createElement('button'); be.className = 'data-btn data-btn-export'; be.type = 'button'; be.textContent = '导出 JS';
-    be.onclick = exportFn;
-    a.appendChild(bi); a.appendChild(be);
-    card.appendChild(h); card.appendChild(d); card.appendChild(m); card.appendChild(a);
-    return card;
-  }
-
-
   var dataFileLoadPromises = {};
 
   function dataFileRegistryObject() {
@@ -15537,163 +15047,6 @@
     });
   }
 
-  function dataFileJson(fragment) {
-    return JSON.stringify(fragment, null, 2)
-      .replace(/\u2028/g, '\\u2028')
-      .replace(/\u2029/g, '\\u2029');
-  }
-
-  function downloadDataFileFragment(relativePath, fragment) {
-    var content = '(window.FGEXPIG_DATA_FILES = window.FGEXPIG_DATA_FILES || {})[' +
-      JSON.stringify(relativePath) + '] = ' + dataFileJson(fragment) + ';\n';
-    var blob = new Blob([content], { type: 'text/javascript;charset=utf-8' });
-    var link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = relativePath.split('/').pop();
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    setTimeout(function () { URL.revokeObjectURL(link.href); }, 3000);
-    alert('已生成数据 JS 文件：\n' + relativePath + '\n请将该文件放入此路径，然后刷新网页。');
-  }
-
-  function exportDataFile(type, id) {
-    var descriptor = dataFileDescriptor(type, id);
-    if (!descriptor) return;
-    var fragment = descriptor.current();
-    if (!descriptor.hasData(fragment)) {
-      alert('暂无数据可导出');
-      return;
-    }
-    downloadDataFileFragment(descriptor.path, fragment);
-  }
-
-  function generateDataFileFromTxt(type, id, file) {
-    if (!file || !/\.txt$/i.test(file.name || '')) {
-      alert('请选择 TXT 文件');
-      return;
-    }
-    var descriptor = dataFileDescriptor(type, id);
-    if (!descriptor) return;
-    var reader = new FileReader();
-    reader.onload = function () {
-      try {
-        var fragment = descriptor.parse(String(reader.result || ''));
-        if (!descriptor.hasData(fragment)) throw new Error('empty');
-        downloadDataFileFragment(descriptor.path, fragment);
-      } catch (err) {
-        alert('生成失败：' + (err && err.message === 'empty' ? '未解析到有效数据' : 'TXT 文件格式错误'));
-      }
-    };
-    reader.readAsText(file);
-  }
-
-  function renderDmContent() {
-    if (!dmContentEl) return;
-    dmContentEl.innerHTML = '';
-    if (dmActiveCat === 'all') {
-      // 全部：5张全局数据卡片
-      dmContentEl.appendChild(makeDataCard('活动核心数据', '活动ID · 中文名 · 英文名 · 音乐 · 显示（0隐藏 / 1显示 / 11默认） · 开发商 · 发行商 · 发行日期 · 标签', 'coreMeta',
-        function () { dataFileInput.click(); }, function () { exportDataFile('core'); }));
-      dmContentEl.appendChild(makeDataCard('活动商店数据', '活动标识 · 版本/DLC￥价格 · 包含内容 · 地图代码', 'shopMeta',
-        function () { shopFileInput.click(); }, function () { exportDataFile('shop'); }));
-      dmContentEl.appendChild(makeDataCard('活动库存数据', '人名 · 活动标识商品名（可无内容）', 'libraryMeta',
-        function () { libraryFileInput.click(); }, function () { exportDataFile('library'); }));
-      dmContentEl.appendChild(makeDataCard('账号数据', '昵称 · 用户名 · 密码 · 媒体机构（可省略）', 'accountMeta',
-        function () { accountFileInput.click(); }, function () { exportDataFile('account'); }));
-      dmContentEl.appendChild(makeDataCard('称号数据', '昵称 · [等级]称号', 'titleMeta',
-        function () { titleFileInput.click(); }, function () { exportDataFile('title'); }));
-      dmContentEl.appendChild(makeDataCard('更新日志', '第一行版本 · 下面内容 · 空行分隔多条日志（resources/update.js）', 'updateMeta',
-        function () { updateFileInput.click(); }, function () { exportDataFile('update'); }));
-      // 刷新各 meta
-      applyCoreData(); applyShopData(); applyLibraryData(); applyAccountData(); applyTitleData(); applyUpdateData();
-    } else {
-      // 各赛季：测评、成就与热点
-      var id = dmActiveCat;
-      dmContentEl.appendChild(makeDataCard('测评数据', '机构 · 分数 · 评测文本；多分类用 --- 分开，每类第一行写分类名', 'reviewMeta',
-        function () { reviewFileInput.click(); }, function () { exportDataFile('review', id); }));
-      dmContentEl.appendChild(makeDataCard('成就数据', '《奖杯组》· [奖杯等级，黑=紫金] · 成就名 · 说明', 'achvMeta',
-        function () { achvFileInput.click(); }, function () { exportDataFile('achievements', id); }));
-      dmContentEl.appendChild(makeDataCard('日程数据', '日期 · 日程（date.txt 格式）', 'scheduleMeta',
-        function () { scheduleFileInput.click(); }, function () { exportDataFile('schedule', id); }));
-      dmContentEl.appendChild(makeDataCard('资源列表数据', '文件名 · 标题 · 分类（空行后的段落为精选列表）', 'resourceListMeta',
-        function () { resourceListFileInput.click(); }, function () { exportDataFile('list', id); }));
-      dmContentEl.appendChild(makeDataCard('热点数据', '日期时间 · 标题 · 内容 · 缩进评论', 'hotspotMeta',
-        function () { hotspotFileInput.click(); }, function () { exportDataFile('news', id); }));
-      dmContentEl.appendChild(makeDataCard('关键词数据', '关键词 · 支持换行、逗号或顿号分隔', 'keywordMeta',
-        function () { hotspotPointsFileInput.click(); }, function () { exportDataFile('points', id); }));
-      applyReviewData(id); applyAchvData(id); applyScheduleData(id); applyResourceListData(id); applyHotspotData(id); applyHotspotPoints(id);
-      Promise.all([fetchReview(id), fetchAchv(id), fetchShop(id), fetchSchedule(id), fetchResourceList(id)]).then(function () {
-        if (dmActiveCat !== id) return;
-        applyReviewData(id);
-        applyAchvData(id);
-        applyScheduleData(id);
-        applyResourceListData(id);
-      });
-    }
-  }
-
-  // 文件选择器事件
-  var dataFileInput = document.getElementById('dataFileInput');
-  dataFileInput.addEventListener('change', function () {
-    if (dataFileInput.files && dataFileInput.files[0]) generateDataFileFromTxt('core', '', dataFileInput.files[0]);
-    dataFileInput.value = '';
-  });
-  var accountFileInput = document.getElementById('accountFileInput');
-  accountFileInput.addEventListener('change', function () {
-    if (accountFileInput.files && accountFileInput.files[0]) generateDataFileFromTxt('account', '', accountFileInput.files[0]);
-    accountFileInput.value = '';
-  });
-  var titleFileInput = document.getElementById('titleFileInput');
-  titleFileInput.addEventListener('change', function () {
-    if (titleFileInput.files && titleFileInput.files[0]) generateDataFileFromTxt('title', '', titleFileInput.files[0]);
-    titleFileInput.value = '';
-  });
-  var updateFileInput = document.getElementById('updateFileInput');
-  updateFileInput.addEventListener('change', function () {
-    if (updateFileInput.files && updateFileInput.files[0]) generateDataFileFromTxt('update', '', updateFileInput.files[0]);
-    updateFileInput.value = '';
-  });
-  reviewFileInput.addEventListener('change', function () {
-    if (reviewFileInput.files && reviewFileInput.files[0] && dmActiveCat !== 'all')
-      generateDataFileFromTxt('review', dmActiveCat, reviewFileInput.files[0]);
-    reviewFileInput.value = '';
-  });
-  achvFileInput.addEventListener('change', function () {
-    if (achvFileInput.files && achvFileInput.files[0] && dmActiveCat !== 'all')
-      generateDataFileFromTxt('achievements', dmActiveCat, achvFileInput.files[0]);
-    achvFileInput.value = '';
-  });
-  scheduleFileInput.addEventListener('change', function () {
-    if (scheduleFileInput.files && scheduleFileInput.files[0] && dmActiveCat !== 'all')
-      generateDataFileFromTxt('schedule', dmActiveCat, scheduleFileInput.files[0]);
-    scheduleFileInput.value = '';
-  });
-  resourceListFileInput.addEventListener('change', function () {
-    if (resourceListFileInput.files && resourceListFileInput.files[0] && dmActiveCat !== 'all')
-      generateDataFileFromTxt('list', dmActiveCat, resourceListFileInput.files[0]);
-    resourceListFileInput.value = '';
-  });
-  shopFileInput.addEventListener('change', function () {
-    if (shopFileInput.files && shopFileInput.files[0])
-      generateDataFileFromTxt('shop', '', shopFileInput.files[0]);
-    shopFileInput.value = '';
-  });
-  libraryFileInput.addEventListener('change', function () {
-    if (libraryFileInput.files && libraryFileInput.files[0])
-      generateDataFileFromTxt('library', '', libraryFileInput.files[0]);
-    libraryFileInput.value = '';
-  });
-  hotspotFileInput.addEventListener('change', function () {
-    if (hotspotFileInput.files && hotspotFileInput.files[0] && dmActiveCat !== 'all')
-      generateDataFileFromTxt('news', dmActiveCat, hotspotFileInput.files[0]);
-    hotspotFileInput.value = '';
-  });
-  hotspotPointsFileInput.addEventListener('change', function () {
-    if (hotspotPointsFileInput.files && hotspotPointsFileInput.files[0] && dmActiveCat !== 'all')
-      generateDataFileFromTxt('points', dmActiveCat, hotspotPointsFileInput.files[0]);
-    hotspotPointsFileInput.value = '';
-  });
 
   /* ---------- 账号数据 ---------- */
   var ACCOUNT_KEY = 'fgexpig_accounts_v1';
@@ -15758,7 +15111,7 @@
   }
 
   function syncUserMediaFromAccounts() {
-    if (typeof user === 'undefined' || !user || user.isAdmin) return;
+    if (typeof user === 'undefined' || !user) return;
     var accounts = (accountStore && accountStore.accounts) || [];
     for (var i = 0; i < accounts.length; i++) {
       if (accounts[i].nick !== user.name) continue;
@@ -16478,7 +15831,7 @@
       if (type === 'experience') {
         if (isDesktopRuntime() && !isGuestUser()) {
           renderPauseLeaderboardSlot(slot, i18nT('pause.lb.mapScore.name', '地图跑分榜'), mapScoreRows, function (value) {
-            return pauseLeaderboardFullNumber(value);
+            return formatMapCount(value);
           });
         } else {
           renderPauseLeaderboardSlot(slot, '老登等级榜', experienceRows, function (value) {
@@ -16491,7 +15844,7 @@
         });
       } else if (type === 'comments') {
         renderPauseLeaderboardSlot(slot, '水军发言榜', commentRows, function (value) {
-          return pauseLeaderboardFullNumber(value);
+          return formatMapCount(value);
         });
       }
     });
@@ -18231,7 +17584,6 @@
     renderHomeFilterHint();
     renderSettingsBottomActions();
     initDividerScrollbars();
-    syncAdminCornerButtons();
     readSlotSize();
 
     // 先用已缓存的核心数据构建；没有缓存时回退到内置列表，后续同步数据时再重建。
@@ -18309,7 +17661,6 @@
       scheduleSectionCardSnap(activeSection || document);
       // 视口宽度变化后卡片边界会变，底栏两侧按键与下边距需要重新对齐。
       scheduleDockSideIconAlignment();
-      syncAdminCornerButtons();
     });
   }
 
