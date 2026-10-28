@@ -1,26 +1,13 @@
 /* ===== 字体 ===== */
 @font-face {
   font-family: 'SarasaGothic';
-  src: url('../fonts/等距更纱黑体(默认).woff') format('woff'),
-       url('../fonts/等距更纱黑体(默认).ttf') format('truetype');
+  src: url('../fonts/default.woff') format('woff');
   font-display: swap;
 }
+/* 仅游戏模式（本地 Web 主机）提供彩色 emoji 字体；网页端回退系统 emoji */
 @font-face {
-  font-family: 'FgexpigKaiti';
-  src: url('../fonts/楷体.woff') format('woff'),
-       url('../fonts/楷体.ttf') format('truetype');
-  font-display: swap;
-}
-@font-face {
-  font-family: 'FgexpigMengyaBear';
-  src: url('../fonts/萌芽熊体.woff') format('woff'),
-       url('../fonts/萌芽熊体.ttf') format('truetype');
-  font-display: swap;
-}
-@font-face {
-  font-family: 'FgexpigShanhaiSummer';
-  src: url('../fonts/山海仲夏夜物语.woff') format('woff'),
-       url('../fonts/山海仲夏夜物语.ttf') format('truetype');
+  font-family: 'FgEmoji';
+  src: url('/__fgsteam/NotoColorEmoji.ttf') format('truetype');
   font-display: swap;
 }
 
@@ -35,7 +22,6 @@
   --text-secondary: rgba(255, 255, 255, 0.45);
   --accent-pink: #ff72b6;
   --accent-pink-text-stroke: 0.28px;
-  /* 楷体笔画细，同色描边需要更粗才看得见（见 html[data-font="kaiti"] 覆盖） */
   --accent-pink-rgb: 255, 114, 182;
   --wallpaper-dim-top: 0.175;
   --wallpaper-dim-bottom: 0.42;
@@ -96,19 +82,6 @@
 button, input, select, textarea { font-family: inherit; }
 /* 全局文字统一使用粗体 */
 body, body * { font-weight: 700 !important; }
-/* 新字体本身较重，使用时取消全局加粗与合成粗体 */
-html[data-font="mengya-bear"] body,
-html[data-font="mengya-bear"] body * {
-  font-weight: 100 !important;
-  font-synthesis: none;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: geometricPrecision;
-}
-html[data-font="shanhai-summer"] body,
-html[data-font="shanhai-summer"] body * {
-  font-weight: 400 !important;
-  font-synthesis: none;
-}
 
 html, body {
   height: 100%;
@@ -116,7 +89,7 @@ html, body {
 }
 
 body {
-  font-family: var(--app-font), 'Segoe UI', sans-serif;
+  font-family: var(--app-font), 'FgEmoji', 'Segoe UI Emoji', 'Segoe UI', sans-serif;
   color: #fff;
   /* 无壁纸时的兜底渐变背景 */
   background:
@@ -2559,8 +2532,6 @@ html.pause-menu-open .account-page input { cursor: text !important; }
   /* 先描边后填充，避免描边吃掉笔画 */
   paint-order: stroke fill;
 }
-/* 楷体笔画细：粉色描边加粗到 0.7px，避免看起来"没有描边" */
-html[data-font="kaiti"] { --accent-pink-text-stroke: 0.7px; }
 .pause-menu .settings-page .font-item-name { font-size: var(--text-large); }
 .pause-menu .settings-page .font-item.is-active {
   border-color: rgba(255, 255, 255, 0.62);

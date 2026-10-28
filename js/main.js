@@ -10466,10 +10466,7 @@
   var keybindings = loadKeybindings();
   var keyCaptureActionId = null;
   var FONT_OPTIONS = [
-    { id: 'sarasa', name: '等距更纱黑体（默认）', family: "'SarasaGothic'", previewWeight: 700 },
-    { id: 'kaiti', name: '楷体', family: "'FgexpigKaiti'", previewWeight: 700 },
-    { id: 'mengya-bear', name: '萌芽熊体', family: "'FgexpigMengyaBear'", previewWeight: 100 },
-    { id: 'shanhai-summer', name: '山海仲夏夜物语', family: "'FgexpigShanhaiSummer'", previewWeight: 400 }
+    { id: 'sarasa', name: '等距更纱黑体（默认）', family: "'SarasaGothic'", previewWeight: 700 }
   ];
   var currentFontId = FONT_OPTIONS[0].id;
   var currentSettingsTab = 'interface';
@@ -11456,10 +11453,7 @@
 
   // 每个字体选项对应的字体文件（缓存加速时只缓存当前选中的这一套）
   var FONT_ASSET_FILES = {
-    sarasa: ['fonts/等距更纱黑体(默认).woff', 'fonts/等距更纱黑体(默认).ttf'],
-    kaiti: ['fonts/楷体.woff', 'fonts/楷体.ttf'],
-    'mengya-bear': ['fonts/萌芽熊体.woff', 'fonts/萌芽熊体.ttf'],
-    'shanhai-summer': ['fonts/山海仲夏夜物语.woff', 'fonts/山海仲夏夜物语.ttf']
+    sarasa: ['fonts/default.woff']
   };
 
   function fontAssetPaths(id) {
@@ -11470,10 +11464,10 @@
   }
 
   var FONT_LANG_SUPPORT = {
-    'zh-Hans': ['sarasa', 'kaiti', 'mengya-bear', 'shanhai-summer'],
-    'en': ['sarasa', 'kaiti', 'mengya-bear', 'shanhai-summer'],
-    'zh-Hant': ['sarasa', 'kaiti'],
-    'ja': ['sarasa', 'kaiti']
+    'zh-Hans': ['sarasa'],
+    'en': ['sarasa'],
+    'zh-Hant': ['sarasa'],
+    'ja': ['sarasa']
   };
 
   function supportedFontIds() {
