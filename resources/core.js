@@ -108,6 +108,7 @@
       "publisher": "JianZha Publisher",
       "releaseDate": "2026 年 7 月 3 日",
       "tags": [
+        "轻松",
         "速决"
       ]
     },
@@ -407,7 +408,7 @@
       "defaultSelected": false,
       "developer": "JianZha Publisher",
       "publisher": "JianZha Publisher",
-      "releaseDate": "2026 年 10 月 30 日",
+      "releaseDate": "2026 年 11 月 2 日",
       "tags": [
         "关卡竞赛"
       ]
