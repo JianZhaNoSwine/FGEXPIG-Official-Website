@@ -43,6 +43,7 @@
   var running = false;
   var pumpTimer = 0;
   var blocked = false;      // 访客模式：完全停用（不注册、不请求）
+  var readonly = !!(global.FGSTEAM_MAPSTATS_READONLY); // 桌面端：由 app 后台 WebView 统一抓取，网页只读
 
   // 地图数据卡片由 exe（桌面端）独占：网页版连一次请求都不发
   function desktopOnly() {
@@ -133,6 +134,7 @@
     // 若不通知，订阅方（首页地图卡片、暂停菜单顶部统计）会一直停在 N/A。
     notify();
     if (!queueNew.length && !queueStale.length) return;
+    if (readonly) return;
     var wait = Number(store.resumeAt || 0) - Date.now();
     schedulePump(wait > 0 ? wait : 0);
   }
@@ -175,6 +177,7 @@
   function schedulePump(delay) {
     if (pumpTimer) return;
     if (blocked) return;
+    if (readonly) return;
     pumpTimer = global.setTimeout(function () {
       pumpTimer = 0;
       pump();
@@ -190,6 +193,7 @@
   function pump() {
     if (!desktopOnly()) return;
     if (blocked) return;
+    if (readonly) return;
     // 处于风控暂停期：等到恢复时间再继续（恢复时间已持久化，关掉页面也有效）
     var wait = Number(store.resumeAt || 0) - Date.now();
     if (wait > 0) {
@@ -456,6 +460,24 @@
     };
   }
 
+  // 桌面端 app 的后台抓取器写入新数据后通过桥推送，网页只读地替换内存数据
+  function applyStore(text) {
+    try {
+      var parsed = JSON.parse(String(text || ''));
+      if (!parsed || typeof parsed !== 'object') return;
+      store = {
+        codes: parsed.codes && typeof parsed.codes === 'object' ? parsed.codes : {},
+        days: parsed.days && typeof parsed.days === 'object' ? parsed.days : {},
+        resumeAt: Number(parsed.resumeAt) || 0
+      };
+      Object.keys(store.codes).forEach(function (code) {
+        var rec = store.codes[code];
+        if (rec && rec.at && !store.days[code]) store.days[code] = dayKey(Number(rec.at));
+      });
+      notify();
+    } catch (err) {}
+  }
+
   /* ---------- 对外：访客模式开关 ---------- */
   // 访客不允许使用第三方接口：立刻停掉队列与定时器，并清空待请求列表
   function setEnabled(flag) {
@@ -480,6 +502,7 @@
     all: all,
     subscribe: subscribe,
     setEnabled: setEnabled,
+    applyStore: applyStore,
     isPaused: isPaused,
     state: state,
     api: API

@@ -1,4 +1,58 @@
 /* ============================================================
+ * 旧版桌面壳强制升级提示
+ * - 新版客户端会在 bridge 上注入 clientVersion，旧 exe / Electron 启动器没有
+ * - 命中后全屏遮罩，引导下载双模式版本；浏览器与新版客户端不受影响
+ * ============================================================ */
+(function () {
+  'use strict';
+
+  var bridge = window.FGEXPIG_DESKTOP;
+  if (bridge && bridge.isDesktop && bridge.clientVersion) return;
+
+  var legacyShell =
+    !!(bridge && bridge.isDesktop) ||
+    !!(window.chrome && window.chrome.webview) ||
+    !!(window.process && window.process.type) ||
+    /Electron/i.test(navigator.userAgent || '');
+  if (!legacyShell) return;
+
+  var DOWNLOAD_URL =
+    'https://github.com/JianZhaNoSwine/FGEXPIG-Official-Website/releases/latest/download/FGEXPIG-Setup.exe';
+
+  function render() {
+    if (document.getElementById('fgUpgradeOverlay')) return;
+    var overlay = document.createElement('div');
+    overlay.id = 'fgUpgradeOverlay';
+    overlay.className = 'fg-upgrade-overlay';
+    overlay.setAttribute('role', 'alertdialog');
+    overlay.innerHTML =
+      '<div class="fg-upgrade-card">' +
+        '<div class="fg-upgrade-title">启动器需要更新</div>' +
+        '<p class="fg-upgrade-desc">当前启动器已停止更新。新版 FGSteam 将标准模式与游戏模式合并为同一个安装包，请下载并安装新版后再启动。</p>' +
+        '<a class="fg-upgrade-action" href="' + DOWNLOAD_URL + '" target="_blank" rel="noopener">下载新版安装包</a>' +
+        '<p class="fg-upgrade-url">' + DOWNLOAD_URL + '</p>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    document.documentElement.classList.add('fg-upgrade-locked');
+    var action = overlay.querySelector('.fg-upgrade-action');
+    if (action) {
+      action.addEventListener('click', function (event) {
+        event.preventDefault();
+        var opened = null;
+        try { opened = window.open(DOWNLOAD_URL, '_blank'); } catch (e) {}
+        // 旧壳可能没有新窗口处理器：退化为当前页直接下载
+        if (!opened) {
+          try { location.href = DOWNLOAD_URL; } catch (e) {}
+        }
+      });
+    }
+  }
+
+  if (document.body) render();
+  else document.addEventListener('DOMContentLoaded', render);
+})();
+
+/* ============================================================
  * 底栏 logo 刻度槽切换
  * - 滚轮切换 / 鼠标长按拖动 / 移动端拖动 / 点击两侧槽位
  * - 每个 logo 对应一个页面（页面唯一标识 = logo 名）
@@ -22,7 +76,7 @@
   var LOGOS = [
     'JFES110', 'JFES115', 'JFES130', 'JFES140',
     'JFES150', 'JFES160', 'JFES170', 'JFES175',
-    'JFES180', 'JFES190'
+    'JFES180', 'JFES190', 'JFES195'
   ];
   // 外屏/内屏兼容路径的可见窗口；非外屏改由中间卡片组的实际边界计算。
   var SIDE_SLOTS = 3;
@@ -165,6 +219,24 @@
 
   function initRuntimeAssetCache() {
     if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
+    if (!isDesktopRuntime()) {
+      // 网页版坚持全部联网读取：注销旧的 Service Worker 并清掉资源缓存。
+      try {
+        navigator.serviceWorker.getRegistrations().then(function (registrations) {
+          registrations.forEach(function (registration) {
+            if (registration.scope.indexOf(location.origin) === 0) registration.unregister();
+          });
+        }).catch(function () {});
+        if (window.caches && caches.keys) {
+          caches.keys().then(function (keys) {
+            keys.forEach(function (key) {
+              if (key.indexOf('fgexpig-') === 0) caches.delete(key);
+            });
+          }).catch(function () {});
+        }
+      } catch (err) {}
+      return;
+    }
     if (navigator.serviceWorker.controller) postRuntimeCacheActivity(navigator.serviceWorker.controller);
     navigator.serviceWorker.addEventListener('controllerchange', function () {
       postRuntimeCacheActivity(navigator.serviceWorker.controller);
@@ -759,10 +831,13 @@
     return timestamp;
   }
 
-  // 显示值为 11 时作为默认活动；有多个时取发行日期最新者，日期相同取核心数据中靠后的项。
+  // 显示值为 11 时作为默认活动；核心数据尚未加载时用这个兜底默认，
+  // 避免首屏先落在旧的最后一个活动（JFES190）再跳到 JFES195。
+  var FALLBACK_DEFAULT_ACTIVITY = 'JFES195';
   function defaultSelectedActivityId() {
     var core = filteredCoreRows();
     if (!core.length) core = (typeof dataStore !== 'undefined' && dataStore && dataStore.core) || [];
+    if (!core.length) return FALLBACK_DEFAULT_ACTIVITY;
     var bestId = '';
     var bestTime = -Infinity;
     var bestIndex = -1;
@@ -9249,115 +9324,35 @@
   }
 
   function initStartupOverlay() {
-    if (startupSyncEl && isDesktopRuntime()) {
+    // 新流程：exe 的开屏图片/视频/主菜单由启动器负责；网页版直接进入主页面。
+    // 站点不再播放开屏、不再等待缓存下载，也不再预热缓存。
+    startupEntryComplete = true;
+    startupSplashActive = false;
+    startupClosing = true;
+    startupAudioPending = false;
+    startupSplashRunId += 1;
+    if (startupSplashStepTimer) {
+      window.clearTimeout(startupSplashStepTimer);
+      startupSplashStepTimer = 0;
+    }
+    if (startupVideo) {
+      try { startupVideo.pause(); } catch (err) {}
+      releaseStartupVideoSource();
+    }
+    if (startupOverlay) {
+      startupOverlay.hidden = true;
+      startupOverlay.style.display = 'none';
+    }
+    if (startupSyncEl) {
       startupSyncEl.hidden = true;
       startupSyncEl.style.display = 'none';
     }
-    if (!startupOverlay || !startupVideo || !startupLanding) {
-      startupEntryComplete = true;
-      return;
-    }
-    document.body.classList.add('startup-lock');
+    document.body.classList.remove('startup-lock');
     syncImmersiveCursorState();
-    // 外屏模式保持原样（直接进登录页）；其他模式先依次播放 logo/1~5 开场图片
-    var outerScreenStartup = shouldUseOuterScreenLayout();
-    var startStartupLanding = function () {
-      if (outerScreenStartup) showStartupLanding();
-      else runStartupSplash(showStartupLanding);
-    };
-    if (window.matchMedia && window.matchMedia('(max-width: 720px)').matches) {
-      startupVideo.pause();
-      startStartupLanding();
-      startupOverlay.addEventListener('click', function (event) {
-        if (startupSplashActive) {
-          event.preventDefault();
-          event.stopPropagation();
-          advanceStartupSplash();
-          return;
-        }
-        event.preventDefault();
-        event.stopPropagation();
-        syncThenCloseStartupOverlay();
-      });
-      document.addEventListener('keydown', function (event) {
-        if (startupSplashActive) {
-          event.preventDefault();
-          event.stopPropagation();
-          advanceStartupSplash();
-          return;
-        }
-        if (startupOverlay && startupOverlay.hidden) return;
-        event.preventDefault();
-        event.stopPropagation();
-        syncThenCloseStartupOverlay();
-      }, true);
-      return;
-    }
-
-    startupVideo.addEventListener('ended', closeStartupOverlay);
-    startupVideo.addEventListener('error', closeStartupOverlay);
-    startupVideo.addEventListener('play', scheduleStartupCrossfade);
-    startupVideo.addEventListener('playing', scheduleStartupCrossfade);
-    if (isDesktopRuntime()) {
-      // exe：open.webp 与 PRESS ANY BUTTON 已由 exe 启动器承担，这里直接播放开场视频
-      startupLanding.hidden = true;
-      startupOverlay.classList.remove('is-landing');
-      attemptStartupVideoPlay();
-      return;
-    }
-    startStartupLanding();
-
-    startupOverlay.addEventListener('click', function (event) {
-      if (startupSplashActive) {
-        event.preventDefault();
-        event.stopPropagation();
-        advanceStartupSplash();
-        return;
-      }
-      if (startupAudioPending) {
-        event.preventDefault();
-        event.stopPropagation();
-        attemptStartupVideoPlay();
-        return;
-      }
-      if (startupLandingShown) {
-        event.preventDefault();
-        event.stopPropagation();
-        leaveStartupLanding();
-        return;
-      }
-      if (startupClosing || startupLeaving || startupVideo.paused || startupVideo.ended) return;
-      event.preventDefault();
-      event.stopPropagation();
-      startupVideo.pause();
-      closeStartupOverlay();
-    });
-
-    document.addEventListener('keydown', function (event) {
-      if (startupSplashActive) {
-        event.preventDefault();
-        event.stopPropagation();
-        advanceStartupSplash();
-        return;
-      }
-      if (startupAudioPending) {
-        event.preventDefault();
-        event.stopPropagation();
-        attemptStartupVideoPlay();
-        return;
-      }
-      if (startupLandingShown) {
-        event.preventDefault();
-        event.stopPropagation();
-        leaveStartupLanding();
-        return;
-      }
-      if (startupClosing || startupLeaving || startupVideo.paused || startupVideo.ended) return;
-      event.preventDefault();
-      event.stopPropagation();
-      startupVideo.pause();
-      closeStartupOverlay();
-    }, true);
+    startActivityMusic();
+    requestAnimationFrame(function () { syncLiquidGlassRenderer(true); });
+    showCursorGlowOnEntry();
+    showDockSelectedFrameForHomeEntry();
   }
 
   /* ---------- 登录态持久化：写入 localStorage，刷新后保持，手动退出才清除 ---------- */
@@ -15658,7 +15653,7 @@
         height: barHeight
       });
       var labelShell = document.createElementNS('http://www.w3.org/1999/xhtml', 'div');
-      labelShell.className = 'pause-leaderboard-html-label' + (isTop ? ' is-top' : '');
+      labelShell.className = 'pause-leaderboard-html-label' + (isTop ? ' is-top' : '') + (row.stale ? ' is-stale' : '');
       labelShell.setAttribute('title', fullNameText);
       var marquee = document.createElementNS('http://www.w3.org/1999/xhtml', 'span');
       marquee.className = 'line-marquee';
@@ -15669,7 +15664,7 @@
       if (typeof initLineMarquee === 'function') initLineMarquee(marquee);
 
       var valueLabel = createPauseLeaderboardSvgElement('text', {
-        'class': 'pause-leaderboard-bar-value' + (isTop ? ' is-top' : ''),
+        'class': 'pause-leaderboard-bar-value' + (isTop ? ' is-top' : '') + (row.stale ? ' is-stale' : ''),
         x: valueRightX,
         y: barY + barHeight / 2 + 3.5,
         'text-anchor': 'end'
@@ -15802,36 +15797,52 @@
     return allHotspotLeaderboardLoadPromise;
   }
 
+  // All three boards are computed by the desktop app; the browser version does
+  // not show any leaderboard at all.
+  var appLeaderboardData = null;
+  var appLeaderboardFetchedAt = 0;
+  var appLeaderboardLoading = false;
+
+  function loadAppLeaderboards() {
+    if (appLeaderboardLoading) return;
+    appLeaderboardLoading = true;
+    fetch('/__fgsteam/leaderboards.json', { cache: 'no-store' })
+      .then(function (response) { return response && response.ok ? response.json() : null; })
+      .then(function (data) {
+        if (data && typeof data === 'object') {
+          appLeaderboardData = data;
+          appLeaderboardFetchedAt = Date.now();
+        }
+      })
+      .catch(function () {})
+      .then(function () {
+        appLeaderboardLoading = false;
+        schedulePauseLeaderboardRender();
+      });
+  }
+
   function renderPauseLeaderboards() {
     var leaderboardSlots = allPauseLeaderboardSlots();
     if (!leaderboardSlots.length) return;
-    if (!allHotspotLeaderboardLoadPromise) {
-      loadAllHotspotDataForLeaderboards();
+    if (!isDesktopRuntime()) {
+      leaderboardSlots.forEach(function (slot) { slot.style.display = 'none'; });
       return;
     }
-    if (!pauseLeaderboardShopRequested && (!shopStore.shops || !Object.keys(shopStore.shops).length)) {
-      pauseLeaderboardShopRequested = true;
-      fetchShop().then(function () { schedulePauseLeaderboardRender(); });
+    leaderboardSlots.forEach(function (slot) { slot.style.display = ''; });
+    if (!appLeaderboardData || Date.now() - appLeaderboardFetchedAt > 5000) {
+      loadAppLeaderboards();
     }
-
-    var names = pauseLeaderboardUsers();
-    var mapScoreRows = (isDesktopRuntime() && !isGuestUser()) ? buildPauseMapScoreRows() : [];
-    var experienceRows = buildPauseRanking(names, totalExperienceForUser);
-    var valueRows = buildPauseRanking(names, accountValueForUser);
-    var commentRows = buildPauseRanking(names, hotspotCharacterCountForUser);
+    var data = appLeaderboardData || {};
+    var mapScoreRows = Array.isArray(data.map) ? data.map : [];
+    var valueRows = Array.isArray(data.value) ? data.value : [];
+    var commentRows = Array.isArray(data.comment) ? data.comment : [];
 
     leaderboardSlots.forEach(function (slot) {
       var type = slot.getAttribute('data-leaderboard');
       if (type === 'experience') {
-        if (isDesktopRuntime() && !isGuestUser()) {
-          renderPauseLeaderboardSlot(slot, i18nT('pause.lb.mapScore.name', '地图跑分榜'), mapScoreRows, function (value) {
-            return formatMapCount(value);
-          });
-        } else {
-          renderPauseLeaderboardSlot(slot, '老登等级榜', experienceRows, function (value) {
-            return userLevelMetrics(value).label + ' ' + pauseLeaderboardFullNumber(value);
-          });
-        }
+        renderPauseLeaderboardSlot(slot, i18nT('pause.lb.mapScore.name', '地图跑分榜'), mapScoreRows, function (value) {
+          return formatMapCount(value);
+        });
       } else if (type === 'value') {
         renderPauseLeaderboardSlot(slot, '全勤价值榜', valueRows, function (value) {
           return Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

@@ -7651,3 +7651,68 @@ html.guest-user #pauseStatBar,
 html.guest-user .pause-cache-line.is-updating {
   display: none !important;
 }
+
+/* 浏览器版不显示三个排行榜（数据只由桌面 app 计算并提供） */
+html:not(.desktop-runtime) .pause-ad-slot[data-leaderboard] { display: none; }
+
+/* 今日尚未刷新的地图：名称与分数用次要色 */
+.pause-leaderboard-html-label.is-stale { color: var(--text-secondary); }
+.pause-leaderboard-bar-value.is-stale { fill: var(--text-secondary); }
+
+/* 旧版桌面壳（无 clientVersion 桥字段）：全屏升级提示 */
+.fg-upgrade-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(6, 6, 8, 0.82);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  font-family: inherit;
+}
+.fg-upgrade-card {
+  width: min(460px, 100%);
+  padding: 28px 28px 22px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  background: rgba(20, 20, 24, 0.96);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+  color: var(--text-primary);
+  text-align: center;
+}
+.fg-upgrade-title {
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+.fg-upgrade-desc {
+  margin: 12px 0 20px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.fg-upgrade-action {
+  display: block;
+  padding: 12px 0;
+  border-radius: 999px;
+  background: var(--accent-pink);
+  color: #1a0510;
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+  transition: filter 0.15s ease;
+}
+.fg-upgrade-action:hover { filter: brightness(1.08); }
+.fg-upgrade-url {
+  margin: 12px 0 0;
+  color: var(--text-secondary);
+  font-size: 10px;
+  line-height: 1.6;
+  word-break: break-all;
+  user-select: text;
+}
+html.fg-upgrade-locked,
+html.fg-upgrade-locked body { overflow: hidden !important; }
