@@ -15,7 +15,7 @@ struct Lang {
     source: bool,
 }
 
-const LANGUAGES: [Lang; 13] = [
+const LANGUAGES: [Lang; 12] = [
     Lang { id: "zh-Hans", native: "简体中文", column: "简体中文", html_lang: "zh-Hans", source: true },
     Lang { id: "ja", native: "日本語", column: "日语", html_lang: "ja", source: false },
     Lang { id: "en", native: "English", column: "英语", html_lang: "en", source: false },
@@ -23,7 +23,6 @@ const LANGUAGES: [Lang; 13] = [
     Lang { id: "it", native: "Italiano", column: "意大利语", html_lang: "it", source: false },
     Lang { id: "de", native: "Deutsch", column: "德语", html_lang: "de", source: false },
     Lang { id: "es-ES", native: "Español (España)", column: "西班牙语（西班牙）", html_lang: "es-ES", source: false },
-    Lang { id: "ar", native: "العربية", column: "阿拉伯语", html_lang: "ar", source: false },
     Lang { id: "ko", native: "한국어", column: "韩语", html_lang: "ko", source: false },
     Lang { id: "pt-BR", native: "Português (Brasil)", column: "葡萄牙语（巴西）", html_lang: "pt-BR", source: false },
     Lang { id: "ru", native: "Русский", column: "俄语", html_lang: "ru", source: false },

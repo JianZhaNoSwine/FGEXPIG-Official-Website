@@ -16,8 +16,42 @@
     /Electron/i.test(navigator.userAgent || '');
   if (!legacyShell) return;
 
-  var DOWNLOAD_URL =
-    'https://github.com/JianZhaNoSwine/FGEXPIG-Official-Website/releases/latest/download/FGEXPIG-Setup.exe';
+  var WEBSITE_URL = 'https://fgexpig.cc/';
+
+  function openOfficialSite() {
+    // 优先走壳提供的「用系统默认浏览器打开」能力，绝不在 exe 壳里直接跳转。
+    var bridge = window.FGEXPIG_DESKTOP;
+    try {
+      if (bridge && typeof bridge.openExternal === 'function') {
+        bridge.openExternal(WEBSITE_URL);
+        return;
+      }
+    } catch (e) {}
+    try {
+      if (window.ipc && typeof window.ipc.postMessage === 'function') {
+        window.ipc.postMessage('open_site');
+        return;
+      }
+    } catch (e) {}
+    try { window.open(WEBSITE_URL, '_blank', 'noopener'); } catch (e) {}
+  }
+
+  function closeShell() {
+    var bridge = window.FGEXPIG_DESKTOP;
+    try {
+      if (bridge && typeof bridge.closeWindow === 'function') {
+        bridge.closeWindow();
+        return;
+      }
+    } catch (e) {}
+    try {
+      if (window.ipc && typeof window.ipc.postMessage === 'function') {
+        window.ipc.postMessage('close');
+        return;
+      }
+    } catch (e) {}
+    try { window.close(); } catch (e) {}
+  }
 
   function render() {
     if (document.getElementById('fgUpgradeOverlay')) return;
@@ -29,8 +63,8 @@
       '<div class="fg-upgrade-card">' +
         '<div class="fg-upgrade-title">启动器需要更新</div>' +
         '<p class="fg-upgrade-desc">当前启动器已停止更新。新版 FGSteam 将标准模式与游戏模式合并为同一个安装包，请下载并安装新版后再启动。</p>' +
-        '<a class="fg-upgrade-action" href="' + DOWNLOAD_URL + '" target="_blank" rel="noopener">下载新版安装包</a>' +
-        '<p class="fg-upgrade-url">' + DOWNLOAD_URL + '</p>' +
+        '<a class="fg-upgrade-action" href="' + WEBSITE_URL + '" target="_blank" rel="noopener">下载新版安装包</a>' +
+        '<p class="fg-upgrade-url">' + WEBSITE_URL + '</p>' +
       '</div>';
     document.body.appendChild(overlay);
     document.documentElement.classList.add('fg-upgrade-locked');
@@ -38,12 +72,9 @@
     if (action) {
       action.addEventListener('click', function (event) {
         event.preventDefault();
-        var opened = null;
-        try { opened = window.open(DOWNLOAD_URL, '_blank'); } catch (e) {}
-        // 旧壳可能没有新窗口处理器：退化为当前页直接下载
-        if (!opened) {
-          try { location.href = DOWNLOAD_URL; } catch (e) {}
-        }
+        openOfficialSite();
+        // 浏览器接管后直接退出旧壳，避免旧 exe 继续占用窗口和数据目录。
+        window.setTimeout(closeShell, 350);
       });
     }
   }
@@ -7994,6 +8025,18 @@
   window.addEventListener('pointerdown', onFirstInteract);
   window.addEventListener('wheel', onFirstInteract);
 
+  /* exe 专用：启动器主菜单的点击发生在 iframe 里，站点文档收不到任何交互事件，
+     因此完全进站时由 app 调这个钩子开始播放背景音乐。 */
+  window.__FGSTEAM_START_MUSIC = function () {
+    if (!interacted) {
+      startActivityMusic();
+      return;
+    }
+    if (musicPausedByUser || !audio.paused) return;
+    var p = audio.play();
+    if (p && p.catch) p.catch(function () {});
+  };
+
   /* ---------- 顶栏 ---------- */
   var topbar = document.getElementById('topbar');
 
@@ -10129,7 +10172,7 @@
 
   function updateUserUI() {
     var sidebarNicknameEl = document.getElementById('sidebarNickname');
-    if (sidebarNicknameEl) sidebarNicknameEl.textContent = user.name;
+    if (sidebarNicknameEl) sidebarNicknameEl.textContent = i18nHotspotText(user.name);
     setAvatar(document.getElementById('userPillAvatar'), user.name);
     setAvatar(document.getElementById('sidebarAvatar'), user.name);
     applyUserTitle();
@@ -10339,6 +10382,13 @@
   var settingsBackBtn = document.getElementById('settingsBack');
   var settingsNav = panelSettings ? panelSettings.querySelector('.settings-tabs') : null;
   var settingsThumb = settingsNav ? settingsNav.querySelector('.topnav-thumb') : null;
+  // “其他”页是 FGSteam 客户端专属能力，网页版直接移除该导航和面板。
+  if (!isDesktopRuntime() && panelSettings) {
+    var otherTabButton = panelSettings.querySelector('.settings-tab[data-settings-tab="other"]');
+    if (otherTabButton) otherTabButton.remove();
+    var otherSection = panelSettings.querySelector('[data-settings-panel="other"]');
+    if (otherSection) otherSection.remove();
+  }
   var settingsTabs = panelSettings ? panelSettings.querySelectorAll('.settings-tab') : [];
   var settingsSections = panelSettings ? panelSettings.querySelectorAll('[data-settings-panel]') : [];
   var settingsDescriptionTitle = document.getElementById('settingsDescriptionTitle');
@@ -10359,6 +10409,14 @@
   var fxLevelInput = document.getElementById('fxLevel');
   var fxLevelVal = document.getElementById('fxLevelVal');
   var fxLevelControl = document.getElementById('fxLevelControl');
+  var autoDownloadInput = document.getElementById('autoDownload');
+  var autoDownloadCard = document.getElementById('autoDownloadCard');
+  var autoDownloadVal = document.getElementById('autoDownloadVal');
+  var settingsLogoutBtn = document.getElementById('settingsLogout');
+  var settingsCheckUpdateBtn = document.getElementById('settingsCheckUpdate');
+  var settingsBackupBtn = document.getElementById('settingsBackup');
+  var settingsExitToMenuBtn = document.getElementById('settingsExitToMenu');
+  var settingsQuitBtn = document.getElementById('settingsQuit');
   var performanceModeInput = document.getElementById('performanceMode');
   var performanceModeCard = document.getElementById('performanceModeCard');
   var performanceModeVal = document.getElementById('performanceModeVal');
@@ -10471,19 +10529,16 @@
       title: '控制',
       text: '点击右侧按键框后按下新按键即可修改。重复按键会与其他功能交换。'
     },
-    audio: { title: '音频', text: '调整网页主音量和小游戏音量。音量设置会自动保存到本机。' },
     font: { title: '字体', text: '选择网页使用的字体。切换后会立即应用，并自动保存到本机。' },
     language: { title: '语言', text: '选择网页界面语言。切换后会立即应用，并自动保存到本机。' },
     sponsor: { title: '赞助', text: '选择微信、支付宝或贝宝向网页开发者捐赠，注意此捐赠仅面向网页开发工作，不接收对于第三方引用资源的付款。第三方引用资源包括但不限于：Resident Evil Requiem的主菜单设计，Assassin\'s Creed Shadows的UI设计，FallGuysDB地图数据接口等。' },
+    other: {
+      title: '其他',
+      text: 'FGSteam 客户端相关操作：账号、更新、备份与退出。'
+    },
     interface: {
       title: '界面',
       text: '调整亮度、模糊和沉浸光效。性能模式开启时，沉浸光效会暂时禁用。',
-      subtitle: '沉浸光感',
-      extra: '0级使用默认鼠标指针\n1级使用称号等级鼠标指针\n2级增加沉浸光感\n3级增加边框描边'
-    },
-    interfaceDesktop: {
-      title: '界面',
-      text: '调整窗口比例、窗口大小、亮度、模糊和沉浸光效。',
       subtitle: '沉浸光感',
       extra: '0级使用默认鼠标指针\n1级使用称号等级鼠标指针\n2级增加沉浸光感\n3级增加边框描边'
     }
@@ -10702,9 +10757,6 @@
   function showSettingsTab(tabId) {
     if (tabId === 'display' && isDesktopRuntime()) tabId = 'interface';
     var desc = SETTINGS_DESCRIPTIONS[tabId] || SETTINGS_DESCRIPTIONS.interface;
-    if (tabId === 'interface' && isDesktopRuntime() && SETTINGS_DESCRIPTIONS.interfaceDesktop) {
-      desc = SETTINGS_DESCRIPTIONS.interfaceDesktop;
-    }
     currentSettingsTab = SETTINGS_DESCRIPTIONS[tabId] ? tabId : 'interface';
     Array.prototype.forEach.call(settingsTabs, function (tab) {
       var active = tab.getAttribute('data-settings-tab') === currentSettingsTab;
@@ -11612,7 +11664,7 @@
     syncNavColorOverlay();
   }
 
-  // 语言不做热切换：确认「需要重新启动」后写入偏好并重启；取消则保持当前语言
+  // 语言热切换：就地刷新 UI，不重载页面；同时把选择回传给 app 统一保存。
   function applyLanguage(id, persist) {
     var api = i18nApi();
     if (!api) return;
@@ -11624,12 +11676,15 @@
       renderLanguageList();
       return;
     }
-    if (!showRestartPrompt()) {
+    // 保留「是否应用设置」确认弹窗；确认后就地切换语言，不重载页面。
+    if (!showApplySettingsPrompt()) {
       renderLanguageList();
       return;
     }
     if (persist !== false) api.saveLanguage(id);
-    window.location.reload();
+    sendDesktopMessage('language:' + id);
+    api.setLanguage(id);
+    renderLanguageList();
   }
 
   // 模板里捕获到的活动中文名：中文界面保留；日文优先用语言包里的日文专名；其他语言用核心数据里的英文名
@@ -12074,6 +12129,38 @@
       showSettingsTab(nextTab);
     });
   });
+  // “其他”页：FGSteam 客户端操作（网页版没有这一页）
+  function sendDesktopMessage(message) {
+    try {
+      if (window.ipc && typeof window.ipc.postMessage === 'function') {
+        window.ipc.postMessage(message);
+      }
+    } catch (err) {}
+  }
+  function syncAutoDownloadUi() {
+    if (!autoDownloadVal) return;
+    autoDownloadVal.textContent = autoDownloadInput && autoDownloadInput.checked ? '开启' : '关闭';
+  }
+  if (autoDownloadInput) {
+    autoDownloadInput.checked = !(window.FGEXPIG_DESKTOP && window.FGEXPIG_DESKTOP.autoDownload === false);
+    syncAutoDownloadUi();
+    autoDownloadInput.addEventListener('change', function () {
+      syncAutoDownloadUi();
+      sendDesktopMessage(autoDownloadInput.checked ? 'auto_download:1' : 'auto_download:0');
+    });
+  }
+  if (autoDownloadCard && autoDownloadInput) {
+    autoDownloadCard.addEventListener('click', function (event) {
+      if (event.target === autoDownloadInput) return;
+      autoDownloadInput.checked = !autoDownloadInput.checked;
+      autoDownloadInput.dispatchEvent(new Event('change'));
+    });
+  }
+  if (settingsLogoutBtn) settingsLogoutBtn.addEventListener('click', function () { sendDesktopMessage('menu:logout'); });
+  if (settingsCheckUpdateBtn) settingsCheckUpdateBtn.addEventListener('click', function () { sendDesktopMessage('menu:update'); });
+  if (settingsBackupBtn) settingsBackupBtn.addEventListener('click', function () { sendDesktopMessage('menu:backup'); });
+  if (settingsExitToMenuBtn) settingsExitToMenuBtn.addEventListener('click', function () { sendDesktopMessage('back_to_menu'); });
+  if (settingsQuitBtn) settingsQuitBtn.addEventListener('click', function () { sendDesktopMessage('menu:quit'); });
   if (panelSettings && sponsorOverlay && sponsorImage) {
     panelSettings.addEventListener('click', function (event) {
       var option = event.target.closest ? event.target.closest('.sponsor-option') : null;

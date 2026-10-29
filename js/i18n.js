@@ -16,7 +16,7 @@
   var DEFAULT_ID = (INDEX && INDEX.defaultId) || 'en';
   var SOURCE_ID = (INDEX && INDEX.sourceId) || 'zh-Hans';
   // RTL 布局完成前暂时隐藏阿拉伯语；语言包仍保留，后续移除该隐藏表即可恢复。
-  var HIDDEN_LANGUAGE_IDS = { ar: true };
+  var HIDDEN_LANGUAGE_IDS = {};
 
   var byId = {};
   LANGUAGES.forEach(function (l) { byId[l.id] = l; });

@@ -15,8 +15,8 @@ const CSV_FILES: [&str; 5] = [
     "hotspot-strings.csv",
     "title-strings.csv",
 ];
-const LANG_COLUMNS: [&str; 12] = [
-    "日语", "英语", "法语", "意大利语", "德语", "西班牙语（西班牙）", "阿拉伯语", "韩语",
+const LANG_COLUMNS: [&str; 11] = [
+    "日语", "英语", "法语", "意大利语", "德语", "西班牙语（西班牙）", "韩语",
     "葡萄牙语（巴西）", "俄语", "繁体中文", "波兰语",
 ];
 const BLACKLISTED: [&str; 4] = ["review.js", "update.js", "account.js", "library.js"];
