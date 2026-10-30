@@ -10,7 +10,7 @@
       "nick": "躺豆人",
       "user": "fgexpig002",
       "pass": "tangdouren",
-      "media": ""
+      "media": "TDR"
     },
     {
       "nick": "彼得",

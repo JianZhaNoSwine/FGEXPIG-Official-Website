@@ -3,6 +3,11 @@
  * - 新版客户端会在 bridge 上注入 clientVersion，旧 exe / Electron 启动器没有
  * - 命中后全屏遮罩，引导下载双模式版本；浏览器与新版客户端不受影响
  * ============================================================ */
+/* 已移除的界面元素（活动中心 / 经验环 / 专辑封面 / 称号 / 顶栏头像等）：
+   旧逻辑若仍按 id 取节点，统一回落到一个游离节点，避免样式与事件绑定在 null 上抛错。 */
+window.fgRemovedEl = window.fgRemovedEl || function () { return document.createElement('div'); };
+window.fgById = window.fgById || function (id) { return document.getElementById(id) || window.fgRemovedEl(); };
+
 (function () {
   'use strict';
 
@@ -517,12 +522,8 @@
   }
 
   function homeFilterActionAvailable() {
-    var section = document.querySelector('.page.active .page-section.active');
-    var sectionKey = section && section.dataset ? section.dataset.section : '';
-    var mainSectionActive = sectionKey === 'home' || sectionKey === 'files' || sectionKey === 'news';
-    return mainSectionActive && !(pauseMenu && pauseMenu.classList.contains('open')) &&
-      !document.documentElement.classList.contains('ui-hidden') &&
-      !(startupOverlay && !startupOverlay.hidden);
+    // 活动中心已移除
+    return false;
   }
 
   function syncKeyIconVisibility() {
@@ -566,7 +567,7 @@
   }
 
   var BOTTOM_KEY_HINTS = [
-    ['toggleMusic', '暂停'],
+    ['openSettings', '设置'],
     ['rewindMusic', '回退'],
     ['forwardMusic', '快进'],
     ['toggleUi', '显示']
@@ -602,12 +603,12 @@
     syncKeyIcons();
   }
 
-  var homeFilterHintEl = document.getElementById('homeFilterHint');
+  var homeFilterHintEl = window.fgById('homeFilterHint');
   var settingsBottomHintsEl = document.getElementById('settingsBottomHints');
-  var titleBottomHintsEl = document.getElementById('titleBottomHints');
-  var filterLogoPaneEl = document.getElementById('filterLogoPane');
-  var filterYearValEl = document.getElementById('filterYearVal');
-  var filterDeveloperValEl = document.getElementById('filterDeveloperVal');
+  var titleBottomHintsEl = window.fgById('titleBottomHints');
+  var filterLogoPaneEl = window.fgById('filterLogoPane');
+  var filterYearValEl = window.fgById('filterYearVal');
+  var filterDeveloperValEl = window.fgById('filterDeveloperVal');
 
   function i18nTr(text, params) {
     var api = window.FgexpigI18n;
@@ -738,12 +739,12 @@
   var pagesWrap = document.getElementById('pages');
   var bgA = document.getElementById('bgA');
   var bgB = document.getElementById('bgB');
-  var innerActivityButton = document.getElementById('innerActivityButton');
-  var innerActivityButtonImg = document.getElementById('innerActivityButtonImg');
-  var outerActivityButton = document.getElementById('outerActivityButton');
-  var outerActivityButtonImg = document.getElementById('outerActivityButtonImg');
-  var innerActivityPicker = document.getElementById('innerActivityPicker');
-  var innerActivityTrack = document.getElementById('innerActivityTrack');
+  var innerActivityButton = window.fgById('innerActivityButton');
+  var innerActivityButtonImg = window.fgById('innerActivityButtonImg');
+  var outerActivityButton = window.fgById('outerActivityButton');
+  var outerActivityButtonImg = window.fgById('outerActivityButtonImg');
+  var innerActivityPicker = window.fgById('innerActivityPicker');
+  var innerActivityTrack = window.fgById('innerActivityTrack');
 
   /* ---------- 状态 ---------- */
   var state = {
@@ -1417,8 +1418,10 @@
   var outerScreenLayoutActive = false;
   var outerScreenLayoutReady = false;
 
-  // 折叠屏内屏分界：小于底栏第 1~7 张卡片的完整视觉跨度 + 2 个卡片间距。
+  // 客户端里只保留宽屏 / 正屏两种布局：折叠屏内屏模式已移除，窄窗口一律使用正屏。
+  // 网页版（手机浏览器）仍保留原判定，避免影响移动端单列布局。
   function shouldUseInnerScreenLayout() {
+    if (isDesktopRuntime()) return false;
     if (!items.length) return false;
     readSlotSize();
     var cardW = parseFloat(getComputedStyle(items[0]).width);
@@ -1430,8 +1433,9 @@
     return viewportWidth < firstToSeventh + 2 * gap;
   }
 
-  // 外屏分界：内屏时顶部导航左边界与右列卡片左边界对齐的位置。
+  // 客户端里只保留宽屏 / 正屏两种布局：移动端外屏模式仅保留给网页版。
   function shouldUseOuterScreenLayout() {
+    if (isDesktopRuntime()) return false;
     var viewportWidth = document.documentElement.clientWidth || window.innerWidth;
     var rootStyle = getComputedStyle(document.documentElement);
     var gap = parseFloat(rootStyle.getPropertyValue('--card-gap')) || 10;
@@ -1440,19 +1444,11 @@
     return viewportWidth / 2 - navWidth / 2 < rightColumnLeft;
   }
 
-  // 正屏分界：右侧自适应列小于底栏一张未选中卡片宽度的 2 倍时，切换为两列布局。
+  // 正屏分界：顶栏 6 个数据因空间不足被隐藏（style.css 的 1100px 断点）时，
+  // 说明窗口宽度已经不够宽屏排版，直接切正屏。
   function shouldUsePortraitLayout() {
-    if (!items.length) return false;
-    readSlotSize();
-    var cardW = parseFloat(getComputedStyle(items[0]).width);
-    if (!isFinite(cardW) || cardW <= 0) cardW = items[0].offsetWidth || slotSize;
-    var gap = slotSize - cardW;
-    if (!(gap > 0)) gap = 10;
-    var centerWidth = (5 + (CENTER_SCALE - 1)) * cardW + 4 * gap;
     var viewportWidth = document.documentElement.clientWidth || window.innerWidth;
-    var sectionContentWidth = Math.max(0, Math.min(viewportWidth, 2 * centerWidth + 2 * gap + 32) - 32);
-    var sideWidth = Math.max(0, (sectionContentWidth - centerWidth - 2 * gap) / 2);
-    return sideWidth < cardW * 2;
+    return viewportWidth <= 1100;
   }
 
   function updateResponsiveLayoutMode() {
@@ -1603,6 +1599,8 @@
     // 正屏模式比较特殊：左右边距按首页 3 卡片的左右边界实时调整。
     var vpWidth = document.documentElement.clientWidth || window.innerWidth;
     if (homeFilterHintEl) homeFilterHintEl.style.right = Math.max(0, vpWidth - cardsRight).toFixed(2) + 'px';
+    // 底栏右侧曲名：与首页卡片右边界对齐
+    rootEl.style.setProperty('--bottom-right-edge', Math.max(0, vpWidth - cardsRight).toFixed(2) + 'px');
     if (rootEl.classList.contains('portrait-layout')) {
       rootEl.style.setProperty('--pause-margin-left', Math.max(0, cardsLeft).toFixed(2) + 'px');
       rootEl.style.setProperty('--pause-margin-right', Math.max(0, vpWidth - cardsRight).toFixed(2) + 'px');
@@ -5908,7 +5906,6 @@
     var actions = document.createElement('div');
     actions.className = 'settings-personal-actions';
     actions.appendChild(makeSettingsPersonalAction('', '用户切换', function () { openOuterAccountPage(); }));
-    var titleAction = makeSettingsPersonalAction('', '称号', function () { openOuterPersonalSubpage(section, 'titles'); });
     titleAction.classList.add('settings-title-action');
     actions.appendChild(titleAction);
     actions.appendChild(makeSettingsPersonalAction('', '开源', function () {
@@ -7850,11 +7847,15 @@
 
   /* ---------- 音乐 ---------- */
   var playerName = document.getElementById('playerName');
-  var playerCover = document.getElementById('playerCover');
-  var playerCoverArt = document.getElementById('playerCoverArt');
-  var playerRing = document.getElementById('playerRing');
-  var userExpRing = document.getElementById('userExpRing');
-  var userPillLevel = document.getElementById('userPillLevel');
+  var nowPlayingBtn = document.getElementById('nowPlaying');
+  if (nowPlayingBtn) {
+    nowPlayingBtn.addEventListener('click', function () { performKeyAction('toggleMusic'); });
+  }
+  var playerCover = window.fgById('playerCover');
+  var playerCoverArt = window.fgById('playerCoverArt');
+  var playerRing = window.fgById('playerRing');
+  var userExpRing = window.fgById('userExpRing');
+  var userPillLevel = window.fgById('userPillLevel');
 
   // 圆环周长（r=18.1，viewBox 40），stroke-dashoffset 按进度从 C → 0
   var RING_C = 2 * Math.PI * 18.1;
@@ -7869,7 +7870,6 @@
   if (!isFinite(userRingLength) || userRingLength <= 0) userRingLength = RING_C * 0.75;
   function initUserExpRing() {
     if (!userExpRing) return;
-    document.documentElement.classList.add('exp-data-loading');
     userExpRing.style.strokeDasharray = String(userRingLength);
     userExpRing.style.strokeDashoffset = String(userRingLength);
   }
@@ -7897,7 +7897,11 @@
 
   // 设置曲名：纯文本、右对齐、不滚动
   function setTrackName(text) {
-    if (playerName) playerName.textContent = text;
+    if (!playerName) return;
+    playerName.textContent = text;
+    // 供 ::after 复制同一段文字做「按进度染白」的遮罩层；换曲时进度归零
+    playerName.setAttribute('data-text', text);
+    playerName.style.setProperty('--song-progress', '0%');
   }
 
   // 刷新播放器曲名与专辑封面
@@ -7927,7 +7931,10 @@
   // 播放进度实时更新到专辑内描边圆环
   audio.addEventListener('timeupdate', function () {
     if (audio.duration && isFinite(audio.duration)) {
-      setRing(audio.currentTime / audio.duration);
+      var ratio = Math.max(0, Math.min(1, audio.currentTime / audio.duration));
+      setRing(ratio);
+      // 曲名按播放进度从左往右由淡色染成白色
+      if (playerName) playerName.style.setProperty('--song-progress', (ratio * 100).toFixed(2) + '%');
     }
   });
 
@@ -8254,7 +8261,7 @@
   dock.addEventListener('pointercancel', endDrag);
 
   /* ---------- 用户系统：暂停菜单 / 数据侧栏 / 登录 ---------- */
-  var userMenuBtn = document.getElementById('userMenuBtn');
+  var userMenuBtn = window.fgById('userMenuBtn');
   var pauseMenu = document.getElementById('pauseMenu');
   var sidebarMask = document.getElementById('sidebarMask');
   var loginOverlay = document.getElementById('loginOverlay');
@@ -8264,7 +8271,7 @@
   var loginSubmit = document.getElementById('loginSubmit');
   var loginCancel = document.getElementById('loginCancel');
   var loginLogout = document.getElementById('loginLogout');
-  var navAccountSwitch = document.getElementById('navAccountSwitch');
+  var navAccountSwitch = window.fgById('navAccountSwitch');
   var GUEST_NAME = '访客用户';
   var user = { name: GUEST_NAME, media: '', lv: 1, exp: 0, expMax: 271 };
 
@@ -8272,11 +8279,11 @@
     return String(user.name || '').trim() === GUEST_NAME;
   }
 
-  var sidebarLevelRow = document.getElementById('sidebarLevelRow');
-  var sidebarLevelBadge = document.getElementById('sidebarLevelBadge');
-  var sidebarExpFill = document.getElementById('sidebarExpFill');
-  var sidebarExpValue = document.getElementById('sidebarExpValue');
-  var sidebarExpTotal = document.getElementById('bottomExpTotal');
+  var sidebarLevelRow = window.fgById('sidebarLevelRow');
+  var sidebarLevelBadge = window.fgById('sidebarLevelBadge');
+  var sidebarExpFill = window.fgById('sidebarExpFill');
+  var sidebarExpValue = window.fgById('sidebarExpValue');
+  var sidebarExpTotal = window.fgById('bottomExpTotal');
 
   /* ---------- 用户经验：评论/回复、库存项目、称号等级实时派生 ---------- */
   var MAX_USER_LEVEL = 100;
@@ -8700,14 +8707,13 @@
   var startupSyncEl = document.getElementById('startupSync');
   var startupSyncFillEl = document.getElementById('startupSyncFill');
   var startupSyncCountEl = document.getElementById('startupSyncCount');
-  var pauseCacheProgressEl = document.getElementById('pauseCacheProgress');
-  var pauseStatBarEl = document.getElementById('pauseStatBar');
+  var pauseCacheProgressEl = window.fgById('pauseCacheProgress');
+  // 统计已从暂停菜单移到主页顶栏（左 3 右 2），这里在整页范围内收集这 5 个数值节点。
+  var pauseStatBarEl = document.getElementById('homeStatsLeft');
   var pauseStatValueEls = {};
-  if (pauseStatBarEl) {
-    Array.prototype.forEach.call(pauseStatBarEl.querySelectorAll('.pause-stat-value[data-stat]'), function (el) {
-      pauseStatValueEls[el.dataset.stat] = el;
-    });
-  }
+  Array.prototype.forEach.call(document.querySelectorAll('.pause-stat-value[data-stat]'), function (el) {
+    pauseStatValueEls[el.dataset.stat] = el;
+  });
   var startupSyncActive = false;
   var backgroundCacheStarted = false;
   var backgroundCacheProgress = { level: 0, current: 0, target: 0, all: 0, done: true };
@@ -8968,6 +8974,7 @@
     setPauseStatValue('likes', has ? formatPauseStatCount(totals.likes) : 'N/A');
     setPauseStatValue('dislikes', has ? formatPauseStatCount(totals.dislikes) : 'N/A');
     setPauseStatValue('likeRate', has && totals.plays > 0 ? formatMapRate((totals.likes / totals.plays) * 100) : 'N/A');
+    setPauseStatValue('dislikeRate', has && totals.plays > 0 ? formatMapRate((totals.dislikes / totals.plays) * 100) : 'N/A');
     var ratio = null;
     if (has) {
       if (totals.dislikes > 0) ratio = totals.likes / totals.dislikes;
@@ -9583,7 +9590,7 @@
     return defaultTitle(nick);
   }
 
-  var userTitleEl = document.getElementById('userTitle');
+  var userTitleEl = window.fgById('userTitle');
   var cursorGlowEl = document.getElementById('cursorGlow');
   var cursorGlowFrame = 0;
   var cursorGlowTrackUntil = 0;
@@ -9976,9 +9983,8 @@
       } else if (guestMenuEnabled()) {
         // 访客没有暂停菜单；Esc / 手柄暂停键只负责收起已经弹出的访客菜单，不主动打开（只能点头像打开）
         closeGuestMenu();
-      } else {
-        openSidebar('left');
       }
+      // 暂停菜单已移除：Esc / 手柄暂停键不再打开它（设置/登录/更新日志有自己的入口）
     }
   }
 
@@ -10171,10 +10177,10 @@
   }
 
   function updateUserUI() {
-    var sidebarNicknameEl = document.getElementById('sidebarNickname');
+    var sidebarNicknameEl = window.fgById('sidebarNickname');
     if (sidebarNicknameEl) sidebarNicknameEl.textContent = i18nHotspotText(user.name);
-    setAvatar(document.getElementById('userPillAvatar'), user.name);
-    setAvatar(document.getElementById('sidebarAvatar'), user.name);
+    setAvatar(window.fgById('userPillAvatar'), user.name);
+    setAvatar(window.fgById('sidebarAvatar'), user.name);
     applyUserTitle();
     refreshReviewPersonalScore();
     refreshHomeLibraryBar();
@@ -10185,6 +10191,8 @@
 
   function setPauseMenuOpen(open) {
     if (!pauseMenu) return;
+    // 暂停菜单列表已移除（Esc / 手柄不再打开它）；这个容器现在只承载
+    // 设置 / 登录 / 更新日志 面板，由各自的入口打开。
     if (open && document.activeElement && document.activeElement.blur) {
       document.activeElement.blur();
     }
@@ -10210,7 +10218,9 @@
   function openSidebar(side) {
     sidebarMask.classList.remove('show');
     sidebarPanelOrigin = 'menu';
-    resetSidebarPanelCore();
+    // 暂停菜单列表已移除：直接打开浮层，交给调用方 showSidebarPanel 选择面板；
+    // 不能再调 resetSidebarPanelCore（它在无列表时会关浮层，和这里互相打架）。
+    if (document.getElementById('panelMenu')) resetSidebarPanelCore();
     setPauseMenuOpen(true);
   }
   function closeSidebars() {
@@ -10245,8 +10255,8 @@
   var guestMenuLoginBtn = document.getElementById('guestMenuLogin');
   var guestMenuSettingsBtn = document.getElementById('guestMenuSettings');
   var guestMenuExitBtn = document.getElementById('guestMenuExit');
-  var winMinimizeBtn = document.getElementById('winMinimizeBtn');
-  var winCloseBtn = document.getElementById('winCloseBtn');
+  var winMinimizeBtn = window.fgById('winMinimizeBtn');
+  var winCloseBtn = window.fgById('winCloseBtn');
   var guestMenuOpen = false;
   var guestMenuIndex = 0;
 
@@ -10359,15 +10369,15 @@
   }
 
   /* ---------- 暂停菜单：称号 / 设置子页面 ---------- */
-  var panelMenu = document.getElementById('panelMenu');
-  var panelTitles = document.getElementById('panelTitles');
+  var panelMenu = window.fgById('panelMenu');
+  var panelTitles = window.fgById('panelTitles');
   var panelAccounts = document.getElementById('panelAccounts');
   var panelSettings = document.getElementById('panelSettings');
   var panelUpdate = document.getElementById('panelUpdate');
-  var panelFilter = document.getElementById('panelFilter');
-  var filterYearEl = document.getElementById('filterYear');
-  var filterDeveloperEl = document.getElementById('filterDeveloper');
-  var filterLogoGridEl = document.getElementById('filterLogoGrid');
+  var panelFilter = window.fgById('panelFilter');
+  var filterYearEl = window.fgById('filterYear');
+  var filterDeveloperEl = window.fgById('filterDeveloper');
+  var filterLogoGridEl = window.fgById('filterLogoGrid');
   var pendingActivityFilter = null;
   var pendingQualitySnapshot = null;
   var settingsDirty = false;
@@ -10397,9 +10407,9 @@
   var settingsDescriptionExtra = document.getElementById('settingsDescriptionExtra');
   var sponsorOverlay = document.getElementById('sponsorOverlay');
   var sponsorImage = document.getElementById('sponsorImage');
-  var titleListEl = document.getElementById('titleList');
-  var titleBackTop = document.getElementById('titleBackTop');
-  var fontListEl = document.getElementById('fontList');
+  var titleListEl = window.fgById('titleList');
+  var titleBackTop = window.fgById('titleBackTop');
+  var fontListEl = window.fgById('fontList');
   var languageListEl = document.getElementById('languageList');
   var keybindListEl = document.getElementById('keybindList');
   var wallpaperDimInput = document.getElementById('wallpaperDim');
@@ -10412,6 +10422,9 @@
   var autoDownloadInput = document.getElementById('autoDownload');
   var autoDownloadCard = document.getElementById('autoDownloadCard');
   var autoDownloadVal = document.getElementById('autoDownloadVal');
+  var startupSoundInput = document.getElementById('startupSound');
+  var startupSoundCard = document.getElementById('startupSoundCard');
+  var startupSoundVal = document.getElementById('startupSoundVal');
   var settingsLogoutBtn = document.getElementById('settingsLogout');
   var settingsCheckUpdateBtn = document.getElementById('settingsCheckUpdate');
   var settingsBackupBtn = document.getElementById('settingsBackup');
@@ -10434,10 +10447,10 @@
   var desktopResolutionVal = document.getElementById('desktopResolutionVal');
   var desktopResolutionPrev = document.getElementById('desktopResolutionPrev');
   var desktopResolutionNext = document.getElementById('desktopResolutionNext');
-  var mainVolumeInput = document.getElementById('mainVolume');
-  var minigameVolumeInput = document.getElementById('minigameVolume');
-  var mainVolumeVal = document.getElementById('mainVolumeVal');
-  var minigameVolumeVal = document.getElementById('minigameVolumeVal');
+  var mainVolumeInput = window.fgById('mainVolume');
+  var minigameVolumeInput = window.fgById('minigameVolume');
+  var mainVolumeVal = window.fgById('mainVolumeVal');
+  var minigameVolumeVal = window.fgById('minigameVolumeVal');
   var titlePendingRaw = null; // 称号页当前选中项
   var currentSidebarPanel = 'menu';
   // 二级页的来源：'menu' = 从暂停菜单进的，'home' = 从首页顶栏快捷入口进的
@@ -10460,9 +10473,7 @@
     { id: 'rewindMusic', label: '音乐回退', defaultKey: 'z', xbox: '←', playstation: '←', gamepadButton: 14 },
     { id: 'forwardMusic', label: '音乐快进', defaultKey: 'c', xbox: '→', playstation: '→', gamepadButton: 15 },
     { id: 'toggleUi', label: '隐藏/显示HUD', defaultKey: 'tab', xbox: 'Y', playstation: '△', gamepadButton: 3 },
-    { id: 'openSettings', label: '设置页', defaultKey: 'i', xbox: 'MENU', playstation: 'OPTIONS' },
-    { id: 'openFilter', label: '活动中心', defaultKey: 'space', xbox: 'LS', playstation: 'L3' },
-    { id: 'openUpdateLog', label: '更新日志', defaultKey: 'v', xbox: 'RS', playstation: 'R3', gamepadButton: 11 }
+    { id: 'openSettings', label: '设置页', defaultKey: 'i', xbox: 'MENU', playstation: 'OPTIONS' }
   ];
   var GAMEPAD_ACTION_BY_BUTTON = {};
   KEYBIND_ACTIONS.forEach(function (action) {
@@ -10690,6 +10701,7 @@
   }
 
   function openFilterPanel() {
+    if (!document.getElementById('panelFilter')) return; // 活动中心已移除
     if (!pauseMenu) return;
     if (pauseMenu.classList.contains('open') && currentSidebarPanel === 'filter') {
       resetSidebarPanel();
@@ -10734,6 +10746,22 @@
   // 只把侧栏面板复位到主菜单（不改变来源，供关闭侧栏时直接调用）
   function resetSidebarPanelCore() {
     var previous = currentSidebarPanel;
+    // 暂停菜单列表已移除：任何「返回菜单列表」的动作都直接关闭浮层（Esc 一次回主页），
+    // 这里直接关，不要再调 closeSidebars——它在 panel 为 menu 时会回调本函数造成递归。
+    if (!document.getElementById('panelMenu')) {
+      if (pauseMenu && pauseMenu.classList.contains('open')) {
+        // 返回主页时重播首页入场动画（与 closeSidebars 的行为一致）
+        playInterfaceAnimation(true);
+        setPauseMenuOpen(false);
+      }
+      sidebarMask.classList.remove('show');
+      // 必须真正复位面板：只改 currentSidebarPanel 会留下 is-settings-open，
+      // 手柄左摇杆回到主页后仍会继续调整已隐藏的设置项。
+      showSidebarPanel('menu');
+      resetSettingsStickAcceleration();
+      resetTitleStickNavigation();
+      return;
+    }
     showSidebarPanel('menu');
     if (previous === 'settings') resetSettingsStickAcceleration();
     if (previous === 'titles') resetTitleStickNavigation();
@@ -11355,7 +11383,8 @@
   }
 
   function applyThemeSettings(brightness, blur, level, quality, persist) {
-    brightness = Math.max(0, Math.min(100, Number(brightness)));
+    // 亮度上限 70%：滑条仍能拉到最右端，最右端即 70%
+    brightness = Math.max(0, Math.min(70, Number(brightness)));
     blur = Math.max(0, Math.min(24, Number(blur)));
     level = Math.max(0, Math.min(3, Math.round(Number(level))));
     quality = normalizeImageQuality(quality);
@@ -11412,8 +11441,8 @@
     if (qualityChanged && track && track.children.length) {
       refreshResponsiveAssets(document);
       if (typeof user !== 'undefined' && user) {
-        setAvatar(document.getElementById('userPillAvatar'), user.name);
-        setAvatar(document.getElementById('sidebarAvatar'), user.name);
+        setAvatar(window.fgById('userPillAvatar'), user.name);
+        setAvatar(window.fgById('sidebarAvatar'), user.name);
       }
       refreshPlayerMedia();
       applyWallpaper(LOGOS[state.index]);
@@ -12069,10 +12098,11 @@
     showSidebarPanel('accounts');
   }
 
-  document.getElementById('navAccountSwitch').addEventListener('click', openAccountPanel);
-  document.getElementById('navTitleSwitch').addEventListener('click', openTitlePanel);
-  document.getElementById('navSettings').addEventListener('click', function () { openSettingsPanel('interface'); });
-  var githubRepositoryBtn = document.getElementById('navGithubRepository');
+  window.fgById('navAccountSwitch').addEventListener('click', openAccountPanel);
+  var navTitleSwitchEl = document.getElementById('navTitleSwitch');
+  if (navTitleSwitchEl) navTitleSwitchEl.addEventListener('click', openTitlePanel);
+  window.fgById('navSettings').addEventListener('click', function () { openSettingsPanel('interface'); });
+  var githubRepositoryBtn = window.fgById('navGithubRepository');
   if (githubRepositoryBtn) {
     if (isDesktopRuntime()) {
       // exe：这一项改成「退出至菜单」，点击回到 exe 启动器主菜单
@@ -12094,7 +12124,7 @@
       });
     }
   }
-  document.getElementById('navBack').addEventListener('click', closeSidebars);
+  window.fgById('navBack').addEventListener('click', closeSidebars);
   if (accountLogoutTop) accountLogoutTop.addEventListener('click', logoutInlineAccount);
   if (titleBackTop) titleBackTop.addEventListener('click', resetSidebarPanel);
   var accountBackBottom = document.getElementById('accountBackBottom');
@@ -12104,14 +12134,14 @@
   if (settingsBackBtn) settingsBackBtn.addEventListener('click', resetSidebarPanel);
   var updateBackBtn = document.getElementById('updateBack');
   if (updateBackBtn) updateBackBtn.addEventListener('click', resetSidebarPanel);
-  var filterBackBtn = document.getElementById('filterBack');
+  var filterBackBtn = window.fgById('filterBack');
   if (filterBackBtn) filterBackBtn.addEventListener('click', resetSidebarPanel);
   if (filterYearEl) filterYearEl.addEventListener('change', function () { requestActivityFilterChange('year', this.value); });
   if (filterDeveloperEl) filterDeveloperEl.addEventListener('change', function () { requestActivityFilterChange('developer', this.value); });
-  var filterYearPrev = document.getElementById('filterYearPrev');
-  var filterYearNext = document.getElementById('filterYearNext');
-  var filterDeveloperPrev = document.getElementById('filterDeveloperPrev');
-  var filterDeveloperNext = document.getElementById('filterDeveloperNext');
+  var filterYearPrev = window.fgById('filterYearPrev');
+  var filterYearNext = window.fgById('filterYearNext');
+  var filterDeveloperPrev = window.fgById('filterDeveloperPrev');
+  var filterDeveloperNext = window.fgById('filterDeveloperNext');
   if (filterYearPrev) filterYearPrev.addEventListener('click', function () { cycleActivityFilter(filterYearEl, 'year', -1); });
   if (filterYearNext) filterYearNext.addEventListener('click', function () { cycleActivityFilter(filterYearEl, 'year', 1); });
   if (filterDeveloperPrev) filterDeveloperPrev.addEventListener('click', function () { cycleActivityFilter(filterDeveloperEl, 'developer', -1); });
@@ -12154,6 +12184,25 @@
       if (event.target === autoDownloadInput) return;
       autoDownloadInput.checked = !autoDownloadInput.checked;
       autoDownloadInput.dispatchEvent(new Event('change'));
+    });
+  }
+  function syncStartupSoundUi() {
+    if (!startupSoundVal) return;
+    startupSoundVal.textContent = startupSoundInput && startupSoundInput.checked ? '开启' : '关闭';
+  }
+  if (startupSoundInput) {
+    startupSoundInput.checked = !(window.FGEXPIG_DESKTOP && window.FGEXPIG_DESKTOP.startupSound === false);
+    syncStartupSoundUi();
+    startupSoundInput.addEventListener('change', function () {
+      syncStartupSoundUi();
+      sendDesktopMessage(startupSoundInput.checked ? 'startup_sound:1' : 'startup_sound:0');
+    });
+  }
+  if (startupSoundCard && startupSoundInput) {
+    startupSoundCard.addEventListener('click', function (event) {
+      if (event.target === startupSoundInput) return;
+      startupSoundInput.checked = !startupSoundInput.checked;
+      startupSoundInput.dispatchEvent(new Event('change'));
     });
   }
   if (settingsLogoutBtn) settingsLogoutBtn.addEventListener('click', function () { sendDesktopMessage('menu:logout'); });
@@ -12310,7 +12359,7 @@
     openSidebar('left');
   });
 
-  // 顶栏文字快捷入口：用户名 → 切换账号；称号 → 切换称号；音乐名 → 设置页的音频
+  // 顶栏文字快捷入口：用户名 → 切换账号；称号 → 切换称号
   // 记下来源为首页，这些二级页按“返回”时直接回首页
   function openTopbarShortcutPanel(openPanel) {
     openSidebar('left');
@@ -12320,9 +12369,7 @@
   if (userTitleEl) userTitleEl.addEventListener('click', function () {
     openTopbarShortcutPanel(openTitlePanel);
   });
-  if (playerName) playerName.addEventListener('click', function () {
-    openTopbarShortcutPanel(function () { openSettingsPanel('audio'); });
-  });
+  // 曲名已移到右下角按钮里：点击整块（含曲名）只做播放/暂停，交给 #nowPlaying 的点击处理。
   sidebarMask.addEventListener('click', closeSidebars);
 
   function focusInputEnd(input) {
@@ -12405,6 +12452,8 @@
   }
 
   document.addEventListener('keydown', function (event) {
+    // 启动器主菜单覆盖期间键盘归启动器 iframe，站点不响应任何快捷键。
+    if (document.documentElement.classList.contains('fgsteam-game-menu-open')) return;
     setInputMode('keyboard');
     if (!startupEntryComplete || (startupOverlay && !startupOverlay.hidden)) return;
     if (keyCaptureActionId) {
@@ -13063,9 +13112,13 @@
     }
     performKeyAction(actionId);
   }
-  // 只有网页 / exe 窗口在前台时才响应手柄，切到别的程序时不响应
+  // 只有网页 / exe 窗口在前台时才响应手柄，切到别的程序时不响应。
+  // 桌面壳里 WebView2 子窗口在鼠标点过之前拿不到键盘焦点（document.hasFocus() 恒为 false），
+  // 但应用窗口是激活的，所以以壳同步的 __FGSTEAM_HOST_ACTIVE__ 为准。
   function gamepadWindowActive() {
-    if (typeof document.hasFocus === 'function' && !document.hasFocus()) return false;
+    var hostActive = window.__FGSTEAM_HOST_ACTIVE__;
+    if (hostActive === false) return false;
+    if (hostActive !== true && typeof document.hasFocus === 'function' && !document.hasFocus()) return false;
     if (document.visibilityState === 'hidden') return false;
     return true;
   }
@@ -13076,7 +13129,9 @@
       ? Math.max(0.5, Math.min(2.5, (now - gamepadLastFrameTime) / 16.67))
       : 1;
     gamepadLastFrameTime = now;
-    var active = gamepadWindowActive();
+    var active = gamepadWindowActive() &&
+      // 启动器主菜单覆盖期间由 iframe 自己处理手柄，站点不要在下面同时响应。
+      !document.documentElement.classList.contains('fgsteam-game-menu-open');
     var anyInput = false;
     if (!active) gamepadSuppressedUntilRelease = true;
     var nextPressed = {};
@@ -14790,7 +14845,7 @@
 
   /* ---------- 更新日志：数据源 resources/update.js ---------- */
   var updateStore = { updates: [] };
-  var pauseVersionHintEl = document.getElementById('pauseVersionHint');
+  var pauseVersionHintEl = window.fgById('pauseVersionHint');
   var updateContentEl = document.getElementById('updateContent');
 
   function normalizeUpdateEntries(list) {
@@ -14884,6 +14939,8 @@
   }
 
   function openUpdatePanel() {
+    // 更新日志页已移除
+    if (!document.getElementById('panelUpdate')) return;
     if (!pauseMenu) return;
     if (!pauseMenu.classList.contains('open')) openSidebar('left');
     sidebarPanelOrigin = 'menu';
@@ -15973,7 +16030,8 @@
     '.review-detail-org',
     '.shop-owned-text',
     '.shop-version-name',
-    '.shop-dlc-heading'
+    '.shop-dlc-heading',
+    '.tb-stats .pause-stat-label'
   ].join(',');
 
   var lineMarqueeReducedMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
@@ -17607,6 +17665,7 @@
       topbar.classList.remove('entering');
       if (dockWrap) dockWrap.classList.remove('entering');
       if (bottomKeyHintsEl) bottomKeyHintsEl.classList.remove('entering');
+      if (nowPlayingBtn) nowPlayingBtn.classList.remove('entering');
       if (homeFilterHintEl) homeFilterHintEl.classList.remove('entering');
       syncLiquidGlassRenderer(true);
       return;
@@ -17616,6 +17675,7 @@
     topbar.classList.remove('entering');
     if (dockWrap) dockWrap.classList.remove('entering');
     if (bottomKeyHintsEl) bottomKeyHintsEl.classList.remove('entering');
+    if (nowPlayingBtn) nowPlayingBtn.classList.remove('entering');
     if (homeFilterHintEl) homeFilterHintEl.classList.remove('entering');
     void pagesWrap.offsetWidth;
     pagesWrap.classList.add('entering');
@@ -17628,6 +17688,10 @@
         void bottomKeyHintsEl.offsetWidth;
         bottomKeyHintsEl.classList.add('entering');
       }
+      if (nowPlayingBtn) {
+        void nowPlayingBtn.offsetWidth;
+        nowPlayingBtn.classList.add('entering');
+      }
       if (homeFilterHintEl) {
         void homeFilterHintEl.offsetWidth;
         homeFilterHintEl.classList.add('entering');
@@ -17638,6 +17702,7 @@
       topbar.classList.remove('entering');
       if (dockWrap) dockWrap.classList.remove('entering');
       if (bottomKeyHintsEl) bottomKeyHintsEl.classList.remove('entering');
+      if (nowPlayingBtn) nowPlayingBtn.classList.remove('entering');
       if (homeFilterHintEl) homeFilterHintEl.classList.remove('entering');
       syncLiquidGlassRenderer(true);
       interfaceAnimationTimer = 0;

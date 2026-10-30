@@ -129,6 +129,7 @@ body {
 html.ui-hidden #pages,
 html.ui-hidden #topbar,
 html.ui-hidden .dock-wrap,
+html.ui-hidden .bottom-key-hints,
 html.ui-hidden .edit-btn,
 html.ui-hidden .pause-menu,
 html.ui-hidden .sidebar-right,
@@ -172,17 +173,18 @@ html.ui-hidden .bg-tint {
   z-index: 1;
 }
 
-/* 页内板块子页：中间固定宽度，左右自适应且各自不超过中间卡片宽度的一半 */
+/* 页内板块子页：宽屏三列按 25% / 50% / 25% 分配；
+   最宽按屏幕 16:9 限制（超宽屏居中留边），避免 UI 被拉得过长 */
 .page-section {
   position: absolute;
   top: 0;
   left: 50%;
-  width: min(100%, calc(var(--home-cards-width) + 32px));
+  width: min(100%, calc(100vh * 16 / 9));
   height: 100%;
   padding: 16px;
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: minmax(0, calc(var(--center-card-width) * 0.5)) var(--center-card-width) minmax(0, calc(var(--center-card-width) * 0.5));
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
   justify-content: center;
   grid-template-rows: 1fr;
   gap: var(--card-gap);
@@ -4991,16 +4993,11 @@ html:not(.portrait-layout) .home-right-column > .card-scroll-track { display: no
 /* ===== 正屏两列布局：严格按底栏卡片跨度分栏 ===== */
 /* 底栏卡片沿用宽屏尺寸规则，不随网页宽度变小而等比缩小。 */
 html.portrait-layout .page-section {
-  --portrait-left-column-width: calc(2 * var(--card-w) + var(--card-gap));
-  --portrait-right-column-width: calc(5.16 * var(--card-w) + 4 * var(--card-gap));
-  width: min(100%, calc(
-    var(--portrait-left-column-width) +
-    var(--portrait-right-column-width) +
-    var(--card-gap) +
-    16px
-  ));
-  padding: 16px 8px;
-  grid-template-columns: var(--portrait-left-column-width) var(--portrait-right-column-width);
+  /* 正屏不再按固定总宽居中：两列按左 30% / 右 70% 分配（间距之外的可用宽度 3:7），
+     和宽屏一样把窗口宽高都用满；左右边距也与宽屏一致（16px）。 */
+  width: 100%;
+  padding: 16px;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 7fr);
   grid-template-rows: minmax(0, 1fr);
 }
 
@@ -7461,7 +7458,8 @@ html.key-icons-home-active:not(.outer-screen-layout):not(.inner-screen-layout) .
 .bottom-key-hint-label {
   color: var(--text-primary);
   font-size: var(--text-large);
-  line-height: 1;
+  /* line-height 1 时行盒等于字号，overflow:hidden 会裁掉中日文顶部的像素 */
+  line-height: 1.35;
   text-shadow: 0 1px 1px #000, 0 0 4px rgba(0, 0, 0, .92);
 }
 /* 活动中心：更新日志式两栏布局，左侧筛选，右侧 logo 网格。 */
@@ -7648,6 +7646,7 @@ html.has-card-blur .pause-menu .filter-page .filter-option-card {
 html.guest-user .map-summary,
 html.guest-user .map-refresh-badge,
 html.guest-user #pauseStatBar,
+html.guest-user .tb-stats,
 html.guest-user .pause-cache-line.is-updating {
   display: none !important;
 }
@@ -7716,3 +7715,87 @@ html:not(.desktop-runtime) .pause-ad-slot[data-leaderboard] { display: none; }
 }
 html.fg-upgrade-locked,
 html.fg-upgrade-locked body { overflow: hidden !important; }
+
+
+/* ===== 主页顶栏统计（原暂停菜单顶部 5 项：左 3 右 2） ===== */
+.tb-stats {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.3vw, 22px);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  user-select: none;
+}
+.tb-stats-left { left: var(--topbar-left-edge, 16px); }
+.tb-stats-right { right: var(--topbar-right-edge, 16px); }
+/* 粉色标签最多占 12 个英文字符（= 6 个中文字符），超出显示省略号；
+   省略号由 .line-marquee 负责，悬停时自动滚动。 */
+.tb-stats .pause-stat-label {
+  max-width: 6em;
+}
+/* 顶栏与底栏文字：全部去掉阴影（含导航选中态、统计、按键提示、曲名） */
+.topbar,
+.topbar .topnav-item,
+.topbar .topnav-item.active,
+.topbar .topnav-item.active .topnav-item-label,
+.tb-stats .pause-stat-value,
+.tb-stats .pause-stat-label,
+.bottom-key-hints .bottom-key-hint-label,
+.now-playing .bottom-key-hint-label,
+html .now-playing #playerName,
+html .now-playing #playerName::after {
+  text-shadow: none !important;
+}
+/* 窄屏时收起，避免与居中导航重叠 */
+@media (max-width: 1100px) {
+  .tb-stats { display: none; }
+}
+/* 暂停菜单及其子页面打开时不越界显示 */
+html.pause-menu-open .tb-stats {
+  display: none !important;
+}
+/* 底栏右侧：当前曲目 + 播放/暂停按键。视觉样式完全复用左下角按键提示的
+   .key-hint-button / .bottom-key-hint / .bottom-key-hint-label，这里只补定位与显隐。 */
+.now-playing {
+  position: fixed;
+  right: var(--bottom-right-edge, 16px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 11px + var(--bottom-ui-lift, 0px));
+  z-index: 14;
+  max-width: 46vw;
+}
+/* 曲名：底色淡，按播放进度从左往右染成白色（::after 复制同一段文字做遮罩） */
+html .now-playing #playerName {
+  position: relative;
+  color: rgba(255, 255, 255, 0.42);
+}
+html .now-playing #playerName::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  white-space: nowrap;
+  color: #fff;
+  text-shadow: inherit;
+  clip-path: inset(0 calc(100% - var(--song-progress, 0%)) 0 0);
+  pointer-events: none;
+}
+/* 与左下角按键提示完全同一套入场动画（由页面进入时加的 .entering 触发） */
+.now-playing.entering {
+  animation: bottom-key-hints-enter 0.58s var(--ease-out) 0.08s backwards;
+}
+/* 暂停菜单及其子页面打开时不越界显示 */
+html.pause-menu-open .now-playing,
+html.ui-hidden .now-playing {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* 暂停菜单已移除：入口在 JS 里停用，这里只隐藏它的侧边栏遮罩。
+   面板本身不能 display:none —— exe 的内嵌登录页就挂在 #pauseMenu 里。 */
+#sidebarMask {
+  display: none !important;
+}

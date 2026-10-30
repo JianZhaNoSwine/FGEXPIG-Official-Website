@@ -9,8 +9,9 @@ use sha2::{Digest, Sha256};
 use crate::datafile;
 
 const ROOT_FILES: [&str; 5] = ["index.html", "sw.js", "favicon.ico", "robots.txt", "sitemap.xml"];
-const DIRS: [&str; 11] = [
-    "button", "css", "emoji", "fonts", "i18n", "js", "logo", "music", "profile", "resources", "wallpaper",
+const DIRS: [&str; 12] = [
+    "button", "css", "emoji", "fonts", "i18n", "js", "logo", "music", "profile", "resources", "superstar",
+    "wallpaper",
 ];
 
 fn is_text_asset(path: &str) -> bool {

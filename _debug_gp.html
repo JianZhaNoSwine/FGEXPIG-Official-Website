@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<script>window.requestAnimationFrame=function(cb){return setTimeout(function(){cb(performance.now());},16);};window.cancelAnimationFrame=function(id){clearTimeout(id);};</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>探索的猪仔官方网站</title>
+<meta name="description" content="探索的猪仔官方网站：收录糖豆人拜年纪、奥林PIG运动会、煎炸镇等系列活动的资料。">
+<meta name="application-name" content="探索的猪仔官方网站">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="探索的猪仔官方网站">
+<meta property="og:title" content="探索的猪仔官方网站">
+<meta property="og:description" content="探索的猪仔官方网站：收录糖豆人拜年纪、奥林PIG运动会、煎炸镇等系列活动的资料。">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="favicon.ico?v=7" type="image/x-icon">
+<link rel="shortcut icon" href="favicon.ico?v=7">
+<link rel="apple-touch-icon" href="favicon.ico?v=7">
+<link rel="stylesheet" href="css/style.css?v=20261030noupdate1">
+</head>
+<body>
+
+<!-- 启动视频与进入页 -->
+<div class="startup-overlay" id="startupOverlay" hidden>
+  <video class="startup-video" id="startupVideo" src="wallpaper/start.mp4" playsinline preload="none"></video>
+  <!-- 开场图片序列：logo/1~5 每张 3 秒（含淡入淡出），播放完才进入登录页 -->
+  <img class="startup-splash-art" id="startupSplashA" alt="" draggable="false" hidden>
+  <img class="startup-splash-art" id="startupSplashB" alt="" draggable="false" hidden>
+  <div class="startup-sync" id="startupSync" hidden>
+    <p class="startup-sync-text">DOWNLOADING</p>
+    <div class="startup-sync-row">
+      <div class="startup-sync-bar"><i class="startup-sync-fill" id="startupSyncFill"></i></div>
+      <span class="startup-sync-count" id="startupSyncCount">0 / 0</span>
+    </div>
+  </div>
+  <div class="startup-audio-start" id="startupAudioStart" hidden>点击播放视频</div>
+  <div class="startup-landing" id="startupLanding" hidden>
+    <img class="startup-logo" id="startupLogo" alt="活动 Logo" draggable="false" loading="eager" decoding="async" hidden>
+    <div class="startup-press">PRESS ANY BUTTON</div>
+  </div>
+</div>
+
+<!-- 壁纸层（新层覆盖旧层淡入） -->
+<div class="bg-layer" id="bgA"></div>
+<div class="bg-layer" id="bgB"></div>
+<div class="bg-tint"></div>
+
+<!-- 页面容器：每个 logo 对应一个 page，data-page 以 logo 名为唯一标识 -->
+<main id="pages"></main>
+
+<!-- 顶部区域：左（用户/等级/称号） · 中（三大导航） · 右（曲名/专辑） -->
+<header class="topbar" id="topbar">
+  <!-- 中部导航 -->
+  <nav class="topnav" id="topnav"></nav>
+
+  <!-- 顶栏两侧按键提示：直接挂在顶栏上，不参与导航内部布局 -->
+  <img class="topbar-key-icon topbar-key-icon-left key-icon" data-key-icon-action="prevNav" alt="" aria-hidden="true" draggable="false">
+  <img class="topbar-key-icon topbar-key-icon-right key-icon" data-key-icon-action="nextNav" alt="" aria-hidden="true" draggable="false">
+
+  <!-- 顶栏两侧按键提示：直接挂在顶栏上，不参与导航内部布局 -->
+
+  <!-- 外屏模式：顶栏中央分页操作栏 -->
+  <div class="top-actions" id="topActions" hidden>
+    <button class="top-action-button top-action-left" id="topActionLeft" type="button" aria-label="返回"></button>
+    <nav class="topnav top-action-nav" id="topActionNav" aria-label="页面分页"></nav>
+    <button class="top-action-button top-action-right" id="topActionRight" type="button" aria-label="页面操作"></button>
+  </div>
+
+  <!-- 外屏模式：活动 logo 入口（外屏不再显示） -->
+
+  <!-- 主页顶栏统计：左侧 游玩/点赞/点踩，右侧 点赞率/赞踩比（数据来自暂停菜单原来的 5 项） -->
+  <div class="tb-stats tb-stats-left" id="homeStatsLeft">
+    <div class="pause-stat-item"><span class="pause-stat-value" data-stat="plays">N/A</span><span class="pause-stat-label"><span class="pause-stat-scope">全地图</span>游玩数</span></div>
+    <span class="pause-stat-divider" aria-hidden="true"></span>
+    <div class="pause-stat-item"><span class="pause-stat-value" data-stat="likes">N/A</span><span class="pause-stat-label"><span class="pause-stat-scope">全地图</span>点赞数</span></div>
+    <span class="pause-stat-divider" aria-hidden="true"></span>
+    <div class="pause-stat-item"><span class="pause-stat-value" data-stat="dislikes">N/A</span><span class="pause-stat-label"><span class="pause-stat-scope">全地图</span>点踩数</span></div>
+  </div>
+  <div class="tb-stats tb-stats-right" id="homeStatsRight">
+    <div class="pause-stat-item"><span class="pause-stat-value" data-stat="dislikeRate">N/A</span><span class="pause-stat-label"><span class="pause-stat-scope">全地图</span>点踩率</span></div>
+    <span class="pause-stat-divider" aria-hidden="true"></span>
+    <div class="pause-stat-item"><span class="pause-stat-value" data-stat="likeRate">N/A</span><span class="pause-stat-label"><span class="pause-stat-scope">全地图</span>点赞率</span></div>
+    <span class="pause-stat-divider" aria-hidden="true"></span>
+    <div class="pause-stat-item"><span class="pause-stat-value" data-stat="likeRatio">N/A</span><span class="pause-stat-label"><span class="pause-stat-scope">全地图</span>赞踩比</span></div>
+  </div>
+</header>
+
+<!-- 底栏右侧：当前播放曲目 + 播放/暂停按键（与左下角提示同一套 key-hint 样式） -->
+<button class="now-playing key-hint-button bottom-key-hint" id="nowPlaying" type="button" data-key-hint-action="toggleMusic" aria-label="播放/暂停">
+  <span class="key-hint-label bottom-key-hint-label" id="playerName">未播放</span>
+  <img class="key-icon key-hint-icon" data-key-icon-action="toggleMusic" alt="" aria-hidden="true" draggable="false">
+</button>
+
+<!-- 访客用户：点头像弹出的下拉菜单（登录 / 设置 / 退出至菜单），访客不进入暂停菜单 -->
+<div class="guest-menu" id="guestMenu" role="menu" aria-hidden="true">
+  <button class="guest-menu-item" id="guestMenuLogin" type="button" role="menuitem"><span>登录</span></button>
+  <button class="guest-menu-item" id="guestMenuSettings" type="button" role="menuitem"><span>设置</span></button>
+  <button class="guest-menu-item" id="guestMenuExit" type="button" role="menuitem"><span>退出至菜单</span></button>
+</div>
+
+
+<!-- 底部 logo 刻度槽 -->
+<div class="dock-wrap">
+  <div class="dock" id="dock">
+    <div class="dock-track" id="dockTrack"></div>
+    <div class="dock-selected-frame" id="dockSelectedFrame" aria-hidden="true"></div>
+  </div>
+  <img class="dock-side-key dock-side-key-left key-icon" data-key-icon-action="prevActivity" alt="" aria-hidden="true" draggable="false">
+  <img class="dock-side-key dock-side-key-right key-icon" data-key-icon-action="nextActivity" alt="" aria-hidden="true" draggable="false">
+  <div class="ruler" aria-hidden="true"></div>
+  <div class="ruler-major" aria-hidden="true"></div>
+</div>
+
+<!-- 左下角按键提示 -->
+<div class="bottom-key-hints" id="bottomKeyHints"></div>
+
+
+<!-- 内屏活动选择页 -->
+
+<!-- 全屏暂停菜单 -->
+<section class="pause-menu" id="pauseMenu" aria-hidden="true">
+  <!-- 网页价值（Tokens）= 固定基数 5,877,718,906 + 截图里的数值，填两数之和；改完同步 app.html，再运行 build\tools\rebuild-desktop-manifest.bat -->
+  <!-- 暂停菜单顶部：全地图统计（exe 独占，5 项，中间 4 条分割线） -->
+    <!-- 左下角版本号（按键 + 文字，点击或按 V / RS / R3 进入更新日志） -->
+  <div class="sidebar-inner pause-menu-inner">
+
+
+    <div class="sidebar-panel account-page" id="panelAccounts" hidden>
+      <div class="account-topbar"></div>
+      <div class="account-bottom-actions" id="accountBottomActions">
+        <button class="settings-back" id="accountBackBottom" type="button">
+          <img class="key-icon settings-back-icon" data-key-icon-action="subpageBack" alt="" aria-hidden="true" draggable="false">
+          <span class="settings-back-label">返回</span>
+        </button>
+        <button class="settings-back account-logout-top" id="accountLogoutTop" type="button">
+          <img class="key-icon settings-back-icon" data-key-icon-action="logoutAccount" alt="" aria-hidden="true" draggable="false">
+          <span class="settings-back-label">退出登录</span>
+        </button>
+      </div>
+      <div class="account-page-center">
+        <form class="account-login-card" id="accountLoginForm">
+          <div class="account-login-title">登录</div>
+          <div class="account-login-fields">
+            <input class="login-input" id="accountLoginUser" type="text" placeholder="账号" autocomplete="username">
+            <input class="login-input" id="accountLoginPass" type="password" placeholder="密码" autocomplete="current-password">
+            <div class="login-error" id="accountLoginError"></div>
+            <div class="login-actions">
+              <button class="login-cancel" id="accountLoginClear" type="button">取消</button>
+              <button class="login-btn" id="accountLoginSubmit" type="submit">确认</button>
+            </div>
+          </div>
+        </form>
+        <div class="account-login-note">本网站的账号系统仅向“煎炸的豬”的社群成员提供，故不开放注册系统！</div>
+      </div>
+    </div>
+    <div class="sidebar-panel settings-page" id="panelSettings" hidden>
+      <div class="settings-topnav">
+        <img class="settings-topnav-key settings-topnav-key-left key-icon" data-key-icon-action="prevNav" alt="" aria-hidden="true" draggable="false">
+        <nav class="topnav settings-tabs" aria-label="设置分类">
+          <div class="topnav-thumb no-anim">
+            <div class="topnav-thumb-inner"></div>
+          </div>
+          <button class="topnav-item settings-tab active is-active" type="button" data-settings-tab="interface">
+            <img class="topnav-item-effect" alt="" aria-hidden="true">
+            <span class="topnav-item-label">界面</span>
+          </button>
+          <button class="topnav-item settings-tab" type="button" data-settings-tab="display">
+            <img class="topnav-item-effect" alt="" aria-hidden="true">
+            <span class="topnav-item-label">显示</span>
+          </button>
+          <button class="topnav-item settings-tab" type="button" data-settings-tab="control">
+            <img class="topnav-item-effect" alt="" aria-hidden="true">
+            <span class="topnav-item-label">控制</span>
+          </button>
+          <button class="topnav-item settings-tab" type="button" data-settings-tab="language">
+            <img class="topnav-item-effect" alt="" aria-hidden="true">
+            <span class="topnav-item-label">语言</span>
+          </button>
+          <button class="topnav-item settings-tab" type="button" data-settings-tab="sponsor">
+            <img class="topnav-item-effect" alt="" aria-hidden="true">
+            <span class="topnav-item-label">赞助</span>
+          </button>
+          <button class="topnav-item settings-tab" type="button" data-settings-tab="other">
+            <img class="topnav-item-effect" alt="" aria-hidden="true">
+            <span class="topnav-item-label">其他</span>
+          </button>
+        </nav>
+        <img class="settings-topnav-key settings-topnav-key-right key-icon" data-key-icon-action="nextNav" alt="" aria-hidden="true" draggable="false">
+      </div>
+      <div class="settings-bottom-actions" id="settingsBottomActions">
+        <button class="settings-back" id="settingsBack" type="button">
+          <img class="key-icon settings-back-icon" data-key-icon-action="subpageBack" alt="" aria-hidden="true" draggable="false">
+          <span class="settings-back-label">返回</span>
+        </button>
+        <div class="settings-bottom-hints" id="settingsBottomHints"></div>
+      </div>
+      <div class="settings-layout">
+        <div class="settings-left">
+          <section class="settings-section" data-settings-panel="display">
+            <div class="sidebar-list theme-list">
+              <div class="theme-control toggle-option" id="performanceModeCard" role="button" tabindex="0">
+                <span class="settings-card-label">性能模式</span>
+                <div class="settings-card-control">
+                  <span class="theme-value" id="performanceModeVal">关闭</span>
+                  <input class="theme-toggle" id="performanceMode" type="checkbox" role="switch" aria-label="性能模式">
+                </div>
+              </div>
+              <div class="theme-control" id="desktopQualityCard">
+                <span class="settings-card-label">画质</span>
+                <div class="settings-card-control">
+                  <span class="theme-value" id="imageQualityVal">极低</span>
+                  <div class="settings-stepper">
+                    <button class="settings-step-btn" id="imageQualityPrev" type="button" aria-label="降低画质">‹</button>
+                    <button class="settings-step-btn" id="imageQualityNext" type="button" aria-label="提高画质">›</button>
+                  </div>
+                  <select class="theme-select settings-native-select" id="imageQuality" aria-label="画质" hidden>
+                    <option value="1">极低</option>
+                    <option value="2">低</option>
+                    <option value="3">中</option>
+                    <option value="4">高</option>
+                    <option value="5">极高</option>
+                  </select>
+                </div>
+              </div>
+              <div class="quality-category-list" id="qualityCategoryList"></div>
+            </div>
+          </section>
+          <section class="settings-section" data-settings-panel="control" hidden>
+            <div class="sidebar-list theme-list keybind-list" id="keybindList"></div>
+          </section>
+          <section class="settings-section" data-settings-panel="language" hidden>
+            <div class="sidebar-list font-list" id="languageList"></div>
+          </section>
+          <section class="settings-section" data-settings-panel="sponsor" hidden>
+            <div class="sidebar-list theme-list">
+              <button class="theme-control sponsor-option" type="button" data-sponsor-image="wallpaper/wx.png">
+                <span class="settings-card-label">使用微信支付</span>
+                <span class="sponsor-arrow" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg>
+                </span>
+              </button>
+              <button class="theme-control sponsor-option" type="button" data-sponsor-image="wallpaper/zfb.jpg">
+                <span class="settings-card-label">使用支付宝支付</span>
+                <span class="sponsor-arrow" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg>
+                </span>
+              </button>
+              <div class="theme-control sponsor-account">
+                <span class="settings-card-label">使用贝宝支付（付款至NTKSCurseN@outlook.com账户）</span>
+              </div>
+            </div>
+          </section>
+          <section class="settings-section" data-settings-panel="other" hidden>
+            <div class="sidebar-list theme-list">
+              <div class="theme-control toggle-option" id="autoDownloadCard" role="button" tabindex="0">
+                <span class="settings-card-label">自动下载更新</span>
+                <div class="settings-card-control">
+                  <span class="theme-value" id="autoDownloadVal">开启</span>
+                  <input class="theme-toggle" id="autoDownload" type="checkbox" role="switch" aria-label="自动下载更新">
+                </div>
+              </div>
+              <button class="theme-control sponsor-option" id="settingsCheckUpdate" type="button">
+                <span class="settings-card-label">检查 FGSteam 更新</span>
+                <span class="sponsor-arrow" aria-hidden="true">›</span>
+              </button>
+              <button class="theme-control sponsor-option" id="settingsBackup" type="button">
+                <span class="settings-card-label">备份恢复</span>
+                <span class="sponsor-arrow" aria-hidden="true">›</span>
+              </button>
+              <button class="theme-control sponsor-option" id="settingsLogout" type="button">
+                <span class="settings-card-label">退出登录</span>
+                <span class="sponsor-arrow" aria-hidden="true">›</span>
+              </button>
+              <button class="theme-control sponsor-option" id="settingsExitToMenu" type="button">
+                <span class="settings-card-label">退出至菜单</span>
+                <span class="sponsor-arrow" aria-hidden="true">›</span>
+              </button>
+              <button class="theme-control sponsor-option" id="settingsQuit" type="button">
+                <span class="settings-card-label">退出</span>
+                <span class="sponsor-arrow" aria-hidden="true">›</span>
+              </button>
+            </div>
+          </section>
+          <section class="settings-section" data-settings-panel="interface" hidden>
+            <div class="sidebar-list theme-list">
+              <div class="theme-control">
+                <span class="settings-card-label">亮度</span>
+                <div class="settings-card-control">
+                  <span class="theme-value" id="wallpaperDimVal">0%</span>
+                  <input class="theme-range" id="wallpaperDim" type="range" min="0" max="70" step="1" value="0">
+                </div>
+              </div>
+              <div class="theme-control">
+                <span class="settings-card-label">模糊度</span>
+                <div class="settings-card-control">
+                  <span class="theme-value" id="cardBlurVal">1px</span>
+                  <input class="theme-range" id="cardBlur" type="range" min="0" max="24" step="1" value="1">
+                </div>
+              </div>
+              <div class="theme-control" id="fxLevelControl">
+                <span class="settings-card-label">沉浸光效</span>
+                <div class="settings-card-control">
+                  <span class="theme-value" id="fxLevelVal">3级</span>
+                  <input class="theme-range" id="fxLevel" type="range" min="0" max="3" step="1" value="3">
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+        <aside class="settings-description" id="settingsDescription">
+          <h3 id="settingsDescriptionTitle">显示</h3>
+          <p id="settingsDescriptionText">调整壁纸亮度、卡片模糊、性能模式和画质。</p>
+          <h4 class="settings-description-subtitle" id="settingsDescriptionSubtitle" hidden></h4>
+          <p id="settingsDescriptionExtra" hidden></p>
+        </aside>
+      </div>
+    </div>
+
+
+  </div>
+</section>
+
+<!-- 侧边栏遮罩 -->
+<div class="sidebar-mask" id="sidebarMask"></div>
+
+<!-- 赞助二维码弹窗 -->
+<div class="sponsor-overlay" id="sponsorOverlay" hidden>
+  <img id="sponsorImage" alt="赞助二维码">
+</div>
+
+<!-- 登录弹窗 -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-dialog">
+    <div class="login-title">账号登录</div>
+    <input class="login-input" id="loginUser" type="text" placeholder="账号" autocomplete="username">
+    <input class="login-input" id="loginPass" type="password" placeholder="密码" autocomplete="current-password">
+    <div class="login-error" id="loginError"></div>
+    <div class="login-actions">
+      <button class="login-cancel" id="loginCancel" type="button">取消</button>
+      <button class="login-btn" id="loginSubmit" type="button">确认</button>
+    </div>
+    <button class="login-logout" id="loginLogout" type="button">退出登录</button>
+  </div>
+</div>
+
+<!-- 按键图标统一白描边：基于 alpha 形态膨胀，避免多向阴影造成视觉偏心 -->
+<svg class="key-icon-filter-defs" width="0" height="0" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="key-icon-outline" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feMorphology in="SourceAlpha" operator="dilate" radius="1" result="expanded"></feMorphology>
+      <feFlood flood-color="#fff" result="white"></feFlood>
+      <feComposite in="white" in2="expanded" operator="in" result="outline"></feComposite>
+      <feMerge>
+        <feMergeNode in="outline"></feMergeNode>
+        <feMergeNode in="SourceGraphic"></feMergeNode>
+      </feMerge>
+    </filter>
+  </defs>
+</svg>
+
+<!-- 跟随鼠标的称号主题光球 -->
+<div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+
+
+<script src="js/minigames.js"></script>
+<script src="js/emoji-manifest.js"></script>
+<script src="js/emoji-trim-data.js"></script>
+<script src="js/emoji-trim.js"></script>
+<script src="js/achv-icon-fit.js"></script>
+<script src="js/map-score-wasm.js"></script>
+<script src="js/map-stats.js?v=20261030noupdate1"></script>
+<script src="js/sync-manifest.js?v=20261030noupdate1"></script>
+<script src="i18n/index.js?v=20261030noupdate1"></script>
+<script src="js/i18n.js?v=20261030noupdate1"></script>
+<script src="js/outer-settings-pages.js?v=20261030noupdate1"></script>
+<script src="js/main.js?v=20261030gpad1"></script>
+</body>
+</html>
