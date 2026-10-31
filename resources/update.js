@@ -1,6 +1,14 @@
 (window.FGEXPIG_DATA_FILES = window.FGEXPIG_DATA_FILES || {})["resources/update.js"] = {
   "updates": [
     {
+      "version": "V3.101.000-R Release",
+      "content": [
+        "更新内容",
+        "- 新增了界面主题，新增了2个主题，分别是MD和F",
+        "- 修复了部分已知问题"
+      ]
+    },
+    {
       "version": "V3.005.000-R Release",
       "content": [
         "更新内容",
