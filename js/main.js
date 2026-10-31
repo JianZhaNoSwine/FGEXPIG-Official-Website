@@ -810,12 +810,24 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
     return String((row && (row.developer || row.publisher)) || '').trim();
   }
 
+  // 游戏模式（桌面壳）只展示最近 1.5 年内发布的活动。
+  function withinRecentActivityWindow(row) {
+    if (!isDesktopRuntime()) return true;
+    var time = coreReleaseTimestamp(row && row.releaseDate);
+    if (!isFinite(time)) return false;
+    var now = new Date();
+    var cutoff = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+    cutoff.setUTCMonth(cutoff.getUTCMonth() - 18);
+    return time >= cutoff.getTime();
+  }
+
   function coreRowsForFilter(filterState) {
     var filter = normalizeActivityFilter(filterState || activityFilter);
     var core = (typeof dataStore !== 'undefined' && dataStore && dataStore.core) || [];
     if (!core.length) return [];
     return core.filter(function (row) {
       if (!row || row.held === false) return false;
+      if (!withinRecentActivityWindow(row)) return false;
       if (filter.year !== 'all' && activityYearOf(row) !== filter.year) return false;
       if (filter.developer !== 'all' && activityDeveloperOf(row) !== filter.developer) return false;
       return true;
@@ -845,7 +857,11 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
   function activityIds() {
     var rows = filteredCoreRows();
     var ids = rows.map(function (r) { return r.id; }).filter(Boolean);
-    return ids.length ? ids : LOGOS.slice();
+    if (ids.length) return ids;
+    // 桌面壳：核心数据已加载但近 1.5 年没有活动时不再回退到全部活动列表。
+    var core = (typeof dataStore !== 'undefined' && dataStore && dataStore.core) || [];
+    if (isDesktopRuntime() && core.length) return [];
+    return LOGOS.slice();
   }
 
   function coreReleaseTimestamp(value) {
@@ -3296,7 +3312,8 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
     searchWrap.appendChild(search);
     searchWrap.appendChild(keywordScroll);
     enableHotspotKeywordScroll(keywordScroll);
-    titleCard.body.appendChild(searchWrap);
+    // 游戏模式（桌面壳）里没有键盘输入：标题卡片不再显示搜索框与关键字条。
+    if (!isDesktopRuntime()) titleCard.body.appendChild(searchWrap);
     var postList = document.createElement('div');
     postList.className = 'hotspot-post-list';
     titleCard.body.appendChild(postList);
@@ -3703,6 +3720,8 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
     if (!section) return;
     buildHotspotSection(id, section);
     var state = hotspotUiState(id);
+    // 桌面壳没有卡片内搜索框：查询词统一来自顶栏搜索。
+    if (isDesktopRuntime()) state.query = String(window.__FGSTEAM_SEARCH__ || '');
     if (section._hotspot.search.value !== state.query) section._hotspot.search.value = state.query;
     var data = hotspotState(id);
     var query = state.query.trim().toLowerCase();
@@ -4910,6 +4929,19 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
     section._filesId = id;
     var state = filesPageState(id);
     var items = activeResourceItems(id);
+    if (isDesktopRuntime()) {
+      var topbarQuery = topbarSearchQuery();
+      if (topbarQuery) {
+        items = items.filter(function (item) {
+          var haystack = [
+            i18nResourceText(item.title || item.file || ''),
+            item.file || '',
+            i18nResourceText(item.category || '')
+          ].join(' ').toLowerCase();
+          return haystack.indexOf(topbarQuery) >= 0;
+        });
+      }
+    }
     var selectedFile = activeResourceSelectedFile(id);
     var dates = state.dates || [];
     var browseBody = section._files.browseBody;
@@ -4961,6 +4993,28 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
       scheduleBody._scheduleListCleanup = attachManualScroll(daySchedule);
     }
   }
+
+  /* 顶栏搜索（游戏模式）：桌面壳把输入同步到 window.__FGSTEAM_SEARCH__，
+     资源页 / 热点页据此过滤左侧列表。 */
+  function topbarSearchQuery() {
+    return String(window.__FGSTEAM_SEARCH__ || '').trim().toLowerCase();
+  }
+  function applyTopbarSearch() {
+    var section = document.querySelector('.page.active .page-section.active');
+    if (!section) return;
+    var key = section.dataset ? section.dataset.section : '';
+    if (key === 'news') {
+      var navId = curNavLogo;
+      if (navId) {
+        hotspotUiState(navId).query = String(window.__FGSTEAM_SEARCH__ || '');
+        renderHotspotSection(navId, section);
+      }
+    } else if (key === 'files') {
+      var filesId = section._filesId || curNavLogo;
+      if (filesId) renderFilesPage(filesId, section);
+    }
+  }
+  window.addEventListener('fgsteam-search', applyTopbarSearch);
 
   function ensureFilesData(id, section) {
     if (!section) return null;
@@ -10422,9 +10476,10 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
   var autoDownloadInput = document.getElementById('autoDownload');
   var autoDownloadCard = document.getElementById('autoDownloadCard');
   var autoDownloadVal = document.getElementById('autoDownloadVal');
-  var startupSoundInput = document.getElementById('startupSound');
-  var startupSoundCard = document.getElementById('startupSoundCard');
-  var startupSoundVal = document.getElementById('startupSoundVal');
+  var fortuneModeCard = document.getElementById('fortuneModeCard');
+  var fortuneModeVal = document.getElementById('fortuneModeVal');
+  var fortuneModePrev = document.getElementById('fortuneModePrev');
+  var fortuneModeNext = document.getElementById('fortuneModeNext');
   var settingsLogoutBtn = document.getElementById('settingsLogout');
   var settingsCheckUpdateBtn = document.getElementById('settingsCheckUpdate');
   var settingsBackupBtn = document.getElementById('settingsBackup');
@@ -12186,24 +12241,38 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
       autoDownloadInput.dispatchEvent(new Event('change'));
     });
   }
-  function syncStartupSoundUi() {
-    if (!startupSoundVal) return;
-    startupSoundVal.textContent = startupSoundInput && startupSoundInput.checked ? '开启' : '关闭';
+  // 每日运势：开启 / 仅运势 / 仅音效 / 关闭（开启=抽签+音效，仅音效=greenpig+音效）。
+  var FORTUNE_MODES = ['开启', '仅运势', '仅音效', '关闭'];
+  var fortuneMode = 0;
+  if (window.FGEXPIG_DESKTOP && typeof window.FGEXPIG_DESKTOP.fortuneMode === 'number') {
+    fortuneMode = Math.max(0, Math.min(3, window.FGEXPIG_DESKTOP.fortuneMode | 0));
+  } else if (window.FGEXPIG_DESKTOP && window.FGEXPIG_DESKTOP.startupSound === false) {
+    fortuneMode = 3;
   }
-  if (startupSoundInput) {
-    startupSoundInput.checked = !(window.FGEXPIG_DESKTOP && window.FGEXPIG_DESKTOP.startupSound === false);
-    syncStartupSoundUi();
-    startupSoundInput.addEventListener('change', function () {
-      syncStartupSoundUi();
-      sendDesktopMessage(startupSoundInput.checked ? 'startup_sound:1' : 'startup_sound:0');
-    });
+  function syncFortuneModeUi() {
+    if (fortuneModeVal) fortuneModeVal.textContent = FORTUNE_MODES[fortuneMode];
   }
-  if (startupSoundCard && startupSoundInput) {
-    startupSoundCard.addEventListener('click', function (event) {
-      if (event.target === startupSoundInput) return;
-      startupSoundInput.checked = !startupSoundInput.checked;
-      startupSoundInput.dispatchEvent(new Event('change'));
-    });
+  function setFortuneMode(mode) {
+    mode = Math.max(0, Math.min(3, mode));
+    if (mode === fortuneMode) return;
+    fortuneMode = mode;
+    syncFortuneModeUi();
+    sendDesktopMessage('fortune_mode:' + fortuneMode);
+  }
+  if (fortuneModeCard) {
+    syncFortuneModeUi();
+    if (fortuneModePrev) {
+      fortuneModePrev.addEventListener('click', function (event) {
+        event.stopPropagation();
+        setFortuneMode(fortuneMode - 1);
+      });
+    }
+    if (fortuneModeNext) {
+      fortuneModeNext.addEventListener('click', function (event) {
+        event.stopPropagation();
+        setFortuneMode(fortuneMode + 1);
+      });
+    }
   }
   if (settingsLogoutBtn) settingsLogoutBtn.addEventListener('click', function () { sendDesktopMessage('menu:logout'); });
   if (settingsCheckUpdateBtn) settingsCheckUpdateBtn.addEventListener('click', function () { sendDesktopMessage('menu:update'); });
