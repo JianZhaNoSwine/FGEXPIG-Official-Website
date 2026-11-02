@@ -1,2 +1,4 @@
 /desktop-manifest.json
   Cache-Control: no-store
+/plugins/index.json
+  Cache-Control: no-store

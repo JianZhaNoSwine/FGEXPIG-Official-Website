@@ -1,0 +1,22 @@
+{
+  "plugins": [
+    {
+      "id": "draw",
+      "name": "抽签",
+      "version": "1.4.1",
+      "download": "https://fgexpig.cc/plugins/draw.zip?v=1.4.1",
+      "sha256": "6518709e2a6b8b883cd8eaacd92c3fa528f62c1f14c126e84c96c87c5d772efc",
+      "author": "FGSteam团队",
+      "updated": "2026-11-02"
+    },
+    {
+      "id": "jfes110game",
+      "name": "打地鼠",
+      "version": "1.2.1",
+      "download": "https://fgexpig.cc/plugins/jfes110game.zip?v=1.2.1",
+      "sha256": "4b7fb3cda0870983375fc1433b1be8d546b1775aed25cc7d7328b02d088e5271",
+      "author": "2026糖豆人拜年纪制作组",
+      "updated": "2026-11-02"
+    }
+  ]
+}

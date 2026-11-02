@@ -4582,32 +4582,6 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
     };
   }
 
-  function makeResourceGameEntry(id) {
-    var button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'hotspot-post-item resource-game-entry';
-    button.setAttribute('data-i18n-skip', '1');
-    var gameTitle = id === 'JFES110' ? '打地鼠' : '迷你游戏';
-    button.setAttribute('aria-label', id === 'JFES110' ? i18nT('minigame.enter.whack', '进入打地鼠小游戏') : i18nT('minigame.enter', '进入小游戏'));
-    var title = document.createElement('div');
-    title.className = 'hotspot-post-title';
-    title.textContent = i18nResourceText(gameTitle);
-    var meta = document.createElement('div');
-    meta.className = 'hotspot-post-meta';
-    var category = document.createElement('span');
-    category.className = 'hotspot-post-time';
-    category.textContent = i18nResourceText('迷你游戏');
-    meta.appendChild(category);
-    button.appendChild(title);
-    button.appendChild(meta);
-
-    button.onclick = function () {
-      var api = window.FGEXPIG_MINIGAMES;
-      if (api && typeof api.open === 'function') api.open(id);
-    };
-    return button;
-  }
-
   function makeResourceCalendar(id, rows) {
     var calendar = document.createElement('div');
     calendar.className = 'resource-calendar';
@@ -4954,15 +4928,10 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
     // 保证第一个可见项也会显示选中效果，而不是出现列表无选中态。
     if (state.showFeatured) state.selectedFeaturedPicture = selected ? selected.file : null;
     else state.selectedPicture = selected ? selected.file : null;
-    var gameApi = window.FGEXPIG_MINIGAMES;
-    if (gameApi && typeof gameApi.has === 'function' && gameApi.has(id)) {
-      browseBody.appendChild(makeResourceGameEntry(id));
-    } else {
-      var summary = document.createElement('div');
-      summary.className = 'resource-browse-summary';
-      summary.setAttribute('aria-hidden', 'true');
-      browseBody.appendChild(summary);
-    }
+    var summary = document.createElement('div');
+    summary.className = 'resource-browse-summary';
+    summary.setAttribute('aria-hidden', 'true');
+    browseBody.appendChild(summary);
 
     if (items.length) {
       var grid = document.createElement('div');
