@@ -605,6 +605,322 @@
           }
         ],
         "commentCount": 0
+      },
+      {
+        "id": "hotspot-4",
+        "title": "雷区项目介绍",
+        "time": "2026/10/27/17:22",
+        "content": "立即观看雷区项目介绍视频！",
+        "comments": [
+          {
+            "name": "miss",
+            "text": "有求必应猪",
+            "replies": []
+          },
+          {
+            "name": "miss",
+            "text": "\\包浆吉小8十三弹好",
+            "replies": []
+          },
+          {
+            "name": "咖啡豆",
+            "text": "糖豆人出现跳转至2:40秒",
+            "replies": [
+              {
+                "name": "企鹅",
+                "text": "你是一杯好心的考非",
+                "replies": []
+              }
+            ]
+          },
+          {
+            "name": "咖啡豆",
+            "text": "\\螃蟹乌萨奇蹦跳",
+            "replies": []
+          },
+          {
+            "name": "咖啡豆",
+            "text": "挺有意思的",
+            "replies": []
+          },
+          {
+            "name": "咖啡豆",
+            "text": "\\绿恐龙鼓掌",
+            "replies": []
+          },
+          {
+            "name": "企鹅",
+            "text": "好紧脏",
+            "replies": []
+          },
+          {
+            "name": "掉线",
+            "text": "这主播居然能憋住 很难得啊",
+            "replies": []
+          }
+        ],
+        "commentCount": 0
+      },
+      {
+        "id": "hotspot-5",
+        "title": "枪械工厂项目介绍",
+        "time": "2026/10/28/17:22",
+        "content": "立即观看枪械工厂项目介绍视频！",
+        "comments": [
+          {
+            "name": "咖啡豆",
+            "text": "已严肃学习规则",
+            "replies": []
+          },
+          {
+            "name": "咖啡豆",
+            "text": "\\螃蟹乌萨奇蹦跳",
+            "replies": []
+          },
+          {
+            "name": "掉线",
+            "text": "真是简单粗暴",
+            "replies": []
+          }
+        ],
+        "commentCount": 0
+      },
+      {
+        "id": "hotspot-6",
+        "title": "猎鸭游戏项目介绍",
+        "time": "2026/10/29/17:22",
+        "content": "立即观看猎鸭游戏项目介绍视频！",
+        "comments": [
+          {
+            "name": "掉线",
+            "text": "严肃观看",
+            "replies": []
+          },
+          {
+            "name": "掉线",
+            "text": "这次的移植预览好后面",
+            "replies": []
+          },
+          {
+            "name": "咖啡豆",
+            "text": "而且时间好短",
+            "replies": []
+          },
+          {
+            "name": "咖啡豆",
+            "text": "\\米牙牙",
+            "replies": []
+          }
+        ],
+        "commentCount": 0
+      },
+      {
+        "id": "hotspot-7",
+        "title": "立足之本项目介绍",
+        "time": "2026/10/30/17:22",
+        "content": "立即观看立足之本项目介绍视频！",
+        "comments": [
+          {
+            "name": "掉线",
+            "text": "故意把自己设置成维序者 这样反猪联盟就没法出现了",
+            "replies": []
+          },
+          {
+            "name": "掉线",
+            "text": "原版有点像工坊官图那张几何图样",
+            "replies": []
+          },
+          {
+            "name": "掉线",
+            "text": "移植版纯运气太吓人了😱",
+            "replies": []
+          }
+        ],
+        "commentCount": 0
+      },
+      {
+        "id": "hotspot-8",
+        "title": "餐桌礼仪项目介绍",
+        "time": "2026/10/31/17:22",
+        "content": "立即观看餐桌礼仪项目介绍视频！",
+        "comments": [
+          {
+            "name": "掉线",
+            "text": "怎么不卡22了",
+            "replies": []
+          },
+          {
+            "name": "掉线",
+            "text": "笑死我了",
+            "replies": []
+          },
+          {
+            "name": "掉线",
+            "text": "\\绿猫找主人",
+            "replies": []
+          }
+        ],
+        "commentCount": 0
+      },
+      {
+        "id": "hotspot-9",
+        "title": "隧道险境介绍",
+        "time": "2026/11/01/17:22",
+        "content": "立即观看隧道险境项目介绍视频！",
+        "comments": [
+          {
+            "name": "掉线",
+            "text": "已经放弃卡点了吗",
+            "replies": []
+          },
+          {
+            "name": "掉线",
+            "text": "＃监禁＃束缚＃",
+            "replies": [
+              {
+                "name": "咖啡豆",
+                "text": "绿杰瑞",
+                "replies": [
+                  {
+                    "name": "掉线",
+                    "text": "笑死了",
+                    "replies": []
+                  },
+                  {
+                    "name": "掉线",
+                    "text": "杰瑞是唯一我会觉得可爱的老鼠 虽然颜色不像老鼠",
+                    "replies": [
+                      {
+                        "name": "咖啡豆",
+                        "text": "\\杰瑞迷人眼",
+                        "replies": []
+                      },
+                      {
+                        "name": "咖啡豆",
+                        "text": "杰瑞就是最可爱的老鼠",
+                        "replies": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "咖啡豆",
+                "text": "\\杰瑞敲门",
+                "replies": []
+              },
+              {
+                "name": "炸鸡",
+                "text": "猪原来喜欢这个",
+                "replies": [
+                  {
+                    "name": "掉线",
+                    "text": "小声小声",
+                    "replies": []
+                  }
+                ]
+              },
+              {
+                "name": "炸鸡",
+                "text": "\\微信创意表情笑死我了",
+                "replies": []
+              }
+            ]
+          },
+          {
+            "name": "掉线",
+            "text": "为什么不选三角形那个 难道那个不能躲",
+            "replies": []
+          }
+        ],
+        "commentCount": 0
+      },
+      {
+        "id": "hotspot-10",
+        "title": "残骸平台项目介绍",
+        "time": "2026/11/02/17:22",
+        "content": "立即观看残骸平台项目介绍视频！",
+        "comments": [
+          {
+            "name": "掉线",
+            "text": "怎么这点卡得越来越晚了",
+            "replies": []
+          },
+          {
+            "name": "掉线",
+            "text": "意思是篮球是垃圾",
+            "replies": []
+          }
+        ],
+        "commentCount": 0
+      },
+      {
+        "id": "hotspot-11",
+        "title": "碎骨者项目介绍",
+        "time": "2026/11/03/17:22",
+        "content": "立即观看碎骨者项目介绍视频！",
+        "comments": [
+          {
+            "name": "咖啡豆",
+            "text": "可以打架了",
+            "replies": [
+              {
+                "name": "掉线",
+                "text": "怎么感觉咖啡跃跃欲试",
+                "replies": [
+                  {
+                    "name": "咖啡豆",
+                    "text": "\\杰瑞汤姆同意",
+                    "replies": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "咖啡豆",
+            "text": "\\乌萨奇打莫莫咖",
+            "replies": []
+          },
+          {
+            "name": "掉线",
+            "text": "视频卡点真是不简单",
+            "replies": []
+          }
+        ],
+        "commentCount": 0
+      },
+      {
+        "id": "hotspot-12",
+        "title": "致命反弹项目介绍",
+        "time": "2026/11/04/17:22",
+        "content": "立即观看致命反弹项目介绍视频！",
+        "comments": [],
+        "commentCount": 0
+      },
+      {
+        "id": "hotspot-13",
+        "title": "叉车认证项目介绍",
+        "time": "2026/11/05/17:22",
+        "content": "立即观看叉车认证项目介绍视频！",
+        "comments": [],
+        "commentCount": 0
+      },
+      {
+        "id": "hotspot-14",
+        "title": "第一轮今日上线",
+        "time": "2026/11/06/17:22",
+        "content": "已预订，关卡竞赛，《猪诞狂欢》~机械狂欢联动~ 第一轮即将开始！参赛选手：Tori、躺豆人、咖啡豆、炸鸡、白玉汤、脆、企鹅。",
+        "comments": [],
+        "commentCount": 0
+      },
+      {
+        "id": "hotspot-15",
+        "title": "第二轮今日上线",
+        "time": "2026/11/13/17:22",
+        "content": "已预订，关卡竞赛，《猪诞狂欢》~机械狂欢联动~ 第二轮即将开始！参赛选手：掉线、彼得、火锅、yin、桃夭。",
+        "comments": [],
+        "commentCount": 0
       }
     ]
   }

@@ -2,6 +2,16 @@
   "lists": {
     "JFES195": [
       {
+        "file": "封禁.png",
+        "title": "驱逐令二次封禁",
+        "category": "资源文件"
+      },
+      {
+        "file": "警告.png",
+        "title": "驱逐令一次警告",
+        "category": "资源文件"
+      },
+      {
         "file": "规则.png",
         "title": "规则",
         "category": "宣传文件"
