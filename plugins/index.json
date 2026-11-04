@@ -5,6 +5,7 @@
       "name": "抽签",
       "version": "1.4.1",
       "download": "https://fgexpig.cc/plugins/draw.zip?v=1.4.1",
+      "preview": "https://fgexpig.cc/plugins/previews/draw.webp?v=1.4.1",
       "sha256": "6518709e2a6b8b883cd8eaacd92c3fa528f62c1f14c126e84c96c87c5d772efc",
       "author": "FGSteam团队",
       "updated": "2026-11-02"
@@ -14,6 +15,7 @@
       "name": "打地鼠",
       "version": "1.2.1",
       "download": "https://fgexpig.cc/plugins/jfes110game.zip?v=1.2.1",
+      "preview": "https://fgexpig.cc/plugins/previews/jfes110game.webp?v=1.2.1",
       "sha256": "4b7fb3cda0870983375fc1433b1be8d546b1775aed25cc7d7328b02d088e5271",
       "author": "2026糖豆人拜年纪制作组",
       "updated": "2026-11-02"
@@ -23,6 +25,7 @@
       "name": "猪标",
       "version": "1.3",
       "download": "https://fgexpig.cc/plugins/zhubiao.zip?v=1.3",
+      "preview": "https://fgexpig.cc/plugins/previews/zhubiao.webp?v=1.3",
       "sha256": "571217c36063aae82c7c4ab7c46790155a31cae7ec36da2a191ff22f279a174a",
       "author": "苏沐沐_Official、杰某official",
       "updated": "2026-06-09"

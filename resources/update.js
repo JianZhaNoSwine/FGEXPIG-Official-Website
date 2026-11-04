@@ -1,6 +1,14 @@
 (window.FGEXPIG_DATA_FILES = window.FGEXPIG_DATA_FILES || {})["resources/update.js"] = {
   "updates": [
     {
+      "version": "V3.203.000-R Release",
+      "content": [
+        "更新内容",
+        "- 库的活动名现在可以设置为独立语言",
+        "- 修复了部分已知问题"
+      ]
+    },
+    {
       "version": "V3.202.000-R Release",
       "content": [
         "更新内容",

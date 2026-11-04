@@ -15411,7 +15411,7 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
     allPauseLeaderboardSlots().forEach(function (slot) {
       var chart = slot.querySelector('.pause-leaderboard');
       if (!chart || !chart._pauseLeaderboardRows || !chart._pauseLeaderboardRows.length) return;
-      drawPauseLeaderboardChart(chart, chart._pauseLeaderboardRows, chart._pauseLeaderboardValueFormatter, chart._pauseLeaderboardBarValueFormatter);
+      drawPauseLeaderboardChart(chart, chart._pauseLeaderboardRows, chart._pauseLeaderboardValueFormatter, chart._pauseLeaderboardBarValueFormatter, chart._pauseLeaderboardGrouped);
     });
   }
 
@@ -15692,7 +15692,7 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
     return Array.isArray(raw) ? raw.join(' ') : String(raw == null ? '' : raw);
   }
 
-  function drawPauseLeaderboardChart(chart, rows, valueFormatter, barValueFormatter) {
+  function drawPauseLeaderboardChart(chart, rows, valueFormatter, barValueFormatter, preGrouped) {
     if (!chart || !rows || !rows.length) return;
     var previousSvg = chart.querySelector('.pause-leaderboard-svg');
     if (previousSvg) previousSvg.remove();
@@ -15703,21 +15703,43 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
     var previousScrollTop = chart.scrollTop || 0;
 
     // 同分值合并为一条：名称用「、」连接，名次按参与人数计算。
+    // 地图榜由桌面端先合并好并写好名次（尾部无跑分的行 value=0、unscored=true）。
     var groupedRows = [];
-    rows.forEach(function (row) {
-      var value = Math.max(0, Number(row.value) || 0);
-      var last = groupedRows[groupedRows.length - 1];
-      if (last && Math.abs(last.value - value) <= 1e-9) {
-        last.names.push(row.name);
-      } else {
-        groupedRows.push({ value: value, names: [row.name] });
-      }
-    });
+    if (preGrouped) {
+      rows.forEach(function (row) {
+        groupedRows.push({
+          value: Math.max(0, Number(row.value) || 0),
+          names: [row.name],
+          fullName: row.fullName != null ? String(row.fullName) : String(row.name == null ? '' : row.name),
+          rank: Math.max(1, Math.round(Number(row.rank) || 0)),
+          unscored: !!row.unscored,
+          stale: !!row.stale
+        });
+      });
+    } else {
+      rows.forEach(function (row) {
+        var value = Math.max(0, Number(row.value) || 0);
+        var last = groupedRows[groupedRows.length - 1];
+        if (last && Math.abs(last.value - value) <= 1e-9) {
+          last.names.push(row.name);
+          last.stale = last.stale || !!row.stale;
+        } else {
+          groupedRows.push({
+            value: value,
+            names: [row.name],
+            stale: !!row.stale
+          });
+        }
+      });
+    }
     rows = groupedRows;
 
     var maxValueTextWidth = 0;
     rows.forEach(function (row) {
-      maxValueTextWidth = Math.max(maxValueTextWidth, pauseLeaderboardEstimatedTextWidth(pauseLeaderboardValueText(Math.max(0, Number(row.value) || 0), valueFormatter)));
+      var valueText = row.unscored
+        ? '-'
+        : pauseLeaderboardValueText(Math.max(0, Number(row.value) || 0), valueFormatter);
+      maxValueTextWidth = Math.max(maxValueTextWidth, pauseLeaderboardEstimatedTextWidth(valueText));
     });
 
     var measuredHeight = chart.clientHeight || pauseLeaderboardAvailableHeight(chart) || 140;
@@ -15791,12 +15813,16 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
     var nextRank = 1;
     rows.forEach(function (row, index) {
       var value = Math.max(0, Number(row.value) || 0);
-      if (index === 0 || Math.abs(value - previousValue) > 1e-9) {
-        currentRank = nextRank;
-        previousValue = value;
+      if (preGrouped) {
+        currentRank = Math.max(1, Math.round(Number(row.rank) || (index + 1)));
+      } else {
+        if (index === 0 || Math.abs(value - previousValue) > 1e-9) {
+          currentRank = nextRank;
+          previousValue = value;
+        }
+        nextRank = currentRank + row.names.length;
       }
-      nextRank = currentRank + row.names.length;
-      var isTop = currentRank === 1;
+      var isTop = currentRank === 1 && !row.unscored;
       var barWidth = Math.max(0, barPlotWidth * value / chartMaximum);
       var barY = margin.top + index * rowStep + (rowStep - barHeight) / 2;
       var rankLabel = createPauseLeaderboardSvgElement('text', {
@@ -15819,7 +15845,7 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
       var fullNameText = row.fullName != null
         ? String(row.fullName)
         : row.names.map(function (name) { return i18nHotspotText(name); }).filter(Boolean).join('、');
-      var valueText = pauseLeaderboardValueText(value, valueFormatter);
+      var valueText = row.unscored ? '-' : pauseLeaderboardValueText(value, valueFormatter);
       var nameMaxWidth = Math.max(60, barPlotWidth - 18);
       barTitle.textContent = fullNameText + '：' + valueText;
       bar.appendChild(barTitle);
@@ -15883,7 +15909,7 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
     chart.scrollTop = previousScrollTop;
   }
 
-  function renderPauseLeaderboardSlot(slot, title, rows, valueFormatter, barValueFormatter) {
+  function renderPauseLeaderboardSlot(slot, title, rows, valueFormatter, barValueFormatter, preGrouped) {
     slot.innerHTML = '';
     var heading = document.createElement('div');
     heading.className = 'pause-ad-title';
@@ -15904,9 +15930,10 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
     chart._pauseLeaderboardRows = rows;
     chart._pauseLeaderboardValueFormatter = valueFormatter;
     chart._pauseLeaderboardBarValueFormatter = barValueFormatter;
+    chart._pauseLeaderboardGrouped = !!preGrouped;
     slot.appendChild(chart);
     requestAnimationFrame(function () {
-      if (chart.isConnected) drawPauseLeaderboardChart(chart, rows, valueFormatter, barValueFormatter);
+      if (chart.isConnected) drawPauseLeaderboardChart(chart, rows, valueFormatter, barValueFormatter, !!preGrouped);
     });
   }
 
@@ -16024,7 +16051,7 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
       if (type === 'experience') {
         renderPauseLeaderboardSlot(slot, i18nT('pause.lb.mapScore.name', '地图跑分榜'), mapScoreRows, function (value) {
           return formatMapCount(value);
-        });
+        }, true);
       } else if (type === 'value') {
         renderPauseLeaderboardSlot(slot, '全勤价值榜', valueRows, function (value) {
           return Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
