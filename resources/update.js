@@ -1,6 +1,27 @@
 (window.FGEXPIG_DATA_FILES = window.FGEXPIG_DATA_FILES || {})["resources/update.js"] = {
   "updates": [
     {
+      "version": "V3.301.000-R Release",
+      "content": [
+        "更新内容",
+        "- 新增了探索会员机制，满足对应条件后即可持有对应会员等级标识与领取对应会员等级权益"
+      ]
+    },
+    {
+      "version": "V3.205.000-R Release",
+      "content": [
+        "更新内容",
+        "- 新增了库存收藏夹的排序功能，长按箭头0.5秒后可自由拖动排序"
+      ]
+    },
+    {
+      "version": "V3.204.000-R Release",
+      "content": [
+        "更新内容",
+        "- 新增了1款插件"
+      ]
+    },
+    {
       "version": "V3.203.000-R Release",
       "content": [
         "更新内容",
