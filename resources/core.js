@@ -42,7 +42,7 @@
       "defaultSelected": false,
       "developer": "JianZha Publisher",
       "publisher": "JianZha Publisher",
-      "releaseDate": "2026 年 11 月 27 日",
+      "releaseDate": "已公告",
       "tags": [
         "合作",
         "解谜"
@@ -201,7 +201,7 @@
       "defaultSelected": false,
       "developer": "JianZha Publisher",
       "publisher": "JianZha Publisher",
-      "releaseDate": "2026 年 11 月 20 日",
+      "releaseDate": "已公告",
       "tags": [
         "艺术",
         "解压"
