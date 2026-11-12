@@ -39,6 +39,16 @@
       "sha256": "571217c36063aae82c7c4ab7c46790155a31cae7ec36da2a191ff22f279a174a",
       "author": "苏沐沐_Official、杰某official",
       "updated": "2026-06-09"
+    },
+    {
+      "id": "gacha",
+      "name": "抽卡",
+      "version": "1.1.0",
+      "download": "https://fgexpig.cc/plugins/gacha.zip?v=1.1.0",
+      "preview": "https://fgexpig.cc/plugins/previews/gacha.webp?v=1.1.0",
+      "sha256": "6f65a7c9a822e298115623a653688b5b288e084618707f11d9a8a4015ac992ce",
+      "author": "FGSteam团队",
+      "updated": "2026-11-12"
     }
   ]
 }

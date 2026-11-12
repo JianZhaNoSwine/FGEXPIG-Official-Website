@@ -1886,6 +1886,8 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
   audio.volume = 1; // 默认 100%
   var audioSettings = { mainVolume: 1, minigameVolume: 1 };
   var musicPausedByUser = false;
+  // 广告（resources/ADS）：投放期间固定广告音乐，进入主页前弹广告图。
+  var adState = { active: false, shown: false, open: false, music: '', text: '', picture: '', website: '' };
   var interacted = false;
   var startupOverlay = document.getElementById('startupOverlay');
   var startupVideo = document.getElementById('startupVideo');
@@ -7911,6 +7913,7 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
 
   // 当前活动的音乐名：优先取核心数据中的 music 字段，缺省用活动 ID
   function trackTitle(logo) {
+    if (adState.active && adState.text) return adState.text;
     var core = (dataStore && dataStore.core) || [];
     for (var i = 0; i < core.length; i++) {
       if (core[i].id === logo && core[i].music) return core[i].music;
@@ -7921,6 +7924,8 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
   // 设置曲名：纯文本、右对齐、不滚动
   function setTrackName(text) {
     if (!playerName) return;
+    // 同一首歌不重置进度填充，切换活动时不会出现“进度消失再恢复”的刷新感。
+    if (playerName.textContent === text) return;
     playerName.textContent = text;
     // 供 ::after 复制同一段文字做「按进度染白」的遮罩层；换曲时进度归零
     playerName.setAttribute('data-text', text);
@@ -7936,6 +7941,12 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
   }
 
   function applyMusic(name) {
+    if (adState.active && adState.music) {
+      // 广告期间音乐固定为广告音乐，不随活动切换。
+      applyAdMusic();
+      syncInnerActivityButton(name);
+      return;
+    }
     var src = musicUrl(name);
     if (audio.dataset.src === src) return;
     audio.dataset.src = src;
@@ -8035,6 +8046,16 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
     if (suppressCoverClick) { suppressCoverClick = false; return; }
     toggleMusicPlayback();
   });
+  // 广告期间点击曲名：重新打开广告弹窗（不自动关闭、不暂停音乐）；
+  // 暂停/继续仍可用快捷键控制。非广告期保持原有的暂停行为。
+  if (playerName) {
+    playerName.addEventListener('click', function (event) {
+      if (!(adState.active && adState.picture)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      showAdPicture();
+    });
+  }
 
   // 浏览器自动播放限制：首次交互后启动音乐
   function startActivityMusic() {
@@ -8043,7 +8064,13 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
     audio.preload = 'auto';
     window.removeEventListener('pointerdown', onFirstInteract);
     window.removeEventListener('wheel', onFirstInteract);
-    if (!audio.src) audio.src = musicUrl(LOGOS[state.index]);
+    if (adState.active && adState.music) {
+      audio.dataset.src = adState.music;
+      audio.src = adState.music;
+      setTrackName(adState.text || '广告');
+    } else if (!audio.src) {
+      audio.src = musicUrl(LOGOS[state.index]);
+    }
     if (musicPausedByUser) return;
     var p = audio.play();
     if (p && p.catch) p.catch(function () {});
@@ -8066,6 +8093,151 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
     var p = audio.play();
     if (p && p.catch) p.catch(function () {});
   };
+
+  /* ---------- 广告（resources/ADS） ---------- */
+  function adTodayKey() {
+    var now = new Date();
+    var month = String(now.getMonth() + 1).padStart(2, '0');
+    var day = String(now.getDate()).padStart(2, '0');
+    return now.getFullYear() + '-' + month + '-' + day;
+  }
+
+  // 广告期间音乐固定为广告音乐，曲名取音乐文件里嵌入的标题。
+  function applyAdMusic() {
+    if (!adState.active || !adState.music) return;
+    var switched = audio.dataset.src !== adState.music;
+    if (switched) {
+      audio.dataset.src = adState.music;
+      audio.src = adState.music;
+      audio.currentTime = 0;
+      setRing(0);
+    }
+    // 切换活动只换界面，广告音乐继续播放，不重置进度。
+    setTrackName(adState.text || '广告');
+    if (interacted && !musicPausedByUser && audio.paused) {
+      var p = audio.play();
+      if (p && p.catch) p.catch(function () {});
+    }
+  }
+
+  function adCloseLayer(layer) {
+    if (!layer || layer.dataset.closing) return;
+    layer.dataset.closing = '1';
+    layer.classList.add('is-closing');
+    adState.open = false;
+    document.documentElement.classList.remove('fg-ad-active');
+    setTimeout(function () {
+      if (layer.parentNode) layer.parentNode.removeChild(layer);
+    }, 220);
+  }
+
+  // 居中弹出广告图：背景变暗、显示鼠标并关闭沉浸光效；只由右上角 X 关闭。
+  function showAdPicture() {
+    if (!adState.picture || adState.open) return;
+    adState.open = true;
+    document.documentElement.classList.add('fg-ad-active');
+    var style = document.createElement('style');
+    style.textContent =
+      'html.fg-ad-active,html.fg-ad-active body,html.fg-ad-active body *{cursor:auto !important}' +
+      'html.fg-ad-active .fg-ad-close{cursor:pointer !important}' +
+      'html.fg-ad-active .fg-ad-picture.is-linked{cursor:pointer !important}' +
+      'html.fg-ad-active .cursor-glow{opacity:0 !important;visibility:hidden !important}' +
+      '.fg-ad-layer{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);opacity:1;transition:opacity .2s ease;pointer-events:auto}' +
+      '.fg-ad-layer.is-closing{opacity:0}' +
+      '@keyframes fg-ad-rise{from{opacity:0;transform:translateY(38px)}to{opacity:1;transform:none}}' +
+      '@keyframes fg-ad-drop{from{opacity:1;transform:none}to{opacity:0;transform:translateY(38px)}}' +
+      '.fg-ad-wrap{display:flex;max-width:72vw;max-height:72vh;animation:fg-ad-rise .26s cubic-bezier(.2,.8,.2,1) both}' +
+      '.fg-ad-layer.is-closing .fg-ad-wrap{animation:fg-ad-drop .2s ease both}' +
+      '.fg-ad-media{position:relative;display:flex;border-radius:14px;overflow:hidden;box-shadow:0 18px 60px rgba(0,0,0,.45);max-width:calc(72vw - 56px);max-height:72vh}' +
+      '.fg-ad-picture{display:block;max-width:calc(72vw - 56px);max-height:72vh;user-select:none;-webkit-user-drag:none}' +
+      '.fg-ad-shade{position:absolute;left:0;right:0;bottom:0;height:40%;background:linear-gradient(to top,rgba(0,0,0,.72),rgba(0,0,0,0));pointer-events:none}' +
+      '.fg-ad-title{position:absolute;left:18px;right:18px;bottom:14px;color:#fff;font-size:20px;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}' +
+      '.fg-ad-close{position:absolute;top:10px;right:10px;z-index:2;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:0;border-radius:17px;background:rgba(255,255,255,.92);color:#1d2126;font:inherit;font-size:13px;font-weight:600;line-height:1;cursor:pointer;transition:transform .12s ease,background .12s ease}' +
+      '.fg-ad-close .fg-ad-cross{font-size:20px;font-weight:400;line-height:1}' +
+      '.fg-ad-close:hover{background:#fff;transform:scale(1.06)}';
+    document.head.appendChild(style);
+    var layer = document.createElement('div');
+    layer.className = 'fg-ad-layer';
+    var wrap = document.createElement('div');
+    wrap.className = 'fg-ad-wrap';
+    var media = document.createElement('div');
+    media.className = 'fg-ad-media';
+    var image = document.createElement('img');
+    image.className = 'fg-ad-picture';
+    image.src = adState.picture;
+    image.alt = '';
+    // 点击广告图用系统默认浏览器打开 website.js 里的链接。
+    if (adState.website) {
+      image.classList.add('is-linked');
+      image.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        try { window.ipc.postMessage('open_url:' + adState.website); } catch (e) {}
+      });
+    }
+    var shade = document.createElement('div');
+    shade.className = 'fg-ad-shade';
+    media.appendChild(image);
+    media.appendChild(shade);
+    if (adState.text) {
+      var title = document.createElement('div');
+      title.className = 'fg-ad-title';
+      title.textContent = adState.text;
+      media.appendChild(title);
+    }
+    var close = document.createElement('button');
+    close.className = 'fg-ad-close';
+    close.type = 'button';
+    close.setAttribute('aria-label', '关闭广告');
+    var closeLabel = document.createElement('span');
+    closeLabel.textContent = '广告';
+    var closeCross = document.createElement('span');
+    closeCross.className = 'fg-ad-cross';
+    closeCross.textContent = '×';
+    close.appendChild(closeLabel);
+    close.appendChild(closeCross);
+    close.addEventListener('click', function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      adCloseLayer(layer);
+    });
+    media.appendChild(close);
+    wrap.appendChild(media);
+    layer.appendChild(wrap);
+    document.body.appendChild(layer);
+  }
+
+  function initAds() {
+    if (!(window.FGEXPIG_DESKTOP && window.FGEXPIG_DESKTOP.isDesktop)) return;
+    fetch('resources/ADS/index.json', { cache: 'no-store' })
+      .then(function (response) { return response.ok ? response.json() : null; })
+      .then(function (payload) {
+        var ads = (payload && payload.ads) || [];
+        var today = adTodayKey();
+        var hit = null;
+        for (var i = 0; i < ads.length; i++) {
+          var ad = ads[i];
+          if (ad && ad.start && ad.end && ad.start <= today && today <= ad.end) hit = ad;
+        }
+        if (!hit) return;
+        adState.active = true;
+        adState.music = hit.music || '';
+        adState.text = hit.text || '';
+        adState.picture = hit.picture || '';
+        adState.website = hit.website || '';
+        applyAdMusic();
+      })
+      .catch(function () {});
+  }
+
+  /* 进入主页（启动器退场）时由 app 调用：显示广告图。 */
+  window.__FGSTEAM_SHOW_AD__ = function () {
+    if (adState.shown) return;
+    adState.shown = true;
+    showAdPicture();
+  };
+
+  initAds();
 
   /* ---------- 顶栏 ---------- */
   var topbar = document.getElementById('topbar');
