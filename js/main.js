@@ -798,8 +798,8 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
     return request;
   }
 
-  // 活动列表：核心数据已加载则只取「已举办」(held!==false) 的活动并保持 ID 顺序；
-  // 没有任何已举办数据时回退到内置兜底列表
+  // 活动列表：核心数据 display 值（1/11 显示，0 不显示）决定是否显示；
+  // 已发行且距今满 500 天的旧活动额外过滤掉，未发行活动照常显示。
   function activityYearOf(row) {
     var time = coreReleaseTimestamp(row && row.releaseDate);
     if (!isFinite(time)) return '';
@@ -810,15 +810,13 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
     return String((row && (row.developer || row.publisher)) || '').trim();
   }
 
-  // 游戏模式（桌面壳）只展示最近 1.5 年内发布的活动。
+  // 游戏模式（桌面壳）：发行日期距今已满 500 天（1.5 年）的活动不再显示；
+  // 未发行/无发行日（距今本来为负）正常显示。
   function withinRecentActivityWindow(row) {
     if (!isDesktopRuntime()) return true;
     var time = coreReleaseTimestamp(row && row.releaseDate);
-    if (!isFinite(time)) return false;
-    var now = new Date();
-    var cutoff = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
-    cutoff.setUTCMonth(cutoff.getUTCMonth() - 18);
-    return time >= cutoff.getTime();
+    if (!isFinite(time)) return true;
+    return Date.now() - time < 500 * 24 * 60 * 60 * 1000;
   }
 
   function coreRowsForFilter(filterState) {
@@ -826,6 +824,7 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
     var core = (typeof dataStore !== 'undefined' && dataStore && dataStore.core) || [];
     if (!core.length) return [];
     return core.filter(function (row) {
+      // display 0（held=false）不显示；1/11 显示，但超过 500 天的旧活动除外。
       if (!row || row.held === false) return false;
       if (!withinRecentActivityWindow(row)) return false;
       if (filter.year !== 'all' && activityYearOf(row) !== filter.year) return false;
@@ -858,7 +857,7 @@ window.fgById = window.fgById || function (id) { return document.getElementById(
     var rows = filteredCoreRows();
     var ids = rows.map(function (r) { return r.id; }).filter(Boolean);
     if (ids.length) return ids;
-    // 桌面壳：核心数据已加载但近 1.5 年没有活动时不再回退到全部活动列表。
+    // 桌面壳：核心数据已加载但没有可显示（display!=0）的活动时不再回退到内置列表。
     var core = (typeof dataStore !== 'undefined' && dataStore && dataStore.core) || [];
     if (isDesktopRuntime() && core.length) return [];
     return LOGOS.slice();
